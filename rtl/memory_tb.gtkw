@@ -1,0 +1,121 @@
+[*]
+[*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
+[*] Sun Aug 26 12:15:44 2018
+[*]
+[dumpfile] "/home/clifford/Work/mlaccel/rtl/memory_tb.vcd"
+[dumpfile_mtime] "Sun Aug 26 12:11:31 2018"
+[dumpfile_size] 630349
+[savefile] "/home/clifford/Work/mlaccel/rtl/memory_tb.gtkw"
+[timestart] 9967
+[size] 1511 941
+[pos] 33 -58
+*-5.000000 10035 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] mlaccel_memory_tb.
+[treeopen] mlaccel_memory_tb.uut.
+[treeopen] mlaccel_memory_tb.uut.ram[0].
+[sst_width] 225
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 281
+@28
+mlaccel_memory_tb.clock
+@200
+-
+@22
+mlaccel_memory_tb.wen[3:0]
+mlaccel_memory_tb.addr[16:0]
+mlaccel_memory_tb.wdata[31:0]
+mlaccel_memory_tb.rdata[31:0]
+@200
+-
+@24
+mlaccel_memory_tb.uut.shamt[2:0]
+@28
+mlaccel_memory_tb.uut.addr_offsets[3:0]
+@200
+-
+@28
+mlaccel_memory_tb.uut.shifted_wen[3:0]
+@23
+mlaccel_memory_tb.uut.shifted_wdata[31:0]
+@c00022
+mlaccel_memory_tb.uut.shifted_rdata[31:0]
+@28
+(0)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(1)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(2)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(3)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(4)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(5)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(6)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(7)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(8)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(9)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(10)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(11)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(12)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(13)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(14)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(15)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(16)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(17)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(18)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(19)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(20)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(21)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(22)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(23)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(24)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(25)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(26)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(27)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(28)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(29)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(30)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+(31)mlaccel_memory_tb.uut.shifted_rdata[31:0]
+@1401200
+-group_end
+@200
+-
+-ram[0]
+@28
+mlaccel_memory_tb.uut.ram[0].clock
+mlaccel_memory_tb.uut.ram[0].wen
+@22
+mlaccel_memory_tb.uut.ram[0].addr[14:0]
+mlaccel_memory_tb.uut.ram[0].wdata[7:0]
+mlaccel_memory_tb.uut.ram[0].rdata[7:0]
+@200
+-
+-ram[1]
+@28
+mlaccel_memory_tb.uut.ram[1].clock
+mlaccel_memory_tb.uut.ram[1].wen
+@22
+mlaccel_memory_tb.uut.ram[1].addr[14:0]
+mlaccel_memory_tb.uut.ram[1].wdata[7:0]
+mlaccel_memory_tb.uut.ram[1].rdata[7:0]
+@200
+-
+-ram[2]
+@28
+mlaccel_memory_tb.uut.ram[2].clock
+mlaccel_memory_tb.uut.ram[2].wen
+@22
+mlaccel_memory_tb.uut.ram[2].addr[14:0]
+mlaccel_memory_tb.uut.ram[2].wdata[7:0]
+mlaccel_memory_tb.uut.ram[2].rdata[7:0]
+@200
+-
+-ram[3]
+@28
+mlaccel_memory_tb.uut.ram[3].clock
+mlaccel_memory_tb.uut.ram[3].wen
+@22
+mlaccel_memory_tb.uut.ram[3].addr[14:0]
+mlaccel_memory_tb.uut.ram[3].wdata[7:0]
+mlaccel_memory_tb.uut.ram[3].rdata[7:0]
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0
