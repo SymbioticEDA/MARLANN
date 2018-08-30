@@ -1,2 +1,4 @@
 /memory_tb
 /memory_tb.vcd
+/compute_tb
+/compute_tb.vcd

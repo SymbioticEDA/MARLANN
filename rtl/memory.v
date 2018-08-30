@@ -1,15 +1,14 @@
 module mlaccel_memory (
 	input             clock,
 	input      [16:0] addr,
-	input      [ 3:0] wen,
-	input      [31:0] wdata,
+	input             wen,
+	input      [ 7:0] wdata,
 	output reg [31:0] rdata
 );
 	wire [2:0] shamt = 4 - addr[1:0];
 	reg [1:0] shamt_rev_q;
 
-	wire [3:0] shifted_wen = {wen, wen} >> shamt[1:0];
-	wire [31:0] shifted_wdata = {wdata, wdata} >> (shamt[1:0] * 8);
+	wire [3:0] shifted_wen = {wen, 3'b000, wen} >> shamt[1:0];
 	wire [31:0] shifted_rdata;
 
 	wire [3:0] addr_offsets = 8'b 0000_1111 >> shamt;
@@ -23,7 +22,7 @@ module mlaccel_memory (
 			addr[16:2] + addr_offsets[1],
 			addr[16:2] + addr_offsets[0]
 		}),
-		.wdata(shifted_wdata),
+		.wdata(wdata),
 		.rdata(shifted_rdata)
 	);
 

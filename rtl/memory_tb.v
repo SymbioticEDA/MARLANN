@@ -1,8 +1,8 @@
 module mlaccel_memory_tb;
 	reg         clock;
 	reg  [16:0] addr;
-	reg  [ 3:0] wen;
-	reg  [31:0] wdata;
+	reg         wen;
+	reg  [ 7:0] wdata;
 	wire [31:0] rdata;
 
 	initial begin
@@ -22,7 +22,7 @@ module mlaccel_memory_tb;
 	);
 
 	initial begin
-		wen <= 4'b0001;
+		wen <= 1;
 		addr <= 0;
 		wdata <= 0;
 
