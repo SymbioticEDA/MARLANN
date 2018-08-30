@@ -3,8 +3,8 @@ mlaccel architecture reference
 
 mlaccel has 128 kB main memory and 1024 words of compute code memory.
 
-The compute core operates on a vector with 4 elements. Each vector element is
-a 24 bits wide accumulator.
+The compute core operates on a 24 bits wide accumulator. Each cycle it can
+add up to 4 products for the MACC units to that accumulator.
 
 The compute core can read and write any byte in a consecutive 4-byte block in
 main memory in a single cycle and without alignment constraints.
@@ -109,30 +109,19 @@ Opcodes with a single address argument:
 Opcodes with a per-lane enable bit, an address argument, and a per-lane 8-bit coefficient:
 
 - MACC: Load 4 bytes from the specified address (relative to LBP), multiply with coefficients,
-and add to accumulators. Only the accumulators that are selected by the per-lane enable bit are updated.
+and add to accumulator. Only the lanes that are selected by the lane enable bit are added.
 
 - MMAX: Like MMAC, but store the max value in the accumulator instead of the sum.
 
-- MSET: Like MMAC, but overwrite the accumulator instead of adding to it.
+- MSET: Like MMAC, but reset the accumulator to zero before adding the products.
 
-Opcodes with a per-lane enable bit, an address argument, and per-lane shift amount (shift amout stored in insn coefficient fields):
+- ACC, MAX, SET: Like MMACC, MMAX or MSET but bypassing the multiplier (i.e. using
+coefficients of 1 instead of the values stored in compute memory).
 
-- STORE: Right-shift accumulators by the specified amount, saturate it to a signed 8-bit value, and
-store the selected accumulators to main memory at the given address (relative to SBP). (The shifted
-and clipped value is stored to memory, the accumulator itself is unchanged.)
+Opcodes with an address argument, and shift amount (shift amout stored in lane enable bits):
+
+- STORE: Right-shift accumulator by the specified amount, saturate it to a signed 8-bit value, and
+store the result to main memory at the given address (relative to SBP). (The shifted
+and saturated value is stored to memory, the accumulator itself is unchanged.)
 
 - RELU: Like store, but replace negative values with zero.
-
-Opcodes without argument:
-
-- RACC-0: Add accumulator 1 to accumulator 0, and accumulator 3 to accumulator 2. (For 8 lanes it also adds acc 5 to 4 and acc 7 to 6.)
-
-- RACC-1: Add accumulator 2 to accumulator 0. (For 8 lanes it also adds acc 6 to 4.)
-
-- RACC-2: (8-lanes only) Add accumulator 4 to accumulator 0.
-
-- RMAX-0: Store max of acc 1 and 0 in acc 0, and max of acc 3 and 2 in 2. (For 8 lanes also acc 5 to 4 and acc 7 to 6.)
-
-- RMAX-1: Store max of acc 2 and 0 in acc 0. (For 8 lanes it also acc 6 to 4.)
-
-- RMAX-2: (8-lanes only) Add accumulator 4 to accumulator 0.
