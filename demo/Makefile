@@ -1,10 +1,10 @@
 all: ctrlsoc.bin ctrlsoc_fw.bin
 
 ctrlsoc.json: ctrlsoc.v spimemio.v simpleuart.v picorv32.v
-        yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $^
+	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $^
 
 ctrlsoc.asc: ctrlsoc.pcf ctrlsoc.json
-        nextpnr-ice40 --freq 13 --up5k --asc ctrlsoc.asc --pcf ctrlsoc.pcf --json ctrlsoc.json
+	nextpnr-ice40 --freq 13 --up5k --asc ctrlsoc.asc --pcf ctrlsoc.pcf --json ctrlsoc.json
 
 ctrlsoc.bin: ctrlsoc.asc
 	icetime -d up5k -c 12 -mtr ctrlsoc.rpt ctrlsoc.asc
