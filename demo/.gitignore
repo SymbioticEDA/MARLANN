@@ -8,3 +8,4 @@
 /ctrlsoc_fw.elf
 /testbench
 /testbench.vcd
+/flashinit.hex

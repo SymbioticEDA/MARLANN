@@ -1,13 +1,16 @@
 testbench.vcd: testbench
 	vvp -N testbench
 
-testbench: testbench.v ctrlsoc.v spimemio.v simpleuart.v picorv32.v ../rtl/spram.v
-	iverilog -s testbench -o $@ $^
+testbench: testbench.v ctrlsoc.v picorv32.v flashinit.hex
+	iverilog -s testbench -o $@ testbench.v ctrlsoc.v picorv32.v ../rtl/spram.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+
+flashinit.hex: flashinit.py
+	python3 flashinit.py
 
 #####################################################################
 
-ctrlsoc.json: ctrlsoc.v spimemio.v simpleuart.v picorv32.v
-	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $^
+ctrlsoc.json: ctrlsoc.v picorv32.v flashinit.hex
+	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' ctrlsoc.v picorv32.v
 
 ctrlsoc.asc: ctrlsoc.pcf ctrlsoc.json
 	nextpnr-ice40 --freq 13 --up5k --asc ctrlsoc.asc --pcf ctrlsoc.pcf --json ctrlsoc.json
@@ -32,7 +35,7 @@ prog_ctrlsoc: ctrlsoc.bin ctrlsoc_fw.bin
 #####################################################################
 
 clean:
-	rm -f testbench.vcd testbench
+	rm -f testbench.vcd testbench flashinit.hex
 	rm -f ctrlsoc.json ctrlsoc.log ctrlsoc.asc ctrlsoc.bin ctrlsoc.rpt
 	rm -f ctrlsoc_fw.elf ctrlsoc_fw.hex ctrlsoc_fw.bin
 

@@ -75,6 +75,9 @@ module ctrlsoc (
 	wire [31:0] spram0_rdata;
 	wire [31:0] spram1_rdata;
 
+	wire flash_ready;
+	wire [31:0] flash_rdata;
+
 	picorv32 #(
 		.ENABLE_COUNTERS(0),
 		.CATCH_MISALIGN(1),
@@ -87,7 +90,7 @@ module ctrlsoc (
 		.trap      (trap     ),
 		.mem_valid (mem_valid),
 		.mem_instr (mem_instr),
-		.mem_ready (mem_ready),
+		.mem_ready (mem_ready || flash_ready),
 		.mem_addr  (mem_addr ),
 		.mem_wdata (mem_wdata),
 		.mem_wstrb (mem_wstrb),
@@ -95,6 +98,7 @@ module ctrlsoc (
 		.mem_rdata (
 			spram0_rselect ? spram0_rdata :
 			spram1_rselect ? spram1_rdata :
+			flash_ready ? flash_rdata :
 			mem_rdata
 		)
 	);
@@ -123,9 +127,7 @@ module ctrlsoc (
 					spram1_rselect <= 1;
 				end
 				addr_flash: begin
-					mem_ready <= 1;
 					buserror <= |mem_wstrb;
-					// FIXME
 				end
 				mem_addr == 32'h 01000000: begin
 					mem_ready <= 1;
@@ -141,55 +143,163 @@ module ctrlsoc (
 		end
 	end
 
-	SB_SPRAM256KA spram0_msb (
-		.ADDRESS(mem_addr[15:2]),
-		.DATAIN(mem_wdata[31:16]),
-		.MASKWREN({{2{mem_wstrb[3]}}, {2{mem_wstrb[2]}}}),
-		.WREN(mem_valid && !mem_ready && |mem_wstrb),
-		.CHIPSELECT(addr_spram0),
-		.CLOCK(clk),
-		.STANDBY(1'b0),
-		.SLEEP(1'b0),
-		.POWEROFF(1'b1),
-		.DATAOUT(spram0_rdata[31:16])
+	ctrlsoc_spram spram0 (
+		.clk    (clk),
+		.enable (addr_spram0 && mem_valid && !mem_ready),
+		.addr   (mem_addr[15:0]),
+		.wstrb  (mem_wstrb),
+		.wdata  (mem_wdata),
+		.rdata  (spram0_rdata)
 	);
 
-	SB_SPRAM256KA spram0_lsb (
-		.ADDRESS(mem_addr[15:2]),
-		.DATAIN(mem_wdata[15:0]),
-		.MASKWREN({{2{mem_wstrb[1]}}, {2{mem_wstrb[0]}}}),
-		.WREN(mem_valid && !mem_ready && |mem_wstrb),
-		.CHIPSELECT(addr_spram0),
-		.CLOCK(clk),
-		.STANDBY(1'b0),
-		.SLEEP(1'b0),
-		.POWEROFF(1'b1),
-		.DATAOUT(spram0_rdata[15:0])
+	ctrlsoc_spram spram1 (
+		.clk    (clk),
+		.enable (addr_spram1 && mem_valid && !mem_ready),
+		.addr   (mem_addr[15:0]),
+		.wstrb  (mem_wstrb),
+		.wdata  (mem_wdata),
+		.rdata  (spram1_rdata)
 	);
 
-	SB_SPRAM256KA spram1_msb (
-		.ADDRESS(mem_addr[15:2]),
-		.DATAIN(mem_wdata[31:16]),
-		.MASKWREN({{2{mem_wstrb[3]}}, {2{mem_wstrb[2]}}}),
-		.WREN(mem_valid && !mem_ready && |mem_wstrb),
-		.CHIPSELECT(addr_spram1),
+	ctrlsoc_flashio flashio (
+		.clk       (clk      ),
+		.resetn    (resetn   ),
+
+		.valid     (addr_flash && mem_valid && !flash_ready),
+		.ready     (flash_ready),
+		.addr      (mem_addr[23:0]),
+		.rdata     (flash_rdata),
+
+		.flash_clk (flash_clk),
+		.flash_csb (flash_csb),
+		.flash_io0 (flash_io0),
+		.flash_io1 (flash_io1),
+		.flash_io2 (flash_io2),
+		.flash_io3 (flash_io3)
+	);
+endmodule
+
+module ctrlsoc_spram (
+	input         clk,
+	input         enable,
+	input  [15:0] addr,
+	input  [ 3:0] wstrb,
+	input  [31:0] wdata,
+	output [31:0] rdata
+);
+	SB_SPRAM256KA spram_hi (
+		.ADDRESS(addr[15:2]),
+		.DATAIN(wdata[31:16]),
+		.MASKWREN({{2{wstrb[3]}}, {2{wstrb[2]}}}),
+		.WREN(enable && |mem_wstrb),
+		.CHIPSELECT(enable),
 		.CLOCK(clk),
 		.STANDBY(1'b0),
 		.SLEEP(1'b0),
 		.POWEROFF(1'b1),
-		.DATAOUT(spram1_rdata[31:16])
+		.DATAOUT(rdata[31:16])
 	);
 
-	SB_SPRAM256KA spram1_lsb (
-		.ADDRESS(mem_addr[15:2]),
-		.DATAIN(mem_wdata[15:0]),
-		.MASKWREN({{2{mem_wstrb[1]}}, {2{mem_wstrb[0]}}}),
-		.WREN(mem_valid && !mem_ready && |mem_wstrb),
-		.CHIPSELECT(addr_spram1),
+	SB_SPRAM256KA spram_lo (
+		.ADDRESS(addr[15:2]),
+		.DATAIN(wdata[15:0]),
+		.MASKWREN({{2{wstrb[1]}}, {2{wstrb[0]}}}),
+		.WREN(enable && |mem_wstrb),
+		.CHIPSELECT(enable),
 		.CLOCK(clk),
 		.STANDBY(1'b0),
 		.SLEEP(1'b0),
 		.POWEROFF(1'b1),
-		.DATAOUT(spram1_rdata[15:0])
+		.DATAOUT(rdata[15:0])
 	);
+endmodule
+
+module ctrlsoc_flashio (
+	input         clk,
+	input         resetn,
+
+	input         valid,
+	output reg    ready,
+	input  [23:0] addr,
+	output [31:0] rdata,
+
+	output reg    flash_clk,
+	output reg    flash_csb,
+	inout         flash_io0,
+	inout         flash_io1,
+	inout         flash_io2,
+	inout         flash_io3
+);
+	reg  flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
+	reg  flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do;
+	wire flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di;
+
+	wire flash_io0_oe_del, flash_io1_oe_del, flash_io2_oe_del, flash_io3_oe_del;
+	wire flash_io0_do_del, flash_io1_do_del, flash_io2_do_del, flash_io3_do_del;
+
+	ctrlsoc_delay flash_io_delay [7:0] (
+		.din({flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe, flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do}),
+		.dout({flash_io0_oe_del, flash_io1_oe_del, flash_io2_oe_del, flash_io3_oe_del, flash_io0_do_del, flash_io1_do_del, flash_io2_do_del, flash_io3_do_del})
+	);
+
+	SB_IO #(
+		.PIN_TYPE(6'b 1010_01),
+		.PULLUP(1'b 0)
+	) flash_io_buf [3:0] (
+		.PACKAGE_PIN({flash_io3, flash_io2, flash_io1, flash_io0}),
+		.OUTPUT_ENABLE({flash_io3_oe_del, flash_io2_oe_del, flash_io1_oe_del, flash_io0_oe_del}),
+		.D_OUT_0({flash_io3_do_del, flash_io2_do_del, flash_io1_do_del, flash_io0_do_del}),
+		.D_IN_0({flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di})
+	);
+
+	reg [15:0] init_sequence_rom [0:255];
+	reg [8:0] init_sequence_cnt;
+	reg [15:0] init_sequence_word;
+	wire init_sequence_done = init_sequence_cnt[8];
+
+	initial begin
+		$readmemh("flashinit.hex", init_sequence_rom);
+	end
+
+	always @(posedge clk) begin
+		if (!resetn) begin
+			init_sequence_cnt <= 0;
+		end else begin
+			init_sequence_cnt <= init_sequence_cnt + !init_sequence_done;
+		end
+		init_sequence_word <= init_sequence_rom[init_sequence_cnt[7:0]];
+	end
+
+	always @(posedge clk) begin
+		if (!init_sequence_done) begin
+			ready <= 0;
+			flash_clk <= init_sequence_word[9];
+			flash_csb <= init_sequence_word[8];
+			{flash_io3_oe, flash_io2_oe, flash_io1_oe, flash_io0_oe} <= init_sequence_word[7:4];
+			{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= init_sequence_word[3:0];
+		end else begin
+		end
+	end
+endmodule
+
+module ctrlsoc_delay (
+	input din,
+	output dout
+);
+`ifdef SYNTHESIS
+	genvar i;
+	wire [10:0] t;
+	generate for (i = 0; i < 10; i = i+1) begin:lc
+		(* keep *)
+		SB_LUT4 #(
+			.LUT_INIT(16'h AAAA)
+		) lut (
+			.I0(t[i]), .I1(), .I2(), .I3(),
+			.O(t[i+1])
+		);
+	end endgenerate
+	assign dout = t[10], t[0] = din;
+`else
+	assign #10 dout = din;
+`endif
 endmodule
