@@ -1,4 +1,10 @@
-all: ctrlsoc.bin ctrlsoc_fw.bin
+testbench.vcd: testbench
+	vvp -N testbench
+
+testbench: testbench.v ctrlsoc.v spimemio.v simpleuart.v picorv32.v ../rtl/spram.v
+	iverilog -s testbench -o $@ $^
+
+#####################################################################
 
 ctrlsoc.json: ctrlsoc.v spimemio.v simpleuart.v picorv32.v
 	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $^
@@ -22,3 +28,12 @@ ctrlsoc_fw.bin: ctrlsoc_fw.elf
 prog_ctrlsoc: ctrlsoc.bin ctrlsoc_fw.bin
 	iceprog ctrlsoc.bin
 	iceprog -o 1M ctrlsoc_fw.bin
+
+#####################################################################
+
+clean:
+	rm -f testbench.vcd testbench
+	rm -f ctrlsoc.json ctrlsoc.log ctrlsoc.asc ctrlsoc.bin ctrlsoc.rpt
+	rm -f ctrlsoc_fw.elf ctrlsoc_fw.hex ctrlsoc_fw.bin
+
+.PHONY: clean prog_ctrlsoc

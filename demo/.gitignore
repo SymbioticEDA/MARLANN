@@ -6,3 +6,5 @@
 /ctrlsoc.rpt
 /ctrlsoc_fw.bin
 /ctrlsoc_fw.elf
+/testbench
+/testbench.vcd
