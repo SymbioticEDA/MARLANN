@@ -234,21 +234,13 @@ module ctrlsoc_flashio (
 	reg  flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do;
 	wire flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di;
 
-	wire flash_io0_oe_del, flash_io1_oe_del, flash_io2_oe_del, flash_io3_oe_del;
-	wire flash_io0_do_del, flash_io1_do_del, flash_io2_do_del, flash_io3_do_del;
-
-	ctrlsoc_delay flash_io_delay [7:0] (
-		.din({flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe, flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do}),
-		.dout({flash_io0_oe_del, flash_io1_oe_del, flash_io2_oe_del, flash_io3_oe_del, flash_io0_do_del, flash_io1_do_del, flash_io2_do_del, flash_io3_do_del})
-	);
-
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),
 		.PULLUP(1'b 0)
 	) flash_io_buf [3:0] (
 		.PACKAGE_PIN({flash_io3, flash_io2, flash_io1, flash_io0}),
-		.OUTPUT_ENABLE({flash_io3_oe_del, flash_io2_oe_del, flash_io1_oe_del, flash_io0_oe_del}),
-		.D_OUT_0({flash_io3_do_del, flash_io2_do_del, flash_io1_do_del, flash_io0_do_del}),
+		.OUTPUT_ENABLE({flash_io3_oe, flash_io2_oe, flash_io1_oe, flash_io0_oe}),
+		.D_OUT_0({flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do}),
 		.D_IN_0({flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di})
 	);
 
@@ -280,26 +272,4 @@ module ctrlsoc_flashio (
 		end else begin
 		end
 	end
-endmodule
-
-module ctrlsoc_delay (
-	input din,
-	output dout
-);
-`ifdef SYNTHESIS
-	genvar i;
-	wire [10:0] t;
-	generate for (i = 0; i < 10; i = i+1) begin:lc
-		(* keep *)
-		SB_LUT4 #(
-			.LUT_INIT(16'h AAAA)
-		) lut (
-			.I0(t[i]), .I1(), .I2(), .I3(),
-			.O(t[i+1])
-		);
-	end endgenerate
-	assign dout = t[10], t[0] = din;
-`else
-	assign #10 dout = din;
-`endif
 endmodule

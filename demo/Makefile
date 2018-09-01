@@ -1,8 +1,8 @@
 testbench.vcd: testbench
 	vvp -N testbench
 
-testbench: testbench.v ctrlsoc.v picorv32.v flashinit.hex
-	iverilog -s testbench -o $@ testbench.v ctrlsoc.v picorv32.v ../rtl/spram.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v flashinit.hex
+	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/spram.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 flashinit.hex: flashinit.py
 	python3 flashinit.py

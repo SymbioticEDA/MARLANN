@@ -39,7 +39,7 @@ def spi_wbyte(value):
         sig_io0[cursor] = "1" if ((value >> i) & 1) else "0"
         cursor += 1
 
-def qpi_wbyte(value):
+def qpi_wbyte(value, release=False):
     global sig_clk, sig_csb, sig_io0, sig_io1, sig_io2, sig_io3, cursor
 
     sig_clk[cursor] = "0"
@@ -68,32 +68,19 @@ def qpi_wbyte(value):
 
     sig_clk[cursor] = "1"
     sig_csb[cursor] = "0"
-    sig_io0[cursor] = "1" if (value & 0x01) else "0"
-    sig_io1[cursor] = "1" if (value & 0x02) else "0"
-    sig_io2[cursor] = "1" if (value & 0x04) else "0"
-    sig_io3[cursor] = "1" if (value & 0x08) else "0"
+    if release:
+        sig_io0[cursor] = "z"
+        sig_io1[cursor] = "z"
+        sig_io2[cursor] = "z"
+        sig_io3[cursor] = "z"
+    else:
+        sig_io0[cursor] = "1" if (value & 0x01) else "0"
+        sig_io1[cursor] = "1" if (value & 0x02) else "0"
+        sig_io2[cursor] = "1" if (value & 0x04) else "0"
+        sig_io3[cursor] = "1" if (value & 0x08) else "0"
     cursor += 1
 
-def qpi_dtr_wbyte(value):
-    global sig_clk, sig_csb, sig_io0, sig_io1, sig_io2, sig_io3, cursor
-
-    sig_clk[cursor] = "0"
-    sig_csb[cursor] = "0"
-    sig_io0[cursor] = "1" if (value & 0x10) else "0"
-    sig_io1[cursor] = "1" if (value & 0x20) else "0"
-    sig_io2[cursor] = "1" if (value & 0x40) else "0"
-    sig_io3[cursor] = "1" if (value & 0x80) else "0"
-    cursor += 1
-
-    sig_clk[cursor] = "1"
-    sig_csb[cursor] = "0"
-    sig_io0[cursor] = "1" if (value & 0x01) else "0"
-    sig_io1[cursor] = "1" if (value & 0x02) else "0"
-    sig_io2[cursor] = "1" if (value & 0x04) else "0"
-    sig_io3[cursor] = "1" if (value & 0x08) else "0"
-    cursor += 1
-
-def spi_dummy(cnt):
+def qpi_read(cnt):
     global sig_clk, sig_csb, sig_io0, sig_io1, sig_io2, sig_io3, cursor
 
     for _ in range(cnt):
@@ -135,16 +122,14 @@ spi_start()
 spi_wbyte(0x38)
 spi_stop()
 
-# DTR Fast Read Quad I/O with "Continous Read Mode"
+# Fast Read Quad I/O (EBh) in QPI Mode
 spi_start()
-qpi_wbyte(0xED)
-qpi_dtr_wbyte(0x21)
-qpi_dtr_wbyte(0x43)
-qpi_dtr_wbyte(0x65)
-qpi_dtr_wbyte(0x87)
-qpi_dtr_wbyte(0xA5)
-spi_dummy(7)
-spi_dummy(2)
+qpi_wbyte(0xEB)
+qpi_wbyte(0x10)
+qpi_wbyte(0x00)
+qpi_wbyte(0x00)
+qpi_wbyte(0xA5, release=True)
+qpi_read(8)
 spi_stop()
 
 with open("flashinit.hex", "w") as f:

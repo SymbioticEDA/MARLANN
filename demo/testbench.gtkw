@@ -1,33 +1,24 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Sat Sep  1 12:18:38 2018
+[*] Sat Sep  1 18:47:10 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/demo/testbench.vcd"
-[dumpfile_mtime] "Sat Sep  1 12:16:13 2018"
-[dumpfile_size] 628355
+[dumpfile_mtime] "Sat Sep  1 18:45:01 2018"
+[dumpfile_size] 200098
 [savefile] "/home/clifford/Work/mlaccel/demo/testbench.gtkw"
-[timestart] 4622000
+[timestart] 13642000
 [size] 1178 804
-[pos] -260 -330
-*-19.000000 5233000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -146 -5
+*-19.000000 14583450 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [sst_width] 225
 [signals_width] 255
 [sst_expanded] 1
-[sst_vpaned_height] 232
+[sst_vpaned_height] 233
 @28
 testbench.uut.clk
 testbench.uut.resetn
-@200
--
-@29
-testbench.uut.flash_clk
-testbench.uut.flash_csb
-testbench.uut.flash_io0
-testbench.uut.flash_io1
-testbench.uut.flash_io2
-testbench.uut.flash_io3
 @200
 -
 @28
@@ -39,5 +30,18 @@ testbench.uut.mem_addr[31:0]
 testbench.uut.mem_rdata[31:0]
 testbench.uut.mem_wdata[31:0]
 testbench.uut.mem_wstrb[3:0]
+@200
+-
+@28
+testbench.uut.flash_clk
+testbench.uut.flash_csb
+testbench.uut.flash_io0
+testbench.uut.flash_io1
+testbench.uut.flash_io2
+testbench.uut.flash_io3
+@200
+-
+@22
+testbench.flash.xfer[7:0]
 [pattern_trace] 1
 [pattern_trace] 0
