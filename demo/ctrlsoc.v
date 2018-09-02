@@ -244,10 +244,6 @@ module ctrlsoc_flashio (
 		.D_IN_0({flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di})
 	);
 
-	// 5 seconds delay before we start re-configuring the flash
-	reg [31:0] boot_delay = 5 * 12_000_000;
-	reg boot_delay_done = 0;
-
 	reg [15:0] init_sequence_rom [0:255];
 	reg [8:0] init_sequence_cnt;
 	reg [15:0] init_sequence_word;
@@ -258,7 +254,7 @@ module ctrlsoc_flashio (
 	end
 
 	always @(posedge clk) begin
-		if (!resetn || !boot_delay_done) begin
+		if (!resetn) begin
 			init_sequence_cnt <= 0;
 		end else begin
 			init_sequence_cnt <= init_sequence_cnt + !init_sequence_done;
@@ -271,10 +267,6 @@ module ctrlsoc_flashio (
 
 	always @(posedge clk) begin
 		ready <= 0;
-		if (!boot_delay_done) begin
-			boot_delay <= boot_delay - 1;
-			boot_delay_done <= !boot_delay;
-		end else
 		if (!init_sequence_done) begin
 			state <= 0;
 			flash_clk <= init_sequence_word[9];
