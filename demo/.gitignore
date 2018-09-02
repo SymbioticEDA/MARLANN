@@ -6,6 +6,7 @@
 /ctrlsoc.rpt
 /ctrlsoc_fw.bin
 /ctrlsoc_fw.elf
+/ctrlsoc_fw.hex
 /testbench
 /testbench.vcd
 /flashinit.hex

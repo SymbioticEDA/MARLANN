@@ -1,35 +1,44 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Sat Sep  1 18:47:10 2018
+[*] Sun Sep  2 11:34:28 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/demo/testbench.vcd"
-[dumpfile_mtime] "Sat Sep  1 18:45:01 2018"
-[dumpfile_size] 200098
+[dumpfile_mtime] "Sun Sep  2 11:33:28 2018"
+[dumpfile_size] 850450
 [savefile] "/home/clifford/Work/mlaccel/demo/testbench.gtkw"
-[timestart] 13642000
-[size] 1178 804
-[pos] -146 -5
-*-19.000000 14583450 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1255 896
+[pos] -1 -1
+*-27.000000 30666912 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
+[treeopen] testbench.uut.flashio.
 [sst_width] 225
 [signals_width] 255
 [sst_expanded] 1
-[sst_vpaned_height] 233
+[sst_vpaned_height] 263
 @28
 testbench.uut.clk
 testbench.uut.resetn
 @200
 -
 @28
-testbench.uut.mem_valid
-testbench.uut.mem_ready
-testbench.uut.mem_instr
+testbench.led1
+testbench.led2
+testbench.led3
+testbench.led4
+testbench.led5
+@200
+-
+@28
+testbench.uut.cpu.mem_valid
+testbench.uut.cpu.mem_ready
+testbench.uut.cpu.mem_instr
 @22
-testbench.uut.mem_addr[31:0]
-testbench.uut.mem_rdata[31:0]
-testbench.uut.mem_wdata[31:0]
-testbench.uut.mem_wstrb[3:0]
+testbench.uut.cpu.mem_wstrb[3:0]
+testbench.uut.cpu.mem_addr[31:0]
+testbench.uut.cpu.mem_rdata[31:0]
+testbench.uut.cpu.mem_wdata[31:0]
 @200
 -
 @28
@@ -43,5 +52,7 @@ testbench.uut.flash_io3
 -
 @22
 testbench.flash.xfer[7:0]
+@200
+-
 [pattern_trace] 1
 [pattern_trace] 0

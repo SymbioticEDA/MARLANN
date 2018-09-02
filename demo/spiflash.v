@@ -45,6 +45,7 @@ module spiflash (
 		crm_state <= 0;
 		cnt <= 0;
 		xfer = 8'hzz;
+		out_enable = 0;
 	end
 
 	always @(posedge flash_csb) begin

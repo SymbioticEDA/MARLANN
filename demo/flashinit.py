@@ -103,7 +103,14 @@ def qpi_read(cnt):
 # Reset
 spi_start()
 spi_wbyte(0xFF)
+spi_stop()
+spi_start()
 spi_wbyte(0xFF)
+spi_stop()
+
+# Release Power-down
+spi_start()
+spi_wbyte(0xAB)
 spi_stop()
 
 # Volatile SR Write Enable

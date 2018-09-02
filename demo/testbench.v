@@ -95,11 +95,6 @@ module testbench;
 	);
 
 	initial begin
-		flash.data[24'h 10_00_00] = 8'h 1a;
-		flash.data[24'h 10_00_01] = 8'h 2b;
-		flash.data[24'h 10_00_02] = 8'h 3c;
-		flash.data[24'h 10_00_03] = 8'h 4d;
-		flash.data[24'h 10_00_04] = 8'h 5e;
-		flash.data[24'h 10_00_05] = 8'h 6f;
+		$readmemh("ctrlsoc_fw.hex", flash.data);
 	end
 endmodule

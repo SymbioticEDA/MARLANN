@@ -35,6 +35,14 @@ addi x29, zero, 0
 addi x30, zero, 0
 addi x31, zero, 0
 
+li a0, 0
+li a1, 0x02000000
+led_loop:
+srli a2, a0, 16
+sw a2, 0(a1)
+addi a0, a0, 1
+j led_loop
+
 # Update LEDs
 li a0, 0x03000000
 li a1, 1

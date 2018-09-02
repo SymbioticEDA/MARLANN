@@ -56,9 +56,9 @@ module ctrlsoc (
 
 	reg led5_r, led4_r, led3_r, led2_r, led1_r;
 
-	assign led1 = btn1;
-	assign led2 = btn2;
-	assign led3 = btn3;
+	assign led1 = led1_r;
+	assign led2 = led2_r;
+	assign led3 = led3_r;
 	assign led4 = led4_r;
 	assign led5 = led5_r;
 
@@ -105,7 +105,7 @@ module ctrlsoc (
 
 	wire addr_spram0 = mem_addr < 64*1024;
 	wire addr_spram1 = (mem_addr < 128*1024) && !(mem_addr < 64*1024);
-	wire addr_flash = (mem_addr < 16*1024*1024) && !(mem_addr < 128*1024);
+	wire addr_flash = (mem_addr < 2*16*1024*1024) && !(mem_addr < 128*1024);
 
 	always @(posedge clk) begin
 		mem_ready <= 0;
@@ -129,7 +129,7 @@ module ctrlsoc (
 				addr_flash: begin
 					buserror <= |mem_wstrb;
 				end
-				mem_addr == 32'h 01000000: begin
+				mem_addr == 32'h 02000000: begin
 					mem_ready <= 1;
 					if (mem_wstrb[0]) begin
 						{led5_r, led4_r, led3_r, led2_r, led1_r} <= mem_wdata;
@@ -191,7 +191,7 @@ module ctrlsoc_spram (
 		.ADDRESS(addr[15:2]),
 		.DATAIN(wdata[31:16]),
 		.MASKWREN({{2{wstrb[3]}}, {2{wstrb[2]}}}),
-		.WREN(enable && |mem_wstrb),
+		.WREN(|wstrb),
 		.CHIPSELECT(enable),
 		.CLOCK(clk),
 		.STANDBY(1'b0),
@@ -204,7 +204,7 @@ module ctrlsoc_spram (
 		.ADDRESS(addr[15:2]),
 		.DATAIN(wdata[15:0]),
 		.MASKWREN({{2{wstrb[1]}}, {2{wstrb[0]}}}),
-		.WREN(enable && |mem_wstrb),
+		.WREN(|wstrb),
 		.CHIPSELECT(enable),
 		.CLOCK(clk),
 		.STANDBY(1'b0),
@@ -215,20 +215,20 @@ module ctrlsoc_spram (
 endmodule
 
 module ctrlsoc_flashio (
-	input         clk,
-	input         resetn,
+	input             clk,
+	input             resetn,
 
-	input         valid,
-	output reg    ready,
-	input  [23:0] addr,
-	output [31:0] rdata,
+	input             valid,
+	output reg        ready,
+	input      [23:0] addr,
+	output reg [31:0] rdata,
 
-	output reg    flash_clk,
-	output reg    flash_csb,
-	inout         flash_io0,
-	inout         flash_io1,
-	inout         flash_io2,
-	inout         flash_io3
+	output reg        flash_clk,
+	output reg        flash_csb,
+	inout             flash_io0,
+	inout             flash_io1,
+	inout             flash_io2,
+	inout             flash_io3
 );
 	reg  flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
 	reg  flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do;
@@ -262,14 +262,181 @@ module ctrlsoc_flashio (
 		init_sequence_word <= init_sequence_rom[init_sequence_cnt[7:0]];
 	end
 
+	reg [4:0] state;
+	reg [31:0] next_addr;
+
 	always @(posedge clk) begin
+		ready <= 0;
 		if (!init_sequence_done) begin
-			ready <= 0;
+			state <= 0;
 			flash_clk <= init_sequence_word[9];
 			flash_csb <= init_sequence_word[8];
 			{flash_io3_oe, flash_io2_oe, flash_io1_oe, flash_io0_oe} <= init_sequence_word[7:4];
 			{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= init_sequence_word[3:0];
 		end else begin
+			case (state)
+				0: begin
+					next_addr <= addr;
+					if (valid && flash_csb) begin
+						flash_clk <= 0;
+						flash_csb <= 0;
+						{flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe} <= 4'b 1111;
+						{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[23:20];
+						state <= 1;
+					end else begin
+						flash_clk <= 0;
+						flash_csb <= 1;
+						{flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe} <= 0;
+						{flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do} <= 0;
+					end
+				end
+				1: begin
+					flash_clk <= 1;
+					state <= 2;
+				end
+				2: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[19:16];
+					state <= 3;
+				end
+				3: begin
+					flash_clk <= 1;
+					state <= 4;
+				end
+				4: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[15:12];
+					state <= 5;
+				end
+				5: begin
+					flash_clk <= 1;
+					state <= 6;
+				end
+				6: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[11:8];
+					state <= 7;
+				end
+				7: begin
+					flash_clk <= 1;
+					state <= 8;
+				end
+				8: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[7:4];
+					state <= 9;
+				end
+				9: begin
+					flash_clk <= 1;
+					state <= 10;
+				end
+				10: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= addr[3:0];
+					state <= 11;
+				end
+				11: begin
+					flash_clk <= 1;
+					state <= 12;
+				end
+				12: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= 4'h A;
+					state <= 13;
+				end
+				13: begin
+					flash_clk <= 1;
+					state <= 14;
+				end
+				14: begin
+					flash_clk <= 0;
+					{flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do} <= 4'h 5;
+					state <= 15;
+				end
+				15: begin
+					flash_clk <= 1;
+					{flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe} <= 4'b 0000;
+					state <= 16;
+				end
+				16: begin
+					flash_clk <= 0;
+					state <= 17;
+				end
+				17: begin
+					flash_clk <= 1;
+					rdata[7:4] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 18;
+				end
+				18: begin
+					flash_clk <= 0;
+					state <= 19;
+				end
+				19: begin
+					flash_clk <= 1;
+					rdata[3:0] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 20;
+				end
+				20: begin
+					flash_clk <= 0;
+					state <= 21;
+				end
+				21: begin
+					flash_clk <= 1;
+					rdata[15:12] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 22;
+				end
+				22: begin
+					flash_clk <= 0;
+					state <= 23;
+				end
+				23: begin
+					flash_clk <= 1;
+					rdata[11:8] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 24;
+				end
+				24: begin
+					flash_clk <= 0;
+					state <= 25;
+				end
+				25: begin
+					flash_clk <= 1;
+					rdata[23:20] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 26;
+				end
+				26: begin
+					flash_clk <= 0;
+					state <= 27;
+				end
+				27: begin
+					flash_clk <= 1;
+					rdata[19:16] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 28;
+				end
+				28: begin
+					flash_clk <= 0;
+					state <= 29;
+				end
+				29: begin
+					flash_clk <= 1;
+					rdata[31:28] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					state <= 30;
+				end
+				30: begin
+					flash_clk <= 0;
+					state <= 31;
+				end
+				31: begin
+					flash_clk <= 1;
+					rdata[27:24] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
+					next_addr <= next_addr + 4;
+					ready <= 1;
+					state <= 16;
+				end
+			endcase
+			if (valid && next_addr != addr) begin
+				state <= 0;
+				ready <= 0;
+			end
 		end
 	end
 endmodule
