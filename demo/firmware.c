@@ -24,9 +24,8 @@
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
 
-#define reg_uart_clkdiv (*(volatile uint32_t*)0x02000004)
-#define reg_uart_data (*(volatile uint32_t*)0x02000008)
-#define reg_leds (*(volatile uint32_t*)0x03000000)
+#define reg_uart (*(volatile uint32_t*)0x02000004)
+#define reg_leds (*(volatile uint32_t*)0x02000000)
 
 // --------------------------------------------------------
 
@@ -34,7 +33,7 @@ void putchar(char c)
 {
 	if (c == '\n')
 		putchar('\r');
-	reg_uart_data = c;
+	reg_uart = c;
 }
 
 void print(const char *p)
@@ -82,56 +81,37 @@ void print_dec(uint32_t v)
 	else putchar('0');
 }
 
-char getchar_prompt(char *prompt)
-{
-	int32_t c = -1;
-
-	uint32_t cycles_begin, cycles_now, cycles;
-	__asm__ volatile ("rdcycle %0" : "=r"(cycles_begin));
-
-	reg_leds = ~0;
-
-	if (prompt)
-		print(prompt);
-
-	while (c == -1) {
-		__asm__ volatile ("rdcycle %0" : "=r"(cycles_now));
-		cycles = cycles_now - cycles_begin;
-		if (cycles > 12000000) {
-			if (prompt)
-				print(prompt);
-			cycles_begin = cycles_now;
-			reg_leds = ~reg_leds;
-		}
-		c = reg_uart_data;
-	}
-
-	reg_leds = 0;
-	return c;
-}
-
 char getchar()
 {
-	return getchar_prompt(0);
+	while (1) {
+		int32_t c = reg_uart;
+		if (c > 0)
+			return c;
+	}
 }
 
 // --------------------------------------------------------
 
 void main()
 {
-	reg_leds = 31;
-	reg_uart_clkdiv = 104;
 	print("Booting..\n");
 
 	reg_leds = 127;
-	while (getchar_prompt("Press ENTER to continue..\n") != '\r') { /* wait */ }
+	while (1) {
+		print("Press ENTER to continue..\n");
+		if (getchar() == '\r')
+			break;
+	}
 
-	print("\n");
-	print("  ____  _          ____         ____\n");
-	print(" |  _ \\(_) ___ ___/ ___|  ___  / ___|\n");
-	print(" | |_) | |/ __/ _ \\___ \\ / _ \\| |\n");
-	print(" |  __/| | (_| (_) |__) | (_) | |___\n");
-	print(" |_|   |_|\\___\\___/____/ \\___/ \\____|\n");
+	print("LED [1..5]> ");
 
-	while (1) { }
+	while (1) {
+		char c = getchar();
+
+		if (c < '1' || c > '5')
+			continue;
+
+		putchar(c);
+		reg_leds ^= 1 << (c - '1');
+	}
 }

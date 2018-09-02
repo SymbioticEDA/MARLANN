@@ -32,6 +32,9 @@ prog_ctrlsoc: ctrlsoc.bin ctrlsoc_fw.bin
 	iceprog ctrlsoc.bin
 	iceprog -o 1M ctrlsoc_fw.bin
 
+prog_ctrlsoc_fw: ctrlsoc_fw.bin
+	iceprog -o 1M ctrlsoc_fw.bin
+
 #####################################################################
 
 clean:
@@ -39,4 +42,4 @@ clean:
 	rm -f ctrlsoc.json ctrlsoc.log ctrlsoc.asc ctrlsoc.bin ctrlsoc.rpt
 	rm -f ctrlsoc_fw.elf ctrlsoc_fw.hex ctrlsoc_fw.bin
 
-.PHONY: clean prog_ctrlsoc
+.PHONY: clean prog_ctrlsoc prog_ctrlsoc_fw

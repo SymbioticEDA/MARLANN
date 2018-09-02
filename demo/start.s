@@ -35,16 +35,35 @@ addi x29, zero, 0
 addi x30, zero, 0
 addi x31, zero, 0
 
-li a0, 0
+##### Simcode #####
+
+# Flash LEDs for Verilog simulation
+
+li a0, 32
+simloop:
+
+sw a0, 0(zero)
+lw a1, 0(zero)
+addi a1, a1, -123
+sw a1, 72(zero)
+lw a2, 72(zero)
+addi a2, a2, 123
 li a1, 0x02000000
-led_loop:
-srli a2, a0, 16
 sw a2, 0(a1)
-addi a0, a0, 1
-j led_loop
+
+addi a0, a0, -1
+bnez a0, simloop
+
+# Write 'AA' to serial out
+#li a0, 65
+#li a1, 0x02000004
+#sw a0, 0(a1)
+#sw a0, 0(a1)
+
+##### End of Simcode #####
 
 # Update LEDs
-li a0, 0x03000000
+li a0, 0x02000000
 li a1, 1
 sw a1, 0(a0)
 
@@ -56,8 +75,8 @@ addi a0, a0, 4
 blt a0, sp, setmemloop
 
 # Update LEDs
-li a0, 0x03000000
-li a1, 3
+li a0, 0x02000000
+li a1, 2
 sw a1, 0(a0)
 
 # copy data section
@@ -74,8 +93,8 @@ blt a1, a2, loop_init_data
 end_init_data:
 
 # Update LEDs
-li a0, 0x03000000
-li a1, 7
+li a0, 0x02000000
+li a1, 3
 sw a1, 0(a0)
 
 # zero-init bss section
@@ -89,79 +108,11 @@ blt a0, a1, loop_init_bss
 end_init_bss:
 
 # Update LEDs
-li a0, 0x03000000
-li a1, 15
+li a0, 0x02000000
+li a1, 4
 sw a1, 0(a0)
 
 # call main
 call main
 loop:
 j loop
-
-.global flashio_worker_begin
-.global flashio_worker_end
-
-.balign 4
-
-flashio_worker_begin:
-# a0 ... data pointer
-# a1 ... data length
-# a2 ... optional WREN cmd (0 = disable)
-
-# address of SPI ctrl reg
-li   t0, 0x02000000
-
-# Set CS high, IO0 is output
-li   t1, 0x120
-sh   t1, 0(t0)
-
-# Enable Manual SPI Ctrl
-sb   zero, 3(t0)
-
-# Send optional WREN cmd
-beqz a2, flashio_worker_L1
-li   t5, 8
-andi t2, a2, 0xff
-flashio_worker_L4:
-srli t4, t2, 7
-sb   t4, 0(t0)
-ori  t4, t4, 0x10
-sb   t4, 0(t0)
-slli t2, t2, 1
-andi t2, t2, 0xff
-addi t5, t5, -1
-bnez t5, flashio_worker_L4
-sb   t1, 0(t0)
-
-# SPI transfer
-flashio_worker_L1:
-beqz a1, flashio_worker_L3
-li   t5, 8
-lbu  t2, 0(a0)
-flashio_worker_L2:
-srli t4, t2, 7
-sb   t4, 0(t0)
-ori  t4, t4, 0x10
-sb   t4, 0(t0)
-lbu  t4, 0(t0)
-andi t4, t4, 2
-srli t4, t4, 1
-slli t2, t2, 1
-or   t2, t2, t4
-andi t2, t2, 0xff
-addi t5, t5, -1
-bnez t5, flashio_worker_L2
-sb   t2, 0(a0)
-addi a0, a0, 1
-addi a1, a1, -1
-j    flashio_worker_L1
-flashio_worker_L3:
-
-# Back to MEMIO mode
-li   t1, 0x80
-sb   t1, 3(t0)
-
-ret
-
-.balign 4
-flashio_worker_end:

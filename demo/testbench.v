@@ -11,14 +11,14 @@ module testbench;
 		#(clock_period / 2);
 		clk = 0;
 
-		repeat (10000) begin
+		repeat (20000) begin
 			#(clock_period / 2);
 			clk = !clk;
 		end
 	end
 
-	wire ser_rx = 1;
 	wire ser_tx;
+	wire ser_rx = ser_tx;
 
 	wire flash_clk;
 	wire flash_csb;
