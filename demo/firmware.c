@@ -109,10 +109,27 @@ void main()
 	while (1) {
 		char c = getchar();
 
-		if (c < '1' || c > '5')
+		if ('1' <= c && c <= '5') {
+			putchar(c);
+			reg_leds ^= 1 << (c - '1');
 			continue;
+		}
 
-		putchar(c);
-		reg_leds ^= 1 << (c - '1');
+		if (c == 'a') {
+			putchar(c);
+			reg_qpio = 0x80000000;
+			continue;
+		}
+
+		if (c == 'b') {
+			putchar(c);
+			reg_qpio = 0x00000000;
+			continue;
+		}
+
+		if (c == 'x') {
+			print("[this is a string stored in flash]");
+			continue;
+		}
 	}
 }
