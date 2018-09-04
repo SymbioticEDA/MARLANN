@@ -24,8 +24,9 @@
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
 
-#define reg_uart (*(volatile uint32_t*)0x02000004)
 #define reg_leds (*(volatile uint32_t*)0x02000000)
+#define reg_uart (*(volatile uint32_t*)0x02000004)
+#define reg_qpio (*(volatile uint32_t*)0x02000008)
 
 // --------------------------------------------------------
 

@@ -40,13 +40,8 @@ module testbench;
 	wire btn2 = 0;
 	wire btn3 = 0;
 
-	wire ml_clk;
 	wire ml_csb;
-	wire ml_io0;
-	wire ml_io1;
-	wire ml_io2;
-	wire ml_io3;
-	wire ml_irq = 0;
+	wire ml_rdy = 0;
 	wire ml_err = 0;
 
 	ctrlsoc uut (
@@ -75,13 +70,8 @@ module testbench;
 		.btn2      (btn2     ),
 		.btn3      (btn3     ),
 
-		.ml_clk    (ml_clk   ),
 		.ml_csb    (ml_csb   ),
-		.ml_io0    (ml_io0   ),
-		.ml_io1    (ml_io1   ),
-		.ml_io2    (ml_io2   ),
-		.ml_io3    (ml_io3   ),
-		.ml_irq    (ml_irq   ),
+		.ml_rdy    (ml_rdy   ),
 		.ml_err    (ml_err   )
 	);
 

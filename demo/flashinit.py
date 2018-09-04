@@ -6,7 +6,7 @@ sig_io0 = ["z"] * 256
 sig_io1 = ["z"] * 256
 sig_io2 = ["z"] * 256
 sig_io3 = ["z"] * 256
-cursor = 1
+cursor = 10
 
 def spi_start():
     global sig_clk, sig_csb, sig_io0, sig_io1, sig_io2, sig_io3, cursor
@@ -100,12 +100,14 @@ def qpi_read(cnt):
         sig_io3[cursor] = "z"
         cursor += 1
 
-# Reset
+# End CRM
 spi_start()
 spi_wbyte(0xFF)
 spi_stop()
+
+# Exit QPI Mode
 spi_start()
-spi_wbyte(0xFF)
+qpi_wbyte(0xFF)
 spi_stop()
 
 # Release Power-down

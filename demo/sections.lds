@@ -1,7 +1,7 @@
 MEMORY
 {
-    FLASH (rx)      : ORIGIN = 0x00100000, LENGTH = 0x400000 /* entire flash, 4 MiB */
-    RAM (xrw)       : ORIGIN = 0x00000000, LENGTH = 0x000400 /* 1 KB */
+    FLASH (rx)      : ORIGIN = 0x00100000, LENGTH = 0xF00000 /* entire flash, 15 MiB */
+    RAM (xrw)       : ORIGIN = 0x00000000, LENGTH = 0x020000 /* 128 KiB */
 }
 
 SECTIONS {
@@ -9,16 +9,15 @@ SECTIONS {
     .text :
     {
         . = ALIGN(4);
-        *(.text)           /* .text sections (code) */
-        *(.text*)          /* .text* sections (code) */
+        *(.start)          /* startup code */
         *(.rodata)         /* .rodata sections (constants, strings, etc.) */
         *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
         *(.srodata)        /* .rodata sections (constants, strings, etc.) */
         *(.srodata*)       /* .rodata* sections (constants, strings, etc.) */
+        . = ALIGN(4);
         _etext = .;        /* define a global symbol at end of code */
         _sidata = _etext;  /* This is used by the startup in order to initialize the .data secion */
     } >FLASH
-
 
     /* This is the initialized data section
     The program executes knowing that the data is in the RAM
@@ -30,6 +29,8 @@ SECTIONS {
         _sdata = .;        /* create a global symbol at data start; used by startup code in order to initialise the .data section in RAM */
         _ram_start = .;    /* create a global symbol at ram start for garbage collector */
         . = ALIGN(4);
+        *(.text)           /* .text sections (code) */
+        *(.text*)          /* .text* sections (code) */
         *(.data)           /* .data sections */
         *(.data*)          /* .data* sections */
         *(.sdata)           /* .sdata sections */

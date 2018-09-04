@@ -1,4 +1,4 @@
-.section .text
+.section .start
 
 start:
 
@@ -76,7 +76,7 @@ blt a0, sp, setmemloop
 
 # Update LEDs
 li a0, 0x02000000
-li a1, 2
+li a1, 3
 sw a1, 0(a0)
 
 # copy data section
@@ -94,7 +94,7 @@ end_init_data:
 
 # Update LEDs
 li a0, 0x02000000
-li a1, 3
+li a1, 7
 sw a1, 0(a0)
 
 # zero-init bss section
@@ -109,7 +109,7 @@ end_init_bss:
 
 # Update LEDs
 li a0, 0x02000000
-li a1, 4
+li a1, 15
 sw a1, 0(a0)
 
 # call main

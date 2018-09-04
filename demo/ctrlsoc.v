@@ -30,14 +30,9 @@ module ctrlsoc (
 	input  btn2,
 	input  btn3,
 
-	// mlaccel (PMOD 1A)
-	output ml_clk,
+	// mlaccel ctrl pins
 	output ml_csb,
-	inout  ml_io0,
-	inout  ml_io1,
-	inout  ml_io2,
-	inout  ml_io3,
-	input  ml_irq,
+	input  ml_rdy,
 	input  ml_err
 );
 	reg resetn = 0;
@@ -51,8 +46,14 @@ module ctrlsoc (
 	wire trap;
 	reg buserror = 0;
 
+	reg [7:0] last_flash_clk;
+
+	always @(posedge clk) begin
+		last_flash_clk <= {last_flash_clk, flash_clk};
+	end
+
 	assign ledr_n = !(trap || buserror);
-	assign ledg_n = flash_csb;
+	assign ledg_n = flash_csb || ((|last_flash_clk) == (&last_flash_clk));
 
 	reg led5_r, led4_r, led3_r, led2_r, led1_r;
 
@@ -124,6 +125,33 @@ module ctrlsoc (
 		.mem_ready  (rxtx_ready)
 	);
 
+	reg ml_csb_r;
+	assign ml_csb = ml_csb_r;
+
+	wire flash_clk_do, flash_csb_do;
+	wire flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
+	wire flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do;
+	wire flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di;
+
+	reg flash_overwrite;
+	reg flash_overwrite_clk;
+	reg flash_overwrite_csb;
+	reg [3:0] flash_overwrite_oe;
+	reg [3:0] flash_overwrite_do;
+
+	assign flash_clk = flash_overwrite ? flash_overwrite_clk : flash_clk_do;
+	assign flash_csb = flash_overwrite ? flash_overwrite_csb : flash_csb_do;
+
+	SB_IO #(
+		.PIN_TYPE(6'b 1010_01),
+		.PULLUP(1'b 0)
+	) flash_io_buf [3:0] (
+		.PACKAGE_PIN({flash_io3, flash_io2, flash_io1, flash_io0}),
+		.OUTPUT_ENABLE(flash_overwrite ? flash_overwrite_oe : {flash_io3_oe, flash_io2_oe, flash_io1_oe, flash_io0_oe}),
+		.D_OUT_0(flash_overwrite ? flash_overwrite_do : {flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do}),
+		.D_IN_0({flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di})
+	);
+
 	always @(posedge clk) begin
 		mem_ready <= 0;
 		spram0_rselect <= 0;
@@ -131,6 +159,8 @@ module ctrlsoc (
 
 		if (!resetn) begin
 			buserror <= 0;
+			flash_overwrite <= 0;
+			ml_csb_r <= 1;
 		end else
 		if (mem_valid && !mem_ready && !buserror) begin
 			(* parallel_case *)
@@ -155,6 +185,28 @@ module ctrlsoc (
 				end
 				mem_addr == 32'h 02000004: begin
 					/* nothing to do here */
+				end
+				mem_addr == 32'h 02000008: begin
+					mem_ready <= 1;
+					if (mem_wstrb[3]) begin
+						flash_overwrite <= mem_wdata[31];
+						flash_overwrite_csb <= mem_wdata[27];
+						ml_csb_r <= mem_wdata[26];
+					end
+					if (mem_wstrb[2]) begin
+						flash_overwrite_clk <= mem_wdata[16];
+					end
+					if (mem_wstrb[1]) begin
+						flash_overwrite_oe <= mem_wdata[11:8];
+					end
+					if (mem_wstrb[0]) begin
+						flash_overwrite_do <= mem_wdata[3:0];
+					end
+					mem_rdata[31:24] <= {flash_overwrite, 3'b 000, flash_overwrite_csb, ml_csb, ml_rdy, ml_err};
+					mem_rdata[23:16] <= flash_overwrite_clk;
+					mem_rdata[15:8] <= flash_overwrite_oe;
+					mem_rdata[7:0] <= {flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di};
+
 				end
 				default: begin
 					buserror <= 1;
@@ -183,19 +235,30 @@ module ctrlsoc (
 
 	ctrlsoc_flashio flashio (
 		.clk       (clk      ),
-		.resetn    (resetn   ),
+		.resetn    (resetn && !flash_overwrite),
 
 		.valid     (addr_flash && mem_valid && !flash_ready),
 		.ready     (flash_ready),
 		.addr      (mem_addr[23:0]),
 		.rdata     (flash_rdata),
 
-		.flash_clk (flash_clk),
-		.flash_csb (flash_csb),
-		.flash_io0 (flash_io0),
-		.flash_io1 (flash_io1),
-		.flash_io2 (flash_io2),
-		.flash_io3 (flash_io3)
+		.flash_clk    (flash_clk_do),
+		.flash_csb    (flash_csb_do),
+
+		.flash_io0_di (flash_io0_di),
+		.flash_io1_di (flash_io1_di),
+		.flash_io2_di (flash_io2_di),
+		.flash_io3_di (flash_io3_di),
+
+		.flash_io0_do (flash_io0_do),
+		.flash_io1_do (flash_io1_do),
+		.flash_io2_do (flash_io2_do),
+		.flash_io3_do (flash_io3_do),
+
+		.flash_io0_oe (flash_io0_oe),
+		.flash_io1_oe (flash_io1_oe),
+		.flash_io2_oe (flash_io2_oe),
+		.flash_io3_oe (flash_io3_oe)
 	);
 endmodule
 
@@ -245,25 +308,22 @@ module ctrlsoc_flashio (
 
 	output reg        flash_clk,
 	output reg        flash_csb,
-	inout             flash_io0,
-	inout             flash_io1,
-	inout             flash_io2,
-	inout             flash_io3
+
+	input             flash_io0_di,
+	input             flash_io1_di,
+	input             flash_io2_di,
+	input             flash_io3_di,
+
+	output reg        flash_io0_do,
+	output reg        flash_io1_do,
+	output reg        flash_io2_do,
+	output reg        flash_io3_do,
+
+	output reg        flash_io0_oe,
+	output reg        flash_io1_oe,
+	output reg        flash_io2_oe,
+	output reg        flash_io3_oe
 );
-	reg  flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
-	reg  flash_io0_do, flash_io1_do, flash_io2_do, flash_io3_do;
-	wire flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di;
-
-	SB_IO #(
-		.PIN_TYPE(6'b 1010_01),
-		.PULLUP(1'b 0)
-	) flash_io_buf [3:0] (
-		.PACKAGE_PIN({flash_io3, flash_io2, flash_io1, flash_io0}),
-		.OUTPUT_ENABLE({flash_io3_oe, flash_io2_oe, flash_io1_oe, flash_io0_oe}),
-		.D_OUT_0({flash_io3_do, flash_io2_do, flash_io1_do, flash_io0_do}),
-		.D_IN_0({flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di})
-	);
-
 	reg [15:0] init_sequence_rom [0:255];
 	reg [8:0] init_sequence_cnt;
 	reg [15:0] init_sequence_word;
