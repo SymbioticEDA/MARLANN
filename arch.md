@@ -157,18 +157,19 @@ The two BANKSEL bits select which banks should execute the instruction.
 
 SetLBP/AddLBP/SetSBP/AddSBP/SetCBP/AddCBP are the same opcode. ARG selects the operation.
 
-- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to the specified value. The two LSB bits of
-MEM-ADDR must be zero.
+- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to the specified value.
+The two LSB bits of MEM-ADDR must be zero.
 
 - AddLBP (OPCODE=0, ARG=9): Add MEM-ADDR to the load base pointer.
+The two LSB bits of MEM-ADDR must be zero.
 
-- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to the specified value.
+- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to MEM-ADDR.
 
-- AddSBP (OPCODE=0, ARG=10): Add the specified value to the store base pointer.
+- AddSBP (OPCODE=0, ARG=10): Add the MEM-ADDR to the store base pointer.
 
-- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to the specified value.
+- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to MEM-ADDR.
 
-- AddCBP (OPCODE=0, ARG=12): Add the specified value to the coefficient base pointer.
+- AddCBP (OPCODE=0, ARG=12): Add MEM-ADDR to the coefficient base pointer.
 
 - Store (OPCODE=1): Right-shift accumulator by the amount specified in ARG, saturate it to
 a signed 8-bit value, and store the result to main memory at the given
