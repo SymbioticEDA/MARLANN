@@ -83,6 +83,19 @@ of this transaction.
 - Broadcast (`1xh`): Like select, but broadcast to multiple chips. (Only
 valid for write-only transactions.) the 4 LSB bits select the chips.
 
+And for fast transfer of data between chips:
+
+- XferSrc (`04h`): Followed by two bytes address. Enable xfer-dst mode and
+save that src address.
+
+- XferDst (`05h`): Followed by two bytes address. Enable xfer-dst mode and
+save that dst address.
+
+- Xfer (`06h`): Sent to src and dst nodes via broadcast. Followed by a dummy
+byte for transfering control of the I/O lines to the src chip. The src chip
+will then send data starting at the stored src addr, and the dst chips will
+store that data at the stored dst addr.
+
 
 Sequencer code
 --------------
