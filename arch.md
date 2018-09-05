@@ -115,13 +115,13 @@ are implicitly 0 and do not need to be included in the instruction word.
 
 (OP nonzero, LEN=0 encodes for LEN=32)
 
-- Load Code (OP=1): Copy LEN words from MEM-ADDR in main memory to CODE-ADDR
+- LoadCode (OP=1): Copy LEN words from MEM-ADDR in main memory to CODE-ADDR
 compute code memory.
 
-- Load Coeff Bank 0 (OP=2): Copy LEN words from MEM-ADDR in main memory to
+- LoadCoeff0 (OP=2): Copy LEN words from MEM-ADDR in main memory to
 CODE-ADDR in coefficient storage bank 0.
 
-- Load Coeff Bank 1 (OP=3): Copy LEN words from MEM-ADDR in main memory to
+- LoadCoeff1 (OP=3): Copy LEN words from MEM-ADDR in main memory to
 CODE-ADDR in coefficient storage bank 1.
 
 ```
@@ -139,6 +139,12 @@ address. Stop if the call stack is empty. (MEM-ADDR and CODE-ADDR must be zero.)
 
 - Execute (OPCODE=3): Execute compute code from the CODE-ADDR. MEM-ADDR contains the number
 of instructions to execute.
+
+- ContinueLoadC (OPCODE=4): Continue the last load operation at CODE-ADDR, load MEM-ADDR words.
+This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
+
+- ContinueLoadM (OPCODE=5): Continue the last load operation at MEM-ADDR, load CODE-ADDR words.
+This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
 
 
 Compute code
