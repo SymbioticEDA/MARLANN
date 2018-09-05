@@ -5,9 +5,9 @@ mlaccel has 128 kB main memory and 1024 words of compute code memory and
 1024 words of coefficient storage.
 
 The compute core operates on a 24 bits wide accumulator. Each cycle it can
-add up to 4 products for the MACC units to that accumulator.
+add up to SZ=4 products for the MACC units to that accumulator.
 
-The compute core can read any consecutive 4-byte block in main memory, as long
+The compute core can read any consecutive SZ-byte block in main memory, as long
 as it has 2-byte alignment. The compute core can write any byte in main memory.
 
 All memory operations the compute core performs are relative to a base-pointer.
@@ -27,7 +27,7 @@ a call-return-mechanism that allows for the code for repeated sequences to be
 stored only once in main memory.
 
 Once this baseline architecture is implemented, we will evaluate (1st) extending
-the vector size from 4 to 8 and (2nd) adding a 2nd compute core with it's own
+the vector size from SZ=4 to SZ=8 and (2nd) adding a 2nd compute core with it's own
 accumulator, coefficient storage bank, LBP, SBP, and CBP. This creates a
 roadmap for up to 16 MACCs per cycle using this architecture, or >500 MMACC/s
 if we can clock the architecture at >35 MHz.
@@ -191,7 +191,7 @@ memory. The accumulator itself is unchanged.)
     +------------+--------------+----------+
 ```
 
-- MACC (OPCODE=1): Load 4 bytes from MEM-ADDR (relative to LBP), multiply with
+- MACC (OPCODE=1): Load SZ bytes from MEM-ADDR (relative to LBP), multiply with
 coefficients at COEFF-ADDR (relative to CBP), and add to accumulator.
 
 - MMAX (OPCODE=2): Like MMAC, but store the max value in the accumulator instead of the sum.
