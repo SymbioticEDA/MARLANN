@@ -26,8 +26,8 @@ There is no conditional branching in the architecture. But the sequencer has
 a call-return-mechanism that allows for the code for repeated sequences to be
 stored only once in main memory.
 
-Once this baseline architecture is implemented, we will evaluate (1st) extending
-the vector size from SZ=4 to SZ=8 and (2nd) adding a 2nd compute core with it's own
+Once this baseline architecture is implemented, we will evaluate extending
+the vector size from SZ=4 to SZ=8 and adding a 2nd compute core with it's own
 accumulator, coefficient storage bank, LBP, SBP, and CBP. This creates a
 roadmap for up to 16 MACCs per cycle using this architecture, or >500 MMACC/s
 if we can clock the architecture at >35 MHz.
