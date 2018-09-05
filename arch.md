@@ -115,13 +115,13 @@ are implicitly 0 and do not need to be included in the instruction word.
 
 (OP nonzero, LEN=0 encodes for LEN=32)
 
-- LoadCode (OP=1): Copy LEN words from MEM-ADDR in main memory to CODE-ADDR
+- LoadCode (OP=1): Copy LEN 4-byte words from MEM-ADDR in main memory to CODE-ADDR
 compute code memory.
 
-- LoadCoeff0 (OP=2): Copy LEN words from MEM-ADDR in main memory to
+- LoadCoeff0 (OP=2): Copy LEN SZ-byte words from MEM-ADDR in main memory to
 CODE-ADDR in coefficient storage bank 0.
 
-- LoadCoeff1 (OP=3): Copy LEN words from MEM-ADDR in main memory to
+- LoadCoeff1 (OP=3): Copy LEN SZ-byte words from MEM-ADDR in main memory to
 CODE-ADDR in coefficient storage bank 1.
 
 ```
@@ -137,14 +137,16 @@ executing at the given MEM-ADDR. (CODE-ADDR must be zero.)
 - Return (OPCODE=2): Pop an address from the call stack and continue executing at that
 address. Stop if the call stack is empty. (MEM-ADDR and CODE-ADDR must be zero.)
 
-- Execute (OPCODE=3): Execute compute code from the CODE-ADDR. MEM-ADDR contains the number
-of instructions to execute.
+- Execute (OPCODE=3): Execute MEM-ADDR compute code instructions, starting at CODE-ADDR.
 
 - ContinueLoadC (OPCODE=4): Continue the last load operation at CODE-ADDR, load MEM-ADDR words.
 This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
 
 - ContinueLoadM (OPCODE=5): Continue the last load operation at MEM-ADDR, load CODE-ADDR words.
 This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
+
+- Sync (OPCODE=6): Block until all pending compute instructions are completed.
+(LoadCode, LoadCoeff0, and LoadCoeff1 also block until all pending compute instructions are completed.)
 
 
 Compute code
