@@ -76,12 +76,12 @@ chip-select from that first one. The other signals (`IO0`, `IO1`, `IO2`,
 `IO3`, `RDY`, `ERR`, `CLK`) are shared between the chips.
 
 - Select (`00h`, `01h`, `02h`, `03h`): Select the specified chip for this
-transaction. `00h` is simply ignored. `01h`, `02h` and `03h` assert the
+transaction. `00h` is simply ignored. `01h`, `02h`, and `03h` assert the
 corresponding chip-select line and the "main" chip will ignore the rest
 of this transaction.
 
 - Broadcast (`1xh`): Like select, but broadcast to multiple chips. (Only
-valid for write-only transactions.) the 4 LSB bits select the chips.
+valid for write-only transactions.) The 4 LSB bits select the chips.
 
 And for fast transfer of data between chips:
 
