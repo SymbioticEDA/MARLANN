@@ -85,16 +85,17 @@ valid for write-only transactions.) the 4 LSB bits select the chips.
 
 And for fast transfer of data between chips:
 
-- XferSrc (`04h`): Followed by two bytes address. Enable xfer-dst mode and
-save that src address.
+- XferSrc (`04h`): Followed by two bytes address. Enable xfer-src mode and
+save that src address. (Sent to exactly one node.)
 
 - XferDst (`05h`): Followed by two bytes address. Enable xfer-dst mode and
-save that dst address.
+save that dst address. (Sent to one or more nodes.)
 
 - Xfer (`06h`): Sent to src and dst nodes via broadcast. Followed by a dummy
 byte for transfering control of the I/O lines to the src chip. The src chip
 will then send data starting at the stored src addr, and the dst chips will
-store that data at the stored dst addr.
+store that data at the stored dst addr. When done this will disable xfer-src
+and xfer-dst mode in selected nodes.
 
 
 Sequencer code
