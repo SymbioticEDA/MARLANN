@@ -42,7 +42,7 @@ protocol.
 
 In addition to the QPI interface the core also has a `RDY` output that is
 pulled low when mlaccel is ready to receive new commands and a `ERR` output
-that is pulled low when mlaccel detects a communication error, such as a two
+that is pulled low when mlaccel detects a communication error, such as a too
 fast clock or a unsupported command. `ERR` is reset when chip-select is de-asserted.
 Both `RDY` and `ERR` are configured as open-collector outputs with weak pull-ups.
 
