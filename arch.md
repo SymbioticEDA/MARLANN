@@ -92,10 +92,12 @@ Sequencer code is stored in main memory and consists of a series of 32 bit words
 All memory addresses are 4-byte aligned. Thus the two LSB bits of MEM-ADDR
 are implicitly 0 and do not need to be included in the instruction word.
 
+```
     |31        17|16          7|6     2|1    0|
     +------------+-------------+-------+------+
     |  MEM-ADDR  |  CODE-ADDR  |  LEN  |  OP  |
     +------------+-------------+-------+------+
+```
 
 - Load Code (OP=1): Copy LEN words from MEM-ADDR in main memory to CODE-ADDR
 compute code memory.
@@ -106,10 +108,12 @@ CODE-ADDR in coefficient storage bank 0.
 - Load Coeff Bank 1 (OP=3): Copy LEN words from MEM-ADDR in main memory to
 CODE-ADDR in coefficient storage bank 1.
 
+```
     |31        17|16          7|6      2|1   0|
     +------------+-------------+--------+-----+
     |  MEM-ADDR  |  CODE-ADDR  | OPCODE |  0  |
     +------------+-------------+--------+-----+
+```
 
 - Call: Push the address of the next instruction to the call stack and continue
 executing at the given MEM-ADDR. (CODE-ADDR must be zero.)
@@ -126,10 +130,12 @@ Compute code
 
 A compute code word is 32 bits in size.
 
+```
     |31          15|16     12|11         9|8       7|6   0|
     +--------------+---------+------------+---------+-----+
     |   MEM-ADDR   |   ARG   |   OPCODE   | BANKSEL |  0  |
     +--------------+---------+------------+---------+-----+
+```
 
 The two BANKSEL bits select which banks should execute the instruction.
 
@@ -155,10 +161,12 @@ memory. The accumulator itself is unchanged.)
 
 - ReLU: Like Store, but replace negative values with zero.
 
+```
     |31        17|16           7|6        0|
     +------------+--------------+----------+
     |  MEM-ADDR  |  COEFF-ADDR  |  OPCODE  |
     +------------+--------------+----------+
+```
 
 - MACC: Load 4 bytes from MEM-ADDR (relative to LBP), multiply with
 coefficients at COEFF-ADDR (relative to CBP), and add to accumulator.
