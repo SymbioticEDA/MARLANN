@@ -113,6 +113,8 @@ are implicitly 0 and do not need to be included in the instruction word.
     +------------+-------------+-------+------+
 ```
 
+(OP nonzero, LEN=0 encodes for LEN=32)
+
 - Load Code (OP=1): Copy LEN words from MEM-ADDR in main memory to CODE-ADDR
 compute code memory.
 
@@ -129,13 +131,13 @@ CODE-ADDR in coefficient storage bank 1.
     +------------+-------------+--------+-----+
 ```
 
-- Call: Push the address of the next instruction to the call stack and continue
+- Call (OPCODE=1): Push the address of the next instruction to the call stack and continue
 executing at the given MEM-ADDR. (CODE-ADDR must be zero.)
 
-- Return: Pop an address from the call stack and continue executing at that
+- Return (OPCODE=2): Pop an address from the call stack and continue executing at that
 address. Stop if the call stack is empty. (MEM-ADDR and CODE-ADDR must be zero.)
 
-- Execute: Execute compute code from the CODE-ADDR. MEM-ADDR contains the number
+- Execute (OPCODE=3): Execute compute code from the CODE-ADDR. MEM-ADDR contains the number
 of instructions to execute.
 
 
@@ -155,25 +157,25 @@ The two BANKSEL bits select which banks should execute the instruction.
 
 SetLBP/AddLBP/SetSBP/AddSBP/SetCBP/AddCBP are the same opcode. ARG selects the operation.
 
-- SetLBP: Set the load base pointer to the specified value. The two LSB bits of
+- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to the specified value. The two LSB bits of
 MEM-ADDR must be zero.
 
-- AddLBP: Add MEM-ADDR to the load base pointer.
+- AddLBP (OPCODE=0, ARG=9): Add MEM-ADDR to the load base pointer.
 
-- SetSBP: Set the store base pointer to the specified value.
+- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to the specified value.
 
-- AddSBP: Add the specified value to the store base pointer.
+- AddSBP (OPCODE=0, ARG=10): Add the specified value to the store base pointer.
 
-- SetCBP: Set the coefficient base pointer to the specified value.
+- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to the specified value.
 
-- AddCBP: Add the specified value to the coefficient base pointer.
+- AddCBP (OPCODE=0, ARG=12): Add the specified value to the coefficient base pointer.
 
-- Store: Right-shift accumulator by the amount specified in ARG, saturate it to
+- Store (OPCODE=1): Right-shift accumulator by the amount specified in ARG, saturate it to
 a signed 8-bit value, and store the result to main memory at the given
 address (relative to SBP). (The shifted and saturated value is only stored in
 memory. The accumulator itself is unchanged.)
 
-- ReLU: Like Store, but replace negative values with zero.
+- ReLU (OPCODE=2): Like Store, but replace negative values with zero.
 
 ```
     |31        17|16           7|6        0|
@@ -182,15 +184,15 @@ memory. The accumulator itself is unchanged.)
     +------------+--------------+----------+
 ```
 
-- MACC: Load 4 bytes from MEM-ADDR (relative to LBP), multiply with
+- MACC (OPCODE=1): Load 4 bytes from MEM-ADDR (relative to LBP), multiply with
 coefficients at COEFF-ADDR (relative to CBP), and add to accumulator.
 
-- MMAX: Like MMAC, but store the max value in the accumulator instead of the sum.
+- MMAX (OPCODE=2): Like MMAC, but store the max value in the accumulator instead of the sum.
 In MAX mode a coefficient of 0x80 (most negative number) is a special symbol for
 values that should be ignored.
 
-- MACCZ/MMAXZ: Like MMAC/MMAX, but reset the accumulator to zero before
+- MACCZ (OPCODE=3) / MMAXZ (OPCODE=4): Like MMAC/MMAX, but reset the accumulator to zero before
 performing the operation.
 
-- MMAXN: Like MMAX but set the accumulator to the most negative value
+- MMAXN (OPCODE=5): Like MMAX but set the accumulator to the most negative value
 before performing the operation.
