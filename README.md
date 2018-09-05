@@ -11,9 +11,9 @@ is using the open source iCE40 flow.
 iCE40UP5K Features
 ------------------
 
-30x 4kbit BRAMS (max 16 bit data bus, used for working set)
+30x 4kbit BRAMS (max 16 bit data bus)
 
-4x 256kbit SPRAMS (max 16 bit data bus, used as coefficient storage)
+4x 256kbit SPRAMS (max 16 bit data bus)
 
 8x MULT16 (fracturable in two MULT8)
 
