@@ -44,30 +44,30 @@ In addition to the QPI interface the core also has a `RDY` output that is
 pulled low when mlaccel is ready to receive new commands and a `ERR` output
 that is pulled low when mlaccel detects a communication error, such as a two
 fast clock or a unsupported command. `ERR` is reset when chip-select is de-asserted.
+Both `RDY` and `ERR` are configured as open-collector outputs with weak pull-ups.
 
 The following commands are used for controlling mlaccel:
 
 - Status (`20h`): Followed by a dummy byte for transfering control of the I/O
-lines to mlaccel. Then mlaccel sends `00h` for busy and `FFh` for ready. (The
+lines to mlaccel. Then mlaccel sends `FFh` for busy and `00h` for idle. (The
 host may keep reading to continously check the status.)
 
-- Write main memory (`21h`): Followed by two bytes address (MSB first). This
-address is shifted left by two bytes to make it 4-byte aligned. All data following
-is written to that address, in 4-byte blocks. If chip-select is deasserted before
-the 4th byte of a block is transmitted then no write is performed.
+- Write main memory (`21h`): Followed by two bytes address (LSB first). This
+address is shifted left by one bit to make it 2-byte aligned. All bytes following
+are written to the memory region starting at that address.
 
-- Read main memory (`22h`): Followed by two bytes address (MSB first). This
-address is shifted left by two bytes to make it 4-byte aligned. The address
+- Read main memory (`22h`): Followed by two bytes address (LSB first). This
+address is shifted left by one bit to make it 2-byte aligned. The address
 is followed by a dummy byte for transfering control of the I/O lines to
-mlaccel. Then mlaccel sends data from main memory starting at the specified
+mlaccel. Then mlaccel sends bytes from main memory starting at the specified
 address.
 
-- Run (`23h`): Followed by two bytes address (MSB first). This address is
-shifted left by two bytes to make it 4-byte aligned. The core will start
-executing at this address.
+- Run (`23h`): Followed by two bytes address (LSB first). This address is
+shifted left by one bit to make it 2-byte aligned. The resulting address must
+be 4-byte aligned. The core will start executing at this address and continue
+executing code until `Return` is executed with an empty call stack.
 
-- Stop (`24h`): The core will immediately stop executing code. Otherwise the
-core will execute code until `Return` is executed with an empty call stack.
+- Stop (`24h`): The core will immediately stop executing code.
 
 The following additional commands allow simple cascading of up to four mlaccel
 cores using only one chip-select line on the host side. For this, the host
@@ -96,6 +96,13 @@ byte for transfering control of the I/O lines to the src chip. The src chip
 will then send data starting at the stored src addr, and the dst chips will
 store that data at the stored dst addr. When done this will disable xfer-src
 and xfer-dst mode in selected nodes.
+
+And for managing the shared RDY signal:
+
+- RdyOn (`07h`): Assert (pull down) `RDY` when the accelerator is idle.
+This is the power-on behavior.
+
+- RdyOff (`08h`): Do not assert (pull down) `RDY` when the accelerator is idle.
 
 
 Sequencer code
