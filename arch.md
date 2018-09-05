@@ -163,33 +163,33 @@ A compute code word is 32 bits in size.
 
 ```
     |31          15|16     12|11         9|8       7|6   0|
-    +--------------+---------+------------+---------+-----+
-    |   MEM-ADDR   |   ARG   |   OPCODE   | BANKSEL |  0  |
-    +--------------+---------+------------+---------+-----+
+    +----------+---------+------------+---------+-----+
+    |   ADDR   |   ARG   |   OPCODE   | BANKSEL |  0  |
+    +----------+---------+------------+---------+-----+
 ```
 
 The two BANKSEL bits select which banks should execute the instruction.
 
 SetLBP/AddLBP/SetSBP/AddSBP/SetCBP/AddCBP are the same opcode. ARG selects the operation.
 
-- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to the specified value.
+- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to ADDR.
+The two LSB bits of ADDR must be zero.
+
+- AddLBP (OPCODE=0, ARG=9): Add ADDR to the load base pointer.
 The two LSB bits of MEM-ADDR must be zero.
 
-- AddLBP (OPCODE=0, ARG=9): Add MEM-ADDR to the load base pointer.
-The two LSB bits of MEM-ADDR must be zero.
+- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to ADDR.
 
-- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to MEM-ADDR.
+- AddSBP (OPCODE=0, ARG=10): Add the ADDR to the store base pointer.
 
-- AddSBP (OPCODE=0, ARG=10): Add the MEM-ADDR to the store base pointer.
+- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to ADDR.
 
-- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to MEM-ADDR.
+- AddCBP (OPCODE=0, ARG=12): Add ADDR to the coefficient base pointer.
 
-- AddCBP (OPCODE=0, ARG=12): Add MEM-ADDR to the coefficient base pointer.
-
-- Store (OPCODE=1): Right-shift accumulator by the amount specified in ARG, saturate it to
-a signed 8-bit value, and store the result to main memory at the given
-address (relative to SBP). (The shifted and saturated value is only stored in
-memory. The accumulator itself is unchanged.)
+- Store (OPCODE=1): Right-shift accumulator by the amount specified in ARG,
+saturate it to a signed 8-bit value, and store the result to main memory at ADDR
+(relative to SBP). (The shifted and saturated value is only stored in memory.
+The accumulator itself is unchanged.)
 
 - ReLU (OPCODE=2): Like Store, but replace negative values with zero.
 
