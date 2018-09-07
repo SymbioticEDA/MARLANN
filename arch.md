@@ -193,6 +193,13 @@ The accumulator itself is unchanged.)
 
 - ReLU (OPCODE=2): Like Store, but replace negative values with zero.
 
+- Save (OPCODE=3): Store the accumulator in the 32-bit word addressed
+by ADDR (relative to SBP). ARG must be zero.
+
+- Load (OPCODE=4): Load the accumulator from the 32-bit word addressed
+by ADDR (relative to LBP). ARG must be zero.
+
+
 ```
     |31        17|16           7|6        0|
     +------------+--------------+----------+
