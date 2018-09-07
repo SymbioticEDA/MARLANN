@@ -112,18 +112,14 @@ void main()
 		if ('1' <= c && c <= '5') {
 			putchar(c);
 			reg_leds ^= 1 << (c - '1');
-			continue;
-		}
 
-		if (c == 'a') {
-			putchar(c);
-			reg_qpio = 0x80000000;
-			continue;
-		}
-
-		if (c == 'b') {
-			putchar(c);
+			uint8_t b = reg_leds;
 			reg_qpio = 0x00000000;
+			reg_qpio = 0x88000f00 | (b >> 4);
+			reg_qpio = 0x88010f00 | (b & 15);
+			reg_qpio = 0x88000000;
+			reg_qpio = 0x00000000;
+
 			continue;
 		}
 
