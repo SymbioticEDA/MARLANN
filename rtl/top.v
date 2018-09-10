@@ -30,6 +30,17 @@ module top (
 		.D_IN_0(ml_io_di)
 	);
 
+	wire ml_csb_di;
+	wire ml_clk_di;
+
+	SB_IO #(
+		.PIN_TYPE(6'b 0000_01),
+		.PULLUP(1'b 1)
+	) ml_in_buf [1:0] (
+		.PACKAGE_PIN({ml_csb, ml_clk}),
+		.D_IN_0({ml_csb_di, ml_clk_di})
+	);
+
 	assign ml_rdy = 0;
 	assign ml_err = 0;
 
@@ -48,10 +59,10 @@ module top (
 	always @(posedge clock) begin
 		din_valid <= 0;
 
-		ml_csb_q1 <= ml_csb;
+		ml_csb_q1 <= ml_csb_di;
 		ml_csb_q2 <= ml_csb_q1;
 
-		ml_clk_q1 <= ml_clk;
+		ml_clk_q1 <= ml_clk_di;
 		ml_clk_q2 <= ml_clk_q1;
 		ml_clk_q3 <= ml_clk_q2;
 

@@ -118,6 +118,7 @@ void main()
 			reg_qpio = 0x88000f00 | (b >> 4);
 			reg_qpio = 0x88010f00 | (b & 15);
 			reg_qpio = 0x88000000;
+			reg_qpio = 0x8C000000;
 			reg_qpio = 0x00000000;
 
 			continue;

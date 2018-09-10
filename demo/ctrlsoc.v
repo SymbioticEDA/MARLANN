@@ -126,7 +126,6 @@ module ctrlsoc (
 	);
 
 	reg ml_csb_r;
-	assign ml_csb = ml_csb_r;
 
 	wire flash_clk_do, flash_csb_do;
 	wire flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
@@ -138,6 +137,8 @@ module ctrlsoc (
 	reg flash_overwrite_csb;
 	reg [3:0] flash_overwrite_oe;
 	reg [3:0] flash_overwrite_do;
+
+	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b1;
 
 	assign flash_clk = flash_overwrite ? flash_overwrite_clk : flash_clk_do;
 	assign flash_csb = flash_overwrite ? flash_overwrite_csb : flash_csb_do;
