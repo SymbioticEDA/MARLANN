@@ -7,8 +7,8 @@ module top (
 	output reg led4,
 	output reg led5,
 
-	input  ml_clk,
 	input  ml_csb,
+	input  ml_clk,
 	inout  ml_io0,
 	inout  ml_io1,
 	inout  ml_io2,
@@ -36,37 +36,38 @@ module top (
 	reg [7:0] din_data;
 	reg din_valid;
 
+	reg ml_csb_q1, ml_csb_q2;
 	reg ml_clk_q1, ml_clk_q2, ml_clk_q3;
-	reg ml_csb_q1, ml_csb_q2, ml_csb_q3;
-	reg ml_di_q1, ml_di_q2;
+	reg [3:0] ml_di_q0, ml_di_q1, ml_di_q2, ml_di_q3;
 	reg phase;
 
 	always @(negedge clock) begin
-		ml_di_q1 <= ml_io_di;
+		ml_di_q0 <= ml_io_di;
 	end
 
 	always @(posedge clock) begin
 		din_valid <= 0;
 
+		ml_csb_q1 <= ml_csb;
+		ml_csb_q2 <= ml_csb_q1;
+
 		ml_clk_q1 <= ml_clk;
 		ml_clk_q2 <= ml_clk_q1;
 		ml_clk_q3 <= ml_clk_q2;
 
-		ml_csb_q1 <= ml_csb;
-		ml_csb_q2 <= ml_csb_q1;
-		ml_csb_q3 <= ml_csb_q2;
-
+		ml_di_q1 <= ml_di_q0;
 		ml_di_q2 <= ml_di_q1;
+		ml_di_q3 <= ml_di_q2;
 
-		if (ml_csb_q3) begin
+		if (ml_csb_q2) begin
 			phase <= 0;
 		end else
 		if (!phase && ml_clk_q2 && !ml_clk_q3) begin
-			din_data[7:4] <= ml_di_q2;
+			din_data[7:4] <= ml_di_q3;
 			phase <= 1;
 		end else
 		if (phase && !ml_clk_q2 && ml_clk_q3) begin
-			din_data[3:0] <= ml_di_q2;
+			din_data[3:0] <= ml_di_q3;
 			din_valid <= 1;
 			phase <= 0;
 		end
