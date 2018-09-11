@@ -72,6 +72,20 @@ module testbench;
 		end
 	endtask
 
+	task xfer_wait;
+		begin
+			qpi_clk = 0;
+			qpi_io0_reg = 1'bz;
+			qpi_io1_reg = 1'bz;
+			qpi_io2_reg = 1'bz;
+			qpi_io3_reg = 1'bz;
+			#17;
+
+			qpi_clk = 1;
+			#(2*17);
+		end
+	endtask
+
 	task xfer_recv;
 		begin
 			qpi_clk = 0;
@@ -114,7 +128,7 @@ module testbench;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#17;
+			#(2*17);
 		end
 	endtask
 
@@ -127,8 +141,6 @@ module testbench;
 
 		xfer_start;
 		xfer_send_byte(8'h 21);
-		xfer_send_byte(8'h 01);
-		xfer_send_byte(8'h 10);
 		xfer_send_byte(8'h 01);
 		xfer_send_byte(8'h 02);
 		xfer_send_byte(8'h 03);
@@ -146,9 +158,22 @@ module testbench;
 		#20;
 
 		xfer_start;
+		xfer_send_byte(8'h 23);
+		xfer_send_byte(8'h 01);
+		xfer_send_byte(8'h 10);
+		xfer_wait;
+		xfer_recv;
+		while (xfer != 8'h 00)
+			xfer_recv;
+		xfer_stop;
+
+		#20;
+
+		xfer_start;
 		xfer_send_byte(8'h 22);
 		xfer_send_byte(8'h 03);
 		xfer_send_byte(8'h 10);
+		xfer_wait;
 		repeat (20) xfer_recv;
 		xfer_stop;
 

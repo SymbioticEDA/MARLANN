@@ -1,0 +1,55 @@
+[*]
+[*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
+[*] Tue Sep 11 18:00:22 2018
+[*]
+[dumpfile] "/home/clifford/Work/mlaccel/rtl/testbench.vcd"
+[dumpfile_mtime] "Tue Sep 11 17:59:52 2018"
+[dumpfile_size] 125088
+[savefile] "/home/clifford/Work/mlaccel/rtl/testbench.gtkw"
+[timestart] 683
+[size] 1250 826
+[pos] -1 -1
+*-8.000000 1150 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uut.
+[treeopen] testbench.uut.mem.
+[sst_width] 256
+[signals_width] 293
+[sst_expanded] 1
+[sst_vpaned_height] 240
+@28
+testbench.clock
+testbench.uut.reset
+@200
+-
+@28
+testbench.qpi_clk
+testbench.qpi_csb
+testbench.qpi_err
+testbench.qpi_io0
+testbench.qpi_io1
+testbench.qpi_io2
+testbench.qpi_io3
+testbench.qpi_rdy
+@200
+-
+@28
+testbench.uut.dout_valid
+testbench.uut.dout_ready
+@23
+testbench.uut.dout_data[7:0]
+@200
+-
+@28
+testbench.uut.din_valid
+testbench.uut.din_start
+@22
+testbench.uut.din_data[7:0]
+@200
+-
+@22
+testbench.uut.state[5:0]
+testbench.uut.buffer_rptr[8:0]
+testbench.uut.buffer_wptr[8:0]
+[pattern_trace] 1
+[pattern_trace] 0
