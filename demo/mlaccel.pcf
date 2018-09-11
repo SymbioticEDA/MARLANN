@@ -1,16 +1,10 @@
 set_io clock      35
 
-set_io led1       27
-set_io led2       25
-set_io led3       21
-set_io led4       23
-set_io led5       26
-
-set_io ml_clk      4
-set_io ml_csb      2
-set_io ml_io0     47
-set_io ml_io1     45
-set_io ml_io2      3
-set_io ml_io3     48
-set_io ml_rdy     46
-set_io ml_err     44
+set_io qpi_clk     4
+set_io qpi_csb     2
+set_io qpi_io0    47
+set_io qpi_io1    45
+set_io qpi_io2     3
+set_io qpi_io3    48
+set_io qpi_rdy    46
+set_io qpi_err    44

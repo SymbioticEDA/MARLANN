@@ -29,7 +29,7 @@ module mlaccel_top (
 	reg qmem_read;
 	reg [1:0] qmem_write;
 	reg [15:0] qmem_addr;
-	reg [15:0] qmem_data;
+	reg [15:0] qmem_wdata;
 
 	wire busy;
 
@@ -130,7 +130,7 @@ module mlaccel_top (
 				(* full_case, parallel_case *)
 				case (state)
 					state_wbuf: begin
-						if (buffer_wptr[0])
+						if (!buffer_wptr[0])
 							buffer[buffer_wptr[8:1]][7:0] <= din_data;
 						else
 							buffer[buffer_wptr[8:1]][15:8] <= din_data;
@@ -162,7 +162,7 @@ module mlaccel_top (
 			if (buffer_wptr != buffer_rptr && !qmem_write) begin
 				qmem_write[0] <= 1;
 				qmem_write[1] <= buffer_wptr != (buffer_rptr|1);
-				qmem_data <= buffer[buffer_rptr[8:1]];
+				qmem_wdata <= buffer[buffer_rptr[8:1]];
 			end
 			if (dout_ready)
 				dout_data <= {8{buffer_wptr != buffer_rptr}};
@@ -189,8 +189,8 @@ module mlaccel_top (
 	wire qmem_active = (qmem_read || qmem_write) && !qmem_done;
 
 	wire [15:0] mem_addr  = qmem_active ? qmem_addr  : 0;
-	wire [ 7:0] mem_wen   = qmem_active ? qmem_write : 0;
-	wire [63:0] mem_wdata = qmem_active ? qmem_data  : 0;
+	wire [ 1:0] mem_wen   = qmem_active ? qmem_write : 0;
+	wire [15:0] mem_wdata = qmem_active ? qmem_wdata : 0;
 	wire [63:0] mem_rdata;
 
 	always @(posedge clock) begin
