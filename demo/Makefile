@@ -45,8 +45,8 @@ reset_ctrlsoc:
 
 #####################################################################
 
-mlaccel.json: ../rtl/top.v
-	yosys -ql ctrlsoc.log -p 'synth_ice40 -top top -json mlaccel.json' ../rtl/top.v
+mlaccel.json: ../rtl/top.v ../rtl/memory.v
+	yosys -ql ctrlsoc.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --freq 13 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
