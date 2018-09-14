@@ -52,22 +52,33 @@ The following commands are used for controlling mlaccel:
 lines to mlaccel. Then mlaccel sends `FFh` for busy and `00h` for idle. (The
 host may keep reading to continously check the status.)
 
-- Write main memory (`21h`): Followed by two bytes address (LSB first). This
-address is shifted left by one bit to make it 2-byte aligned. All bytes following
-are written to the memory region starting at that address.
+- Write buffer (`21h`): Writes the following bytes to the main memory transfer
+buffer.
 
-- Read main memory (`22h`): Followed by two bytes address (LSB first). This
-address is shifted left by one bit to make it 2-byte aligned. The address
-is followed by a dummy byte for transfering control of the I/O lines to
-mlaccel. Then mlaccel sends bytes from main memory starting at the specified
-address.
+- Read buffer (`22h`): Followed by a dummy byte for transfering control of the
+I/O lines to mlaccel. Then mlaccel sends bytes from main memory transfer
+buffer.
 
-- Run (`23h`): Followed by two bytes address (LSB first). This address is
+- Write main memory (`23h`): Followed by two bytes address (LSB first) and
+one byte length. The address is shifted left by one bit to make it 2-byte aligned.
+Followed by a dummy byte for transfering control of the I/O lines to mlaccel.
+Mlaccel will copy the specified number of 4-byte words from the transfer buffer to
+main memory (length=0 encodes for 1kB). It will output `FFh` while the transfer
+is running and `00h` when it is finished.
+
+- Read main memory (`24h`): Followed by two bytes address (LSB first) and
+one byte length. The address is shifted left by one bit to make it 2-byte
+aligned.  Followed by a dummy byte for transfering control of the I/O lines to
+mlaccel. Mlaccel will copy the specified number of 4-byte words from main
+memory to the transfer buffer (length=0 encodes for 1kB). It will output `FFh`
+while the transfer is running and `00h` when it is finished.
+
+- Run (`25h`): Followed by two bytes address (LSB first). This address is
 shifted left by one bit to make it 2-byte aligned. The resulting address must
 be 4-byte aligned. The core will start executing at this address and continue
 executing code until `Return` is executed with an empty call stack.
 
-- Stop (`24h`): The core will immediately stop executing code.
+- Stop (`26h`): The core will immediately stop executing code.
 
 The following additional commands allow simple cascading of up to four mlaccel
 cores using only one chip-select line on the host side. For this, the host
@@ -85,24 +96,15 @@ valid for write-only transactions.) The 4 LSB bits select the chips.
 
 And for fast transfer of data between chips:
 
-- XferSrc (`04h`): Followed by two bytes address. Enable xfer-src mode and
-save that src address. (Sent to exactly one node.)
-
-- XferDst (`05h`): Followed by two bytes address. Enable xfer-dst mode and
-save that dst address. (Sent to one or more nodes.)
-
-- Xfer (`06h`): Sent to src and dst nodes via broadcast. Followed by a dummy
-byte for transfering control of the I/O lines to the src chip. The src chip
-will then send data starting at the stored src addr, and the dst chips will
-store that data at the stored dst addr. When done this will disable xfer-src
-and xfer-dst mode in selected nodes.
+- Xfer (`3xh`): When chip-select goes low the next time, ignore the first
+`x` bytes and copy the rest into the transfer buffer.
 
 And for managing the shared RDY signal:
 
-- RdyOn (`07h`): Assert (pull down) `RDY` when the accelerator is idle.
+- RdyOn (`04h`): Assert (pull down) `RDY` when the accelerator is idle.
 This is the power-on behavior.
 
-- RdyOff (`08h`): Do not assert (pull down) `RDY` when the accelerator is idle.
+- RdyOff (`05h`): Do not assert (pull down) `RDY` when the accelerator is idle.
 
 
 Sequencer code

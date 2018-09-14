@@ -17,6 +17,7 @@
  *
  */
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -27,6 +28,16 @@ extern uint32_t sram;
 #define reg_leds (*(volatile uint32_t*)0x02000000)
 #define reg_uart (*(volatile uint32_t*)0x02000004)
 #define reg_qpio (*(volatile uint32_t*)0x02000008)
+
+// --------------------------------------------------------
+
+void *memset(void *s, int c, size_t n)
+{
+	char *p = s;
+	while (n--)
+		*(p++) = c;
+	return s;
+}
 
 // --------------------------------------------------------
 
@@ -82,6 +93,16 @@ void print_dec(uint32_t v)
 	else putchar('0');
 }
 
+int getchar_timeout()
+{
+	for (int i = 0; i < 100000; i++) {
+		int32_t c = reg_uart;
+		if (c > 0)
+			return c;
+	}
+	return -1;
+}
+
 char getchar()
 {
 	while (1) {
@@ -93,6 +114,79 @@ char getchar()
 
 // --------------------------------------------------------
 
+void ml_start()
+{
+	reg_qpio = 0x8C000000;
+	reg_qpio = 0x88000000;
+}
+
+void ml_send(uint8_t byte)
+{
+	reg_qpio = 0x88000f00 | (byte >> 4);
+	reg_qpio = 0x88010f00 | (byte & 15);
+	reg_qpio = 0x88000000;
+}
+
+uint8_t ml_recv()
+{
+	uint8_t byte = 0;
+
+	reg_qpio = 0x88000000;
+	byte |= (reg_qpio & 15) << 4;
+
+	reg_qpio = 0x88010000;
+	byte |= reg_qpio & 15;
+
+	reg_qpio = 0x88000000;
+	return byte;
+}
+
+void ml_stop()
+{
+	reg_qpio = 0x8C000000;
+}
+
+// --------------------------------------------------------
+
+void ml_write(int addr, const uint8_t *data, int len)
+{
+	ml_start();
+	ml_send(0x21);
+	for (int i = 0; i < len; i++)
+		ml_send(data[i]);
+	ml_stop();
+
+	ml_start();
+	ml_send(0x23);
+	ml_send(addr);
+	ml_send(addr >> 8);
+	ml_send(len >> 2);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+}
+
+void ml_read(int addr, uint8_t *data, int len)
+{
+	ml_start();
+	ml_send(0x24);
+	ml_send(addr);
+	ml_send(addr >> 8);
+	ml_send(len >> 2);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+
+	ml_start();
+	ml_send(0x22);
+	ml_recv();
+	for (int i = 0; i < len; i++)
+		data[i] = ml_recv();
+	ml_stop();
+}
+
+// --------------------------------------------------------
+
 void main()
 {
 	print("Booting..\n");
@@ -100,33 +194,22 @@ void main()
 	reg_leds = 127;
 	while (1) {
 		print("Press ENTER to continue..\n");
-		if (getchar() == '\r')
+		if (getchar_timeout() == '\r')
 			break;
 	}
 
-	print("LED [1..5]> ");
+	char wbuffer[64] = "Hello World! This is a test.";
+	char rbuffer[64];
 
-	while (1) {
-		char c = getchar();
+	print("ml_write..\n");
+	ml_write(0, wbuffer, 64);
 
-		if ('1' <= c && c <= '5') {
-			putchar(c);
-			reg_leds ^= 1 << (c - '1');
+	print("ml_read..\n");
+	ml_read(0, rbuffer, 64);
 
-			uint8_t b = reg_leds;
-			reg_qpio = 0x00000000;
-			reg_qpio = 0x88000f00 | (b >> 4);
-			reg_qpio = 0x88010f00 | (b & 15);
-			reg_qpio = 0x88000000;
-			reg_qpio = 0x8C000000;
-			reg_qpio = 0x00000000;
+	print("rbuffer: ");
+	print(rbuffer);
+	print("\n");
 
-			continue;
-		}
-
-		if (c == 'x') {
-			print("[this is a string stored in flash]");
-			continue;
-		}
-	}
+	print("READY.\n");
 }

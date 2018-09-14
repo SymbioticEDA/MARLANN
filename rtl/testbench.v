@@ -161,6 +161,20 @@ module testbench;
 		xfer_send_byte(8'h 23);
 		xfer_send_byte(8'h 01);
 		xfer_send_byte(8'h 10);
+		xfer_send_byte(8'h 03);
+		xfer_wait;
+		xfer_recv;
+		while (xfer != 8'h 00)
+			xfer_recv;
+		xfer_stop;
+
+		#20;
+
+		xfer_start;
+		xfer_send_byte(8'h 24);
+		xfer_send_byte(8'h 03);
+		xfer_send_byte(8'h 10);
+		xfer_send_byte(8'h 02);
 		xfer_wait;
 		xfer_recv;
 		while (xfer != 8'h 00)
@@ -171,11 +185,9 @@ module testbench;
 
 		xfer_start;
 		xfer_send_byte(8'h 22);
-		xfer_send_byte(8'h 03);
-		xfer_send_byte(8'h 10);
 		xfer_wait;
-		repeat (20) xfer_recv;
+		repeat (8)
+			xfer_recv;
 		xfer_stop;
-
 	end
 endmodule

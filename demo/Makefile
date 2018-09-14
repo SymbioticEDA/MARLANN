@@ -41,12 +41,15 @@ prog_ctrlsoc_fw: ctrlsoc_fw.bin
 	iceprog $(CTRLSOC_DEV) -o 1M ctrlsoc_fw.bin
 
 reset_ctrlsoc:
+	iceprog $(CTRLSOC_DEV) -t
+
+erase_ctrlsoc:
 	iceprog $(CTRLSOC_DEV) -e 1
 
 #####################################################################
 
 mlaccel.json: ../rtl/top.v ../rtl/memory.v
-	yosys -ql ctrlsoc.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/memory.v
+	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --freq 13 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
@@ -59,6 +62,9 @@ prog_mlaccel: mlaccel.bin
 	iceprog $(MLACCEL_DEV) mlaccel.bin
 
 reset_mlaccel:
+	iceprog $(MLACCEL_DEV) -t
+
+erase_mlaccel:
 	iceprog $(MLACCEL_DEV) -e 1
 
 #####################################################################
@@ -67,6 +73,6 @@ clean:
 	rm -f testbench.vcd testbench flashinit.hex
 	rm -f ctrlsoc.json ctrlsoc.log ctrlsoc.asc ctrlsoc.bin ctrlsoc.rpt
 	rm -f ctrlsoc_fw.elf ctrlsoc_fw.hex ctrlsoc_fw.bin
-	rm -f mlaccel.json mlaccel.asc mlaccel.bin mlaccel.rpt
+	rm -f mlaccel.json mlaccel.log mlaccel.asc mlaccel.bin mlaccel.rpt
 
-.PHONY: clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc prog_mlaccel reset_mlaccel
+.PHONY: clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc erase_ctrlsoc prog_mlaccel reset_mlaccel erase_mlaccel

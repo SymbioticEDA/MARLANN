@@ -2,7 +2,6 @@
 /ctrlsoc.bin
 /ctrlsoc.json
 /ctrlsoc.log
-/ctrlsoc.pcf
 /ctrlsoc.rpt
 /ctrlsoc_fw.bin
 /ctrlsoc_fw.elf
@@ -10,6 +9,7 @@
 /mlaccel.asc
 /mlaccel.bin
 /mlaccel.json
+/mlaccel.log
 /mlaccel.rpt
 /testbench
 /testbench.vcd
