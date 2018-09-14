@@ -2,6 +2,7 @@
 
 module testbench;
 	localparam clock_period = 1000.0 / 12.0;
+	localparam ser_period = 1000.0 / 0.1152;
 
 	reg clk;
 	initial begin
@@ -11,14 +12,14 @@ module testbench;
 		#(clock_period / 2);
 		clk = 0;
 
-		repeat (20000) begin
+		repeat (500000) begin
 			#(clock_period / 2);
 			clk = !clk;
 		end
 	end
 
 	wire ser_tx;
-	wire ser_rx = ser_tx;
+	wire ser_rx = 1;
 
 	wire flash_clk;
 	wire flash_csb;
@@ -44,7 +45,7 @@ module testbench;
 	wire ml_rdy = 0;
 	wire ml_err = 0;
 
-	ctrlsoc uut (
+	ctrlsoc ctrl (
 		.clk       (clk      ),
 
 		.ser_rx    (ser_rx   ),
@@ -83,6 +84,31 @@ module testbench;
 		.flash_io2(flash_io2),
 		.flash_io3(flash_io3)
 	);
+
+	mlaccel_top mlacc (
+		.clock   (clk      ),
+		.qpi_csb (ml_csb   ),
+		.qpi_clk (flash_clk),
+		.qpi_io0 (flash_io0),
+		.qpi_io1 (flash_io1),
+		.qpi_io2 (flash_io2),
+		.qpi_io3 (flash_io3),
+		.qpi_rdy (ml_rdy   ),
+		.qpi_err (ml_err   )
+	);
+
+	reg [7:0] ser_byte;
+
+	always begin
+		@(negedge ser_tx);
+		#(1.5 * ser_period);
+		repeat (8) begin
+			ser_byte = {ser_tx, ser_byte[7:1]};
+			#(ser_period);
+		end
+		$write("%c", ser_byte);
+		$fflush;
+	end
 
 	initial begin
 		$readmemh("ctrlsoc_fw.hex", flash.data);

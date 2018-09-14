@@ -206,7 +206,7 @@ module ctrlsoc (
 					mem_rdata[31:24] <= {flash_overwrite, 3'b 000, flash_overwrite_csb, ml_csb, ml_rdy, ml_err};
 					mem_rdata[23:16] <= flash_overwrite_clk;
 					mem_rdata[15:8] <= flash_overwrite_oe;
-					mem_rdata[7:0] <= {flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di};
+					mem_rdata[7:0] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
 
 				end
 				default: begin

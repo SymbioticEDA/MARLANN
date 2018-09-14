@@ -299,8 +299,10 @@ module mlaccel_qpi (
 
 	reg out_enable_0;
 	reg out_enable_1;
+	reg next_out_enable_1;
 	reg [3:0] out_phase_0;
 	reg [3:0] out_phase_1;
+	reg [3:0] next_out_phase_1;
 
 	assign qpi_io_oe = qpi_clk_di ? {4{out_enable_1}} : {4{out_enable_0}};
 	assign qpi_io_do = qpi_clk_di ? out_phase_1 : out_phase_0;
@@ -308,20 +310,26 @@ module mlaccel_qpi (
 	always @(posedge clock) begin
 		dout_ready <= 0;
 
-		if (dout_valid && !dout_ready) begin
-			if (qpi_clk_q0) begin
+		if (qpi_clk_q0) begin
+			if (dout_valid && !dout_ready && !next_out_enable_1) begin
+				dout_ready <= 1;
 				out_enable_0 <= 1;
 				out_phase_0 <= dout_data[7:4];
-			end else begin
-				out_enable_1 <= 1;
-				out_phase_1 <= dout_data[3:0];
-				dout_ready <= 1;
+				next_out_enable_1 <= 1;
+				next_out_phase_1 <= dout_data[3:0];
+			end
+		end else begin
+			if (next_out_enable_1) begin
+				next_out_enable_1 <= 0;
+				out_enable_1 <= next_out_enable_1;
+				out_phase_1 <= next_out_phase_1;
 			end
 		end
 
 		if (qpi_csb_q2 || reset || latched_reset) begin
 			out_enable_0 <= 0;
 			out_enable_1 <= 0;
+			next_out_enable_1 <= 0;
 		end
 	end
 

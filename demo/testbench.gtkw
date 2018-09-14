@@ -1,25 +1,26 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Sun Sep  2 19:52:14 2018
+[*] Fri Sep 14 16:32:55 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/demo/testbench.vcd"
-[dumpfile_mtime] "Sun Sep  2 19:49:59 2018"
-[dumpfile_size] 1755288
+[dumpfile_mtime] "Fri Sep 14 16:31:51 2018"
+[dumpfile_size] 55285316
 [savefile] "/home/clifford/Work/mlaccel/demo/testbench.gtkw"
 [timestart] 0
-[size] 1158 921
-[pos] 124 -14
-*-29.000000 681422118 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1377 921
+[pos] 329 29
+*-33.000000 16851884814 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
-[treeopen] testbench.uut.
-[treeopen] testbench.uut.flashio.
+[treeopen] testbench.ctrl.
+[treeopen] testbench.ctrl.flashio.
+[treeopen] testbench.mlacc.
 [sst_width] 225
 [signals_width] 293
 [sst_expanded] 1
-[sst_vpaned_height] 269
+[sst_vpaned_height] 466
 @28
-testbench.uut.clk
-testbench.uut.resetn
+testbench.ctrl.clk
+testbench.ctrl.resetn
 @200
 -
 @28
@@ -31,46 +32,42 @@ testbench.led5
 @200
 -
 @28
-testbench.uut.ser_rx
-testbench.uut.ser_tx
+testbench.ctrl.ser_rx
+testbench.ctrl.ser_tx
 @200
 -
 @22
-testbench.uut.cpu.next_pc[31:0]
+testbench.ctrl.cpu.dbg_insn_addr[31:0]
+testbench.ctrl.cpu.dbg_insn_opcode[31:0]
 @820
-testbench.uut.cpu.dbg_ascii_instr[63:0]
-testbench.uut.cpu.dbg_ascii_state[127:0]
+testbench.ctrl.cpu.dbg_ascii_instr[63:0]
+testbench.ctrl.cpu.dbg_ascii_state[127:0]
 @200
 -
 @28
-testbench.uut.cpu.mem_valid
-testbench.uut.cpu.mem_ready
-testbench.uut.cpu.mem_instr
+testbench.ctrl.cpu.mem_valid
+testbench.ctrl.cpu.mem_ready
+testbench.ctrl.cpu.mem_instr
 @22
-testbench.uut.cpu.mem_wstrb[3:0]
-testbench.uut.cpu.mem_addr[31:0]
-testbench.uut.cpu.mem_rdata[31:0]
-testbench.uut.cpu.mem_wdata[31:0]
+testbench.ctrl.cpu.mem_wstrb[3:0]
+testbench.ctrl.cpu.mem_addr[31:0]
+testbench.ctrl.cpu.mem_rdata[31:0]
+testbench.ctrl.cpu.mem_wdata[31:0]
 @200
 -
 @28
-testbench.uut.addr_flash
-testbench.uut.addr_spram0
-testbench.uut.addr_spram1
+testbench.ctrl.addr_flash
+testbench.ctrl.addr_spram0
+testbench.ctrl.addr_spram1
 @200
 -
 @28
-testbench.uut.flash_clk
-testbench.uut.flash_csb
-testbench.uut.flash_io0
-testbench.uut.flash_io1
-testbench.uut.flash_io2
-testbench.uut.flash_io3
-@200
--
-@22
-testbench.flash.xfer[7:0]
-@200
--
+testbench.ml_csb
+testbench.ctrl.flash_csb
+testbench.ctrl.flash_clk
+testbench.ctrl.flash_io0
+testbench.ctrl.flash_io1
+testbench.ctrl.flash_io2
+testbench.ctrl.flash_io3
 [pattern_trace] 1
 [pattern_trace] 0

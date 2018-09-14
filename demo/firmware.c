@@ -144,6 +144,7 @@ uint8_t ml_recv()
 void ml_stop()
 {
 	reg_qpio = 0x8C000000;
+	reg_qpio = 0x00000000;
 }
 
 // --------------------------------------------------------
@@ -154,7 +155,6 @@ void ml_write(int addr, const uint8_t *data, int len)
 	ml_send(0x21);
 	for (int i = 0; i < len; i++)
 		ml_send(data[i]);
-	ml_stop();
 
 	ml_start();
 	ml_send(0x23);
@@ -163,6 +163,7 @@ void ml_write(int addr, const uint8_t *data, int len)
 	ml_send(len >> 2);
 	ml_recv();
 	while (ml_recv() != 0) { }
+
 	ml_stop();
 }
 
@@ -175,13 +176,13 @@ void ml_read(int addr, uint8_t *data, int len)
 	ml_send(len >> 2);
 	ml_recv();
 	while (ml_recv() != 0) { }
-	ml_stop();
 
 	ml_start();
 	ml_send(0x22);
 	ml_recv();
 	for (int i = 0; i < len; i++)
 		data[i] = ml_recv();
+
 	ml_stop();
 }
 
@@ -192,11 +193,13 @@ void main()
 	print("Booting..\n");
 
 	reg_leds = 127;
+#if 0
 	while (1) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
+#endif
 
 	char wbuffer[64] = "Hello World! This is a test.";
 	char rbuffer[64];

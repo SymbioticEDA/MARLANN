@@ -1,10 +1,9 @@
 .section .start
 
 start:
-
-# zero-initialize register file
+// zero-initialize register file
 addi x1, zero, 0
-# x2 (sp) is initialized by reset
+// x2 (sp) is initialized by reset
 addi x3, zero, 0
 addi x4, zero, 0
 addi x5, zero, 0
@@ -35,9 +34,9 @@ addi x29, zero, 0
 addi x30, zero, 0
 addi x31, zero, 0
 
-##### Simcode #####
+/**** Simcode ****/
 
-# Flash LEDs for Verilog simulation
+// Flash LEDs for Verilog simulation
 
 li a0, 32
 simloop:
@@ -54,32 +53,36 @@ sw a2, 0(a1)
 addi a0, a0, -1
 bnez a0, simloop
 
-# Write 'AA' to serial out
-#li a0, 65
-#li a1, 0x02000004
-#sw a0, 0(a1)
-#sw a0, 0(a1)
+// Write 'AA' to serial out
+#if 0
+li a0, 65
+li a1, 0x02000004
+sw a0, 0(a1)
+sw a0, 0(a1)
+#endif
 
-##### End of Simcode #####
+/**** End of Simcode ****/
 
-# Update LEDs
+// Update LEDs
 li a0, 0x02000000
 li a1, 1
 sw a1, 0(a0)
 
-# zero initialize entire scratchpad memory
+// zero initialize entire scratchpad memory
+#if 0
 li a0, 0x00000000
 setmemloop:
 sw a0, 0(a0)
 addi a0, a0, 4
 blt a0, sp, setmemloop
+#endif
 
-# Update LEDs
+// Update LEDs
 li a0, 0x02000000
 li a1, 3
 sw a1, 0(a0)
 
-# copy data section
+// copy data section
 la a0, _sidata
 la a1, _sdata
 la a2, _edata
@@ -92,12 +95,12 @@ addi a1, a1, 4
 blt a1, a2, loop_init_data
 end_init_data:
 
-# Update LEDs
+// Update LEDs
 li a0, 0x02000000
 li a1, 7
 sw a1, 0(a0)
 
-# zero-init bss section
+// zero-init bss section
 la a0, _sbss
 la a1, _ebss
 bge a0, a1, end_init_bss
@@ -107,12 +110,12 @@ addi a0, a0, 4
 blt a0, a1, loop_init_bss
 end_init_bss:
 
-# Update LEDs
+// Update LEDs
 li a0, 0x02000000
 li a1, 15
 sw a1, 0(a0)
 
-# call main
+// call main
 call main
 loop:
 j loop
