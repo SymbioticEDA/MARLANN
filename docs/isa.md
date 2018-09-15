@@ -66,6 +66,13 @@ Store instructions have no alignment restrictions and use MX-Format.
     +-----------+-------+---------+
 ```
 
+Sequencer Instructions
+----------------------
+
+Sequencer instructions are handled by the sequencer and thus can only be executed
+directly from main memory. Sequencer instructions are invalid when executed from
+compute code memory using the Execute instruction.
+
 - Sync (A-Format, OP=0, ARG=0): Wait for the compute pipeline to become idle.
 
 - Call (M-Format, OP=1, ARG=0): Push the address of the next instruction to the call
@@ -90,6 +97,13 @@ Continue loading ARG words from memory and store at CADDR.
 
 - ContinueLoadM (M-Format, OP=8): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
 Load ARG words from memory at MADDR and continue storing in destination memory.
+
+
+Compute Instructions
+--------------------
+
+Compute instructions can be executed via the sequencer from main memory or directly
+from compute code memory using the Execute instruction.
 
 - SetLBP (M-Format, OP=9, ARG=0): Set the load base pointer to MADDR.
 
