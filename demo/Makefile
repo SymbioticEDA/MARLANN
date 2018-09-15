@@ -48,8 +48,8 @@ erase_ctrlsoc:
 
 #####################################################################
 
-mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
-	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
+mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
+	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --freq 13 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
