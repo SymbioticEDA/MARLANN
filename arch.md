@@ -28,9 +28,9 @@ stored only once in main memory.
 
 Once this baseline architecture is implemented, we will evaluate extending
 the vector size from SZ=4 to SZ=8 and adding a 2nd compute core with it's own
-accumulator, coefficient storage bank, LBP, SBP, and CBP. This creates a
-roadmap for up to 16 MACCs per cycle using this architecture, or >500 MMACC/s
-if we can clock the architecture at >35 MHz.
+accumulator and coefficient storage. This creates a roadmap for up to 16 MACCs
+per cycle using this architecture, or >500 MMACC/s if we can clock the
+architecture at >35 MHz.
 
 
 Host interface
@@ -107,117 +107,102 @@ This is the power-on behavior.
 - RdyOff (`05h`): Do not assert (pull down) `RDY` when the accelerator is idle.
 
 
-Sequencer code
---------------
+Instruction Format
+------------------
 
-Sequencer code is stored in main memory and consists of a series of 32 bit words.
+Some instructions are handled by the sequencer. Others are directly passed
+to the compute core. Sequencer and compute instructions use a uniform instruction
+format.
 
-All memory addresses are 4-byte aligned. Thus the two LSB bits of MEM-ADDR
-are implicitly 0 and do not need to be included in the instruction word.
+MADDR = Main memory address  
+CADDR = Compute code address or coefficient storage address.
+
+All memory loads are 4-byte aligned. Thus the two LSB bits of MADDR are
+implicitly 0 and do not need to be included in the instruction word.
+
+Store instructions have no alignment restrictions and use MX-Format.
 
 ```
-    |31        17|16          7|6     2|1    0|
-    +------------+-------------+-------+------+
-    |  MEM-ADDR  |  CODE-ADDR  |  LEN  |  OP  |
-    +------------+-------------+-------+------+
+    |31     17|16      6|5       0|
+    +---------+---------+---------+
+    |  MADDR  |  CADDR  |    OP   |    MC-Format
+    +---------+---------+---------+
+    |  MADDR  |   ARG   |    OP   |    M-Format
+    +---------+---------+---------+
+    |   ARG   |  CADDR  |    OP   |    C-Format
+    +---------+---------+---------+
+    |        ARG        |    OP   |    A-Format
+    +-------------------+---------+
+
+    |31       15|14    6|5       0|
+    +-----------+-------+---------+
+    |   MXADDR  |  ARG  |    OP   |    MX-Format
+    +-----------+-------+---------+
 ```
 
-(OP nonzero, LEN=0 encodes for LEN=32)
+- Sync (A-Format, OP=0, ARG=0): Wait for the compute pipeline to become idle.
 
-- LoadCode (OP=1): Copy LEN 4-byte words from MEM-ADDR in main memory to CODE-ADDR
+- Call (M-Format, OP=1, ARG=0): Push the address of the next instruction to the call
+stack and continue executing at the given MADDR.
+
+- Return (A-Format, OP=2, ARG=0): Pop an address from the call stack and continue
+executing at that address. Stop if the call stack is empty.
+
+- Execute (C-Format, OP=3): Execute ARG compute code instructions, starting at CADDR.
+
+- LoadCode (MC-Format, OP=4): Load one (4-byte) word at MADDR and store it at CADDR in
 compute code memory.
 
-- LoadCoeff0 (OP=2): Copy LEN SZ-byte words from MEM-ADDR in main memory to
-CODE-ADDR in coefficient storage bank 0.
+- LoadCoeff0 (MC-Format, OP=5): Load one (SZ-byte) word at MADDR and store it at CADDR
+coefficient bank 0.
 
-- LoadCoeff1 (OP=3): Copy LEN SZ-byte words from MEM-ADDR in main memory to
-CODE-ADDR in coefficient storage bank 1.
+- LoadCoeff1 (MC-Format, OP=6): Load one (SZ-byte) word at MADDR and store it at CADDR
+coefficient bank 1.
 
-```
-    |31        17|16          7|6      2|1   0|
-    +------------+-------------+--------+-----+
-    |  MEM-ADDR  |  CODE-ADDR  | OPCODE |  0  |
-    +------------+-------------+--------+-----+
-```
+- ContinueLoadC (C-Format, OP=7): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
+Continue loading ARG words from memory and store at CADDR.
 
-- Call (OPCODE=1): Push the address of the next instruction to the call stack and continue
-executing at the given MEM-ADDR. (CODE-ADDR must be zero.)
+- ContinueLoadM (M-Format, OP=8): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
+Load ARG words from memory at MADDR and continue storing in destination memory.
 
-- Return (OPCODE=2): Pop an address from the call stack and continue executing at that
-address. Stop if the call stack is empty. (MEM-ADDR and CODE-ADDR must be zero.)
+- SetLBP (M-Format, OP=9, ARG=0): Set the load base pointer to MADDR.
 
-- Execute (OPCODE=3): Execute MEM-ADDR compute code instructions, starting at CODE-ADDR.
+- AddLBP (M-Format, OP=9, ARG=1): Add MADDR to the load base pointer.
 
-- ContinueLoadC (OPCODE=4): Continue the last load operation at CODE-ADDR, load MEM-ADDR words.
-This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
+- SetSBP (MX-Format, OP=10, ARG=0): Set the load base pointer to MADDR.
 
-- ContinueLoadM (OPCODE=5): Continue the last load operation at MEM-ADDR, load CODE-ADDR words.
-This instruction is only valid immediately after a LoadCode, LoadCoeff0, LoadCoeff1, ContinueLoadC, or ContinueLoadM instruction.
+- AddSBP (MX-Format, OP=10, ARG=1): Add MADDR to the load base pointer.
 
-- Sync (OPCODE=6): Block until all pending compute instructions are completed.
-(LoadCode, LoadCoeff0, and LoadCoeff1 also block until all pending compute instructions are completed.)
+- SetCBP (C-Format, OP=11, ARG=0): Set the coefficient base pointer to CADDR.
 
+- AddCBP (C-Format, OP=11, ARG=1): Add CADDR to the coefficient base pointer.
 
-Compute code
-------------
+- Store (MX-Format, OP=12, ARG[8:5]=0): Right-shift accumulator by the amount
+specified in ARG[4:0], saurate it to a signed 8-bit value, and store the result
+to main memory at MXADDR (relative to SBP). (The shifted and saturated value is
+only stored in memory. The accumulator itself is unchanged.)
 
-A compute code word is 32 bits in size.
+- ReLU (MX-Format, OP=12, ARG[8:5]=1): Like Store, but replace negative values
+with zero.
 
-```
-    |31      15|16     12|11         9|8       7|6   0|
-    +----------+---------+------------+---------+-----+
-    |   ADDR   |   ARG   |   OPCODE   | BANKSEL |  0  |
-    +----------+---------+------------+---------+-----+
-```
+- Save (M-Format, OP=12, ARG=0): Store the accumulator in the 32-bit word addressed
+by MADDR (relative to SBP).
 
-The two BANKSEL bits select which banks should execute the instruction.
+- Load (M-Format, OP=13, ARG=0): Load the accumulator from the 32-bit word addressed
+by MADDR (relative to LBP).
 
-SetLBP/AddLBP/SetSBP/AddSBP/SetCBP/AddCBP are the same opcode. ARG selects the operation.
+- LoadAdd (M-Format, OP=13, ARG=1): Add the 32-bit word addressed by MADDR (relative
+to LBP) to the accumulator.
 
-- SetLBP (OPCODE=0, ARG=1): Set the load base pointer to ADDR.
-The two LSB bits of ADDR must be zero.
+- MACC (MC-Format, OP=14): Load SZ bytes from MADDR (relative to LBP), multiply with
+coefficients at CADDR (relative to CBP), and add to accumulator.
 
-- AddLBP (OPCODE=0, ARG=9): Add ADDR to the load base pointer.
-The two LSB bits of MEM-ADDR must be zero.
+- MMAX (MC-Format, OP=15): Like MMAC, but store the max value in the accumulator instead
+of the sum. In MAX mode a coefficient of 0x80 (most negative number) is a special symbol
+for values that should be ignored.
 
-- SetSBP (OPCODE=0, ARG=2): Set the store base pointer to ADDR.
+- MACCZ (MC-Format, OP=16) / MMAXZ (MC-Format, OP=17): Like MMAC/MMAX, but reset the
+accumulator to zero before performing the operation.
 
-- AddSBP (OPCODE=0, ARG=10): Add the ADDR to the store base pointer.
-
-- SetCBP (OPCODE=0, ARG=4): Set the coefficient base pointer to ADDR.
-
-- AddCBP (OPCODE=0, ARG=12): Add ADDR to the coefficient base pointer.
-
-- Store (OPCODE=1): Right-shift accumulator by the amount specified in ARG,
-saturate it to a signed 8-bit value, and store the result to main memory at ADDR
-(relative to SBP). (The shifted and saturated value is only stored in memory.
-The accumulator itself is unchanged.)
-
-- ReLU (OPCODE=2): Like Store, but replace negative values with zero.
-
-- Save (OPCODE=3): Store the accumulator in the 32-bit word addressed
-by ADDR (relative to SBP). ARG must be zero.
-
-- Load (OPCODE=4): Load the accumulator from the 32-bit word addressed
-by ADDR (relative to LBP). ARG must be zero.
-
-
-```
-    |31        17|16           7|6        0|
-    +------------+--------------+----------+
-    |  MEM-ADDR  |  COEFF-ADDR  |  OPCODE  |
-    +------------+--------------+----------+
-```
-
-- MACC (OPCODE=1): Load SZ bytes from MEM-ADDR (relative to LBP), multiply with
-coefficients at COEFF-ADDR (relative to CBP), and add to accumulator.
-
-- MMAX (OPCODE=2): Like MMAC, but store the max value in the accumulator instead of the sum.
-In MAX mode a coefficient of 0x80 (most negative number) is a special symbol for
-values that should be ignored.
-
-- MACCZ (OPCODE=3) / MMAXZ (OPCODE=4): Like MMAC/MMAX, but reset the accumulator to zero before
-performing the operation.
-
-- MMAXN (OPCODE=5): Like MMAX but set the accumulator to the most negative value
+- MMAXN (MC-Format, OP=18): Like MMAX but set the accumulator to the most negative value
 before performing the operation.
