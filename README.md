@@ -8,6 +8,12 @@ max pooling, and ReLU activation function.
 The reference platform for this project is the iCE40UP5K FPGA. The project
 is using the open source iCE40 flow.
 
+See [docs/isa.md](docs/isa.md) for a description of the architecture and
+the instruction set reference.
+
+See [docs/qpi.md](docs/qpi.md) for a description of the QPI interface to
+the host.
+
 iCE40UP5K Features
 ------------------
 
