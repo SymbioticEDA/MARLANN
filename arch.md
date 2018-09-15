@@ -177,26 +177,40 @@ Load ARG words from memory at MADDR and continue storing in destination memory.
 
 - AddCBP (C-Format, OP=11, ARG=1): Add CADDR to the coefficient base pointer.
 
-- Store (MX-Format, OP=12, ARG[8:5]=0): Right-shift accumulator by the amount
+- Store (MX-Format, OP=12, ARG[8:7]=0): Right-shift accumulator by the amount
 specified in ARG[4:0], saurate it to a signed 8-bit value, and store the result
 to main memory at MXADDR (relative to SBP). (The shifted and saturated value is
-only stored in memory. The accumulator itself is unchanged.)
+only stored in memory. The accumulator itself is unchanged.) If ARG[5] selects
+bank 0. ARG[6] selects bank 1. (Bank 1 stores at MXADDR + SBP + 1.)
 
-- ReLU (MX-Format, OP=12, ARG[8:5]=1): Like Store, but replace negative values
+- ReLU (MX-Format, OP=12, ARG[8:7]=1): Like Store, but replace negative values
 with zero.
 
-- Save (M-Format, OP=12, ARG=0): Store the accumulator in the 32-bit word addressed
-by MADDR (relative to SBP).
+- Save0 (M-Format, OP=12, ARG=0): Store the bank 0 accumulator in the 32-bit
+word addressed by MADDR (relative to SBP).
 
-- SetAcc (M-Format, OP=13, ARG=0): Load the accumulator from the 32-bit word addressed
-by MADDR (relative to LBP).
+- Save1 (M-Format, OP=12, ARG=1): Store the bank 1 accumulator in the 32-bit
+word addressed by MADDR (relative to SBP).
 
-- AddAcc (M-Format, OP=13, ARG=1): Add the 32-bit word addressed by MADDR (relative
-to LBP) to the accumulator.
+- SetAcc0 (M-Format, OP=13, ARG=0): Load the bank 0 accumulator from the 32-bit
+word addressed by MADDR (relative to LBP).
 
-- MaxAcc (M-Format, OP=13, ARG=2): Load the 32-bit word addressed by MADDR (relative
-to LBP) into the accumulator if that value is larger than the value currently in the
-accumulator.
+- SetAcc1 (M-Format, OP=13, ARG=1): Load the bank 1 accumulator from the 32-bit
+word addressed by MADDR (relative to LBP).
+
+- AddAcc0 (M-Format, OP=13, ARG=2): Add the 32-bit word addressed by MADDR (relative
+to LBP) to the bank 0 accumulator.
+
+- AddAcc1 (M-Format, OP=13, ARG=3): Add the 32-bit word addressed by MADDR (relative
+to LBP) to the bank 1 accumulator.
+
+- MaxAcc0 (M-Format, OP=13, ARG=4): Load the 32-bit word addressed by MADDR (relative
+to LBP) into the bank 0 accumulator if that value is larger than the value currently in
+the accumulator.
+
+- MaxAcc1 (M-Format, OP=13, ARG=5): Load the 32-bit word addressed by MADDR (relative
+to LBP) into the bank 1 accumulator if that value is larger than the value currently in
+the accumulator.
 
 - MACC (MC-Format, OP=14): Load SZ bytes from MADDR (relative to LBP), multiply with
 coefficients at CADDR (relative to CBP), and add to accumulator.

@@ -152,8 +152,6 @@ module mlaccel_top (
 			if (din_start) begin
 				case (din_data)
 					cmd_status: begin
-						dout_valid <= 1;
-						dout_data <= {8{busy}};
 						state <= state_status;
 					end
 					cmd_wbuf: begin
@@ -235,6 +233,7 @@ module mlaccel_top (
 
 		if (!din_valid || !din_start) begin
 			if (state == state_status) begin
+				dout_valid <= 1;
 				dout_data <= {8{busy}};
 			end
 
