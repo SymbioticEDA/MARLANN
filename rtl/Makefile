@@ -1,7 +1,7 @@
 all: testbench.vcd
 
-testbench: testbench.v top.v memory.v sequencer.v
-	iverilog -s testbench -o testbench testbench.v top.v memory.v sequencer.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v top.v memory.v sequencer.v compute.v
+	iverilog -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 testbench.vcd: testbench
 	vvp -N testbench

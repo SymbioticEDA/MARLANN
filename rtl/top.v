@@ -49,6 +49,14 @@ module mlaccel_top (
 	(* keep *) wire        comp_ready;
 	(* keep *) wire [31:0] comp_data;
 
+	(* keep *) wire        comp_busy;
+
+	wire        cmem_ren;
+	wire [ 1:0] cmem_wen;
+	wire [15:0] cmem_addr;
+	wire [15:0] cmem_wdata;
+	wire [63:0] cmem_rdata;
+
 	/********** Reset Generator **********/
 
 	reg [3:0] reset_cnt = 0;
@@ -311,9 +319,23 @@ module mlaccel_top (
 		.comp_data  (comp_data )
 	);
 
-	assign comp_ready = 1;
+	mlaccel_compute comp (
+		.clock     (clock     ),
+		.reset     (reset     ),
+		.busy      (comp_busy ),
 
-	assign busy = seq_busy;
+		.cmd_valid (comp_valid),
+		.cmd_ready (comp_ready),
+		.cmd_data  (comp_data ),
+
+		.mem_ren   (cmem_ren  ),
+		.mem_wen   (cmem_wen  ),
+		.mem_addr  (cmem_addr ),
+		.mem_wdata (cmem_wdata),
+		.mem_rdata (cmem_rdata)
+	);
+
+	assign busy = seq_busy || comp_busy;
 
 	/********** Main Memory **********/
 
@@ -331,25 +353,28 @@ module mlaccel_top (
 		mem_client_qmem = 0;
 		mem_client_smem = 0;
 
-		mem_addr = 0;
-		mem_wen = 0;
-		mem_wdata = 0;
+		mem_addr = cmem_addr;
+		mem_wen = cmem_wen;
+		mem_wdata = cmem_wdata;
 
-		if ((qmem_read || qmem_write) && !qmem_done) begin
-			mem_client_qmem = 1;
-			mem_addr = qmem_addr;
-			mem_wen = qmem_write;
-			mem_wdata = qmem_wdata;
-		end else
-		if (smem_valid && !smem_state) begin
-			mem_client_smem = 1;
-			mem_addr = smem_addr;
+		if (!cmem_ren && !cmem_wen) begin
+			if ((qmem_read || qmem_write) && !qmem_done) begin
+				mem_client_qmem = 1;
+				mem_addr = qmem_addr;
+				mem_wen = qmem_write;
+				mem_wdata = qmem_wdata;
+			end else
+			if (smem_valid && !smem_state) begin
+				mem_client_smem = 1;
+				mem_addr = smem_addr;
+			end
 		end
 	end
 
 	assign qmem_rdata = mem_rdata[15:0];
 	assign smem_data = mem_rdata[31:0];
 	assign smem_ready = smem_state[1];
+	assign cmem_rdata = mem_rdata;
 
 	always @(posedge clock) begin
 		qmem_done <= mem_client_qmem;
