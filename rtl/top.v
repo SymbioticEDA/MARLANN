@@ -17,23 +17,38 @@ module mlaccel_top (
 	reg reset;
 	reg trigger_reset;
 
-	wire din_valid;
-	wire din_start;
-	wire [7:0] din_data;
+	wire busy;
 
-	reg dout_valid;
-	wire dout_ready;
-	reg [7:0] dout_data;
+	wire        din_valid;
+	wire        din_start;
+	wire [ 7:0] din_data;
 
-	reg qmem_done;
-	reg qmem_rdone;
-	reg qmem_read;
-	reg [1:0] qmem_write;
-	reg [15:0] qmem_addr;
-	reg [15:0] qmem_wdata;
+	reg         dout_valid;
+	wire        dout_ready;
+	reg  [ 7:0] dout_data;
+
+	reg         qmem_done;
+	reg         qmem_rdone;
+	reg         qmem_read;
+	reg  [ 1:0] qmem_write;
+	reg  [15:0] qmem_addr;
+	reg  [15:0] qmem_wdata;
 	wire [15:0] qmem_rdata;
 
-	wire busy;
+	reg         seq_start;
+	reg         seq_stop;
+	reg  [15:0] seq_addr;
+	wire        seq_busy;
+
+	wire        smem_valid;
+	wire        smem_ready;
+	wire [15:0] smem_addr;
+	wire [31:0] smem_data;
+
+	(* keep *) wire        comp_valid;
+	(* keep *) wire        comp_ready;
+	(* keep *) wire [31:0] comp_data;
+	(* keep *) wire        comp_op;
 
 	/********** Reset Generator **********/
 
@@ -104,29 +119,44 @@ module mlaccel_top (
 
 	reg [5:0] state;
 
-	localparam integer state_halt = 0;
-	localparam integer state_wbuf = 1;
-	localparam integer state_rbuf = 2;
+	localparam integer state_halt   =  0;
+	localparam integer state_status =  1;
+	localparam integer state_wbuf   =  2;
+	localparam integer state_rbuf   =  3;
 
-	localparam integer state_wmem0 = 3;
-	localparam integer state_wmem1 = 4;
-	localparam integer state_wmem2 = 5;
-	localparam integer state_wmem3 = 6;
+	localparam integer state_wmem0  =  4;
+	localparam integer state_wmem1  =  5;
+	localparam integer state_wmem2  =  6;
+	localparam integer state_wmem3  =  7;
 
-	localparam integer state_rmem0 = 7;
-	localparam integer state_rmem1 = 8;
-	localparam integer state_rmem2 = 9;
-	localparam integer state_rmem3 = 10;
+	localparam integer state_rmem0  =  8;
+	localparam integer state_rmem1  =  9;
+	localparam integer state_rmem2  = 10;
+	localparam integer state_rmem3  = 11;
 
-	localparam [7:0] cmd_wbuf = 8'h 21;
-	localparam [7:0] cmd_rbuf = 8'h 22;
-	localparam [7:0] cmd_wmem = 8'h 23;
-	localparam [7:0] cmd_rmem = 8'h 24;
+	localparam integer state_run0   = 12;
+	localparam integer state_run1   = 13;
+
+	localparam [7:0] cmd_status = 8'h 20;
+	localparam [7:0] cmd_wbuf   = 8'h 21;
+	localparam [7:0] cmd_rbuf   = 8'h 22;
+	localparam [7:0] cmd_wmem   = 8'h 23;
+	localparam [7:0] cmd_rmem   = 8'h 24;
+	localparam [7:0] cmd_run    = 8'h 25;
+	localparam [7:0] cmd_stop   = 8'h 26;
 
 	always @(posedge clock) begin
+		seq_start <= 0;
+		seq_stop <= 0;
+
 		if (din_valid) begin
 			if (din_start) begin
 				case (din_data)
+					cmd_status: begin
+						dout_valid <= 1;
+						dout_data <= {8{busy}};
+						state <= state_status;
+					end
 					cmd_wbuf: begin
 						buffer_ptr <= 0;
 						state <= state_wbuf;
@@ -142,6 +172,13 @@ module mlaccel_top (
 					cmd_rmem: begin
 						buffer_ptr <= 0;
 						state <= state_rmem0;
+					end
+					cmd_run: begin
+						state <= state_run0;
+					end
+					cmd_stop: begin
+						seq_stop <= 1;
+						state <= state_halt;
 					end
 				endcase
 			end else begin
@@ -183,11 +220,25 @@ module mlaccel_top (
 						buffer_len <= din_data ? {din_data, 2'b00} : 1024;
 						state <= state_rmem3;
 					end
+
+					state_run0: begin
+						seq_addr[7:0] <= din_data;
+						state <= state_run1;
+					end
+					state_run1: begin
+						seq_addr[15:8] <= din_data;
+						seq_start <= 1;
+						state <= state_halt;
+					end
 				endcase
 			end
 		end
 
 		if (!din_valid || !din_start) begin
+			if (state == state_status) begin
+				dout_data <= {8{busy}};
+			end
+
 			if (state == state_rbuf) begin
 				dout_valid <= !dout_ready;
 				buffer_ptr <= buffer_ptr + dout_ready;
@@ -242,20 +293,77 @@ module mlaccel_top (
 	end
 
 
+	/********** Sequencer and Compute **********/
+
+	mlaccel_sequencer seq (
+		.clock      (clock     ),
+		.reset      (reset     ),
+
+		.start      (seq_start ),
+		.addr       (seq_addr  ),
+		.busy       (seq_busy  ),
+
+		.smem_valid (smem_valid),
+		.smem_ready (smem_ready),
+		.smem_addr  (smem_addr ),
+		.smem_data  (smem_data ),
+
+		.comp_valid (comp_valid),
+		.comp_ready (comp_ready),
+		.comp_data  (comp_data ),
+		.comp_op    (comp_op   )
+	);
+
+	assign comp_ready = 1;
+
+	assign busy = seq_busy;
+
 	/********** Main Memory **********/
 
-	wire qmem_active = (qmem_read || qmem_write) && !qmem_done;
+	reg mem_client_qmem;
+	reg mem_client_smem;
 
-	wire [15:0] mem_addr  = qmem_active ? qmem_addr  : 0;
-	wire [ 1:0] mem_wen   = qmem_active ? qmem_write : 0;
-	wire [15:0] mem_wdata = qmem_active ? qmem_wdata : 0;
+	reg  [15:0] mem_addr;
+	reg  [ 1:0] mem_wen;
+	reg  [15:0] mem_wdata;
 	wire [63:0] mem_rdata;
 
+	reg [1:0] smem_state;
+
+	always @* begin
+		mem_client_qmem = 0;
+		mem_client_smem = 0;
+
+		mem_addr = 0;
+		mem_wen = 0;
+		mem_wdata = 0;
+
+		if ((qmem_read || qmem_write) && !qmem_done) begin
+			mem_client_qmem = 1;
+			mem_addr = qmem_addr;
+			mem_wen = qmem_write;
+			mem_wdata = qmem_wdata;
+		end else
+		if (smem_valid && !smem_state) begin
+			mem_client_smem = 1;
+			mem_addr = smem_addr;
+		end
+	end
+
 	assign qmem_rdata = mem_rdata[15:0];
+	assign smem_data = mem_rdata[31:0];
+	assign smem_ready = smem_state[1];
 
 	always @(posedge clock) begin
-		qmem_done <= !reset && (qmem_read || qmem_write) && !qmem_done;
-		qmem_rdone <= !reset && qmem_read && qmem_done;
+		qmem_done <= mem_client_qmem;
+		qmem_rdone <= qmem_read && qmem_done;
+
+		smem_state <= {smem_state, mem_client_smem};
+
+		if (reset) begin
+			qmem_done <= 0;
+			qmem_rdone <= 0;
+		end
 	end
 
 	mlaccel_memory mem (

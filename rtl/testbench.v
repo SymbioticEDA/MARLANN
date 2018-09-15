@@ -72,6 +72,30 @@ module testbench;
 		end
 	endtask
 
+	task xfer_send_hword;
+		input [15:0] data;
+		begin
+			xfer = data[7:0];
+			xfer_send;
+			xfer = data[15:8];
+			xfer_send;
+		end
+	endtask
+
+	task xfer_send_word;
+		input [31:0] data;
+		begin
+			xfer = data[7:0];
+			xfer_send;
+			xfer = data[15:8];
+			xfer_send;
+			xfer = data[23:16];
+			xfer_send;
+			xfer = data[31:24];
+			xfer_send;
+		end
+	endtask
+
 	task xfer_wait;
 		begin
 			qpi_clk = 0;
@@ -141,27 +165,24 @@ module testbench;
 
 		xfer_start;
 		xfer_send_byte(8'h 21);
-		xfer_send_byte(8'h 01);
-		xfer_send_byte(8'h 02);
-		xfer_send_byte(8'h 03);
-		xfer_send_byte(8'h 04);
-		xfer_send_byte(8'h 05);
-		xfer_send_byte(8'h 06);
-		xfer_send_byte(8'h 07);
-		xfer_send_byte(8'h 08);
-		xfer_send_byte(8'h 09);
-		xfer_send_byte(8'h 0A);
-		xfer_send_byte(8'h 0B);
-		xfer_send_byte(8'h 0C);
+		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 0
+		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 1
+		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 2
+		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 3
+		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 4
+		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 5
+		xfer_send_word({15'd 0, 11'd 0, 6'd 4});  // 6
+		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 7
+		xfer_send_word({15'd 0, 11'd 0, 6'd 3});  // 8
+		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 9
 		xfer_stop;
 
 		#20;
 
 		xfer_start;
 		xfer_send_byte(8'h 23);
-		xfer_send_byte(8'h 01);
-		xfer_send_byte(8'h 10);
-		xfer_send_byte(8'h 03);
+		xfer_send_hword(16'h 0000);
+		xfer_send_byte(8'd 10);
 		xfer_wait;
 		xfer_recv;
 		while (xfer != 8'h 00)
@@ -171,22 +192,16 @@ module testbench;
 		#20;
 
 		xfer_start;
-		xfer_send_byte(8'h 24);
-		xfer_send_byte(8'h 03);
-		xfer_send_byte(8'h 10);
-		xfer_send_byte(8'h 02);
-		xfer_wait;
-		xfer_recv;
-		while (xfer != 8'h 00)
-			xfer_recv;
+		xfer_send_byte(8'h 25);
+		xfer_send_hword(16'h 0000);
 		xfer_stop;
 
 		#20;
 
 		xfer_start;
-		xfer_send_byte(8'h 22);
+		xfer_send_byte(8'h 20);
 		xfer_wait;
-		repeat (8)
+		while (xfer != 8'h 00)
 			xfer_recv;
 		xfer_stop;
 	end

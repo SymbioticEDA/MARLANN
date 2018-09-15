@@ -6,8 +6,8 @@ MLACCEL_DEV = -d d:001/072
 testbench.vcd: testbench flashinit.hex ctrlsoc_fw.hex
 	vvp -N testbench
 
-testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/memory.v
-	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/memory.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
+	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 flashinit.hex: flashinit.py
 	python3 flashinit.py
@@ -48,8 +48,8 @@ erase_ctrlsoc:
 
 #####################################################################
 
-mlaccel.json: ../rtl/top.v ../rtl/memory.v
-	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/memory.v
+mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
+	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --freq 13 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
