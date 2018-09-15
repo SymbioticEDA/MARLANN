@@ -188,11 +188,15 @@ with zero.
 - Save (M-Format, OP=12, ARG=0): Store the accumulator in the 32-bit word addressed
 by MADDR (relative to SBP).
 
-- Load (M-Format, OP=13, ARG=0): Load the accumulator from the 32-bit word addressed
+- SetAcc (M-Format, OP=13, ARG=0): Load the accumulator from the 32-bit word addressed
 by MADDR (relative to LBP).
 
-- LoadAdd (M-Format, OP=13, ARG=1): Add the 32-bit word addressed by MADDR (relative
+- AddAcc (M-Format, OP=13, ARG=1): Add the 32-bit word addressed by MADDR (relative
 to LBP) to the accumulator.
+
+- MaxAcc (M-Format, OP=13, ARG=2): Load the 32-bit word addressed by MADDR (relative
+to LBP) into the accumulator if that value is larger than the value currently in the
+accumulator.
 
 - MACC (MC-Format, OP=14): Load SZ bytes from MADDR (relative to LBP), multiply with
 coefficients at CADDR (relative to CBP), and add to accumulator.
