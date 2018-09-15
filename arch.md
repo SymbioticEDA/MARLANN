@@ -169,9 +169,9 @@ Load ARG words from memory at MADDR and continue storing in destination memory.
 
 - AddLBP (M-Format, OP=9, ARG=1): Add MADDR to the load base pointer.
 
-- SetSBP (MX-Format, OP=10, ARG=0): Set the load base pointer to MADDR.
+- SetSBP (MX-Format, OP=10, ARG=0): Set the load base pointer to MXADDR.
 
-- AddSBP (MX-Format, OP=10, ARG=1): Add MADDR to the load base pointer.
+- AddSBP (MX-Format, OP=10, ARG=1): Add MXADDR to the load base pointer.
 
 - SetCBP (C-Format, OP=11, ARG=0): Set the coefficient base pointer to CADDR.
 
