@@ -12,7 +12,7 @@ module testbench;
 		#(clock_period / 2);
 		clk = 0;
 
-		repeat (500000) begin
+		repeat (700000) begin
 			#(clock_period / 2);
 			clk = !clk;
 		end
@@ -98,14 +98,16 @@ module testbench;
 	);
 
 	reg [7:0] ser_byte;
+	reg [7:0] ser_temp;
 
 	always begin
 		@(negedge ser_tx);
 		#(1.5 * ser_period);
 		repeat (8) begin
-			ser_byte = {ser_tx, ser_byte[7:1]};
+			ser_temp = {ser_tx, ser_temp[7:1]};
 			#(ser_period);
 		end
+		ser_byte = ser_temp;
 		$write("%c", ser_byte);
 		$fflush;
 	end

@@ -187,41 +187,43 @@ module mlaccel_top (
 			end
 		end
 
-		if (state == state_rbuf) begin
-			dout_valid <= !dout_ready;
-			buffer_ptr <= buffer_ptr + dout_ready;
-			if (!buffer_ptr[0])
-				dout_data <= buffer[buffer_ptr[8:1]][7:0];
-			else
-				dout_data <= buffer[buffer_ptr[8:1]][15:8];
-		end
-
-		if (state == state_wmem3) begin
-			if (qmem_done) begin
-				buffer_ptr <= buffer_ptr + 2;
-				qmem_addr <= qmem_addr + 1;
-			end else
-			if (buffer_ptr != buffer_len && !qmem_write) begin
-				qmem_write <= 3;
-				qmem_wdata <= buffer[buffer_ptr[8:1]];
+		if (!din_valid || !din_start) begin
+			if (state == state_rbuf) begin
+				dout_valid <= !dout_ready;
+				buffer_ptr <= buffer_ptr + dout_ready;
+				if (!buffer_ptr[0])
+					dout_data <= buffer[buffer_ptr[8:1]][7:0];
+				else
+					dout_data <= buffer[buffer_ptr[8:1]][15:8];
 			end
-			if (dout_ready)
-				dout_data <= {8{buffer_ptr != buffer_len}};
-		end
 
-		if (state == state_rmem3) begin
-			if (qmem_rdone) begin
-				buffer[buffer_ptr[8:1]] <= qmem_rdata;
-				buffer_ptr <= buffer_ptr + 2;
-				qmem_addr <= qmem_addr + 1;
-			end else
-			if (buffer_ptr != buffer_len && !qmem_read) begin
-				qmem_read <= 3;
+			if (state == state_wmem3) begin
+				if (qmem_done) begin
+					buffer_ptr <= buffer_ptr + 2;
+					qmem_addr <= qmem_addr + 1;
+				end else
+				if (buffer_ptr != buffer_len && !qmem_write) begin
+					qmem_write <= 3;
+					qmem_wdata <= buffer[buffer_ptr[8:1]];
+				end
+				if (dout_ready)
+					dout_data <= {8{buffer_ptr != buffer_len}};
 			end
-			if (dout_ready)
-				dout_data <= {8{buffer_ptr != buffer_len}};
-			if (qmem_done)
-				qmem_read <= 0;
+
+			if (state == state_rmem3) begin
+				if (qmem_rdone) begin
+					buffer[buffer_ptr[8:1]] <= qmem_rdata;
+					buffer_ptr <= buffer_ptr + 2;
+					qmem_addr <= qmem_addr + 1;
+				end else
+				if (buffer_ptr != buffer_len && !qmem_read) begin
+					qmem_read <= 3;
+				end
+				if (dout_ready)
+					dout_data <= {8{buffer_ptr != buffer_len}};
+				if (qmem_done)
+					qmem_read <= 0;
+			end
 		end
 
 		if (reset || qmem_done) begin

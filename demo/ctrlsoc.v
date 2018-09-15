@@ -516,7 +516,7 @@ module ctrlsoc_flashio (
 					end
 				end
 			endcase
-			if (valid && next_addr != addr) begin
+			if (valid && next_addr != addr && state != 0) begin
 				state <= 0;
 				ready <= 0;
 			end
@@ -616,8 +616,7 @@ module ctrlsoc_rxtx (
 		if (mem_rvalid && !mem_ready) begin
 			rbuf <= rbuf >> 8;
 			rbuf_valid <= rbuf_valid >> 1;
-			mem_rdata[31] <= !rbuf_valid[0];
-			mem_rdata[30:0] <= rbuf[7:0];
+			mem_rdata <= rbuf[7:0] | {32{!rbuf_valid[0]}};
 			mem_ready <= 1;
 		end
 

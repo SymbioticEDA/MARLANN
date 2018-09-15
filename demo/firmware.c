@@ -192,27 +192,25 @@ void main()
 {
 	print("Booting..\n");
 
+	char wbuf0[64] = "Hello World! This is a test and if you can\n";
+	char wbuf1[64] = "read this then everything is working fine.\n";
+	char rbuf[64];
+
+	ml_write(0, wbuf0, 64);
+	ml_write(70, wbuf1, 64);
+
+	ml_read(0, rbuf, 64);
+	print(rbuf);
+
+	ml_read(70, rbuf, 64);
+	print(rbuf);
+
 	reg_leds = 127;
-#if 0
 	while (1) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
-#endif
-
-	char wbuffer[64] = "Hello World! This is a test.";
-	char rbuffer[64];
-
-	print("ml_write..\n");
-	ml_write(0, wbuffer, 64);
-
-	print("ml_read..\n");
-	ml_read(0, rbuffer, 64);
-
-	print("rbuffer: ");
-	print(rbuffer);
-	print("\n");
 
 	print("READY.\n");
 }

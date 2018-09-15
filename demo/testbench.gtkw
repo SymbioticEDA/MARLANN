@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Fri Sep 14 16:32:55 2018
+[*] Sat Sep 15 09:57:52 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/demo/testbench.vcd"
-[dumpfile_mtime] "Fri Sep 14 16:31:51 2018"
-[dumpfile_size] 55285316
+[dumpfile_mtime] "Sat Sep 15 09:56:21 2018"
+[dumpfile_size] 81634906
 [savefile] "/home/clifford/Work/mlaccel/demo/testbench.gtkw"
 [timestart] 0
 [size] 1377 921
-[pos] 329 29
-*-33.000000 16851884814 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-33.000000 28320226560 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.ctrl.
 [treeopen] testbench.ctrl.flashio.
@@ -34,6 +34,8 @@ testbench.led5
 @28
 testbench.ctrl.ser_rx
 testbench.ctrl.ser_tx
+@820
+testbench.ser_byte[7:0]
 @200
 -
 @22
