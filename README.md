@@ -9,7 +9,8 @@ The reference platform for this project is the iCE40UP5K FPGA. The project
 is using the open source iCE40 flow.
 
 See [docs/isa.md](docs/isa.md) for a description of the architecture and
-the instruction set reference.
+the instruction set reference, and [docs/asm.md](docs/asm.md) for a description
+of the assembler language syntax.
 
 See [docs/qpi.md](docs/qpi.md) for a description of the QPI interface to
 the host.
