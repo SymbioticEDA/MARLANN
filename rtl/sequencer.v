@@ -12,12 +12,12 @@ module mlaccel_sequencer (
 
 	output reg        comp_valid,
 	input             comp_ready,
-	output reg [31:0] comp_data,
-	output reg        comp_op
+	output reg [31:0] comp_data
 );
-	localparam [5:0] opcode_sync   = 0;
-	localparam [5:0] opcode_call   = 1;
-	localparam [5:0] opcode_return = 2;
+	localparam [5:0] opcode_sync     = 0;
+	localparam [5:0] opcode_call     = 1;
+	localparam [5:0] opcode_return   = 2;
+	localparam [5:0] opcode_execute  = 3;
 
 	/**** Front-End ****/
 
@@ -72,34 +72,61 @@ module mlaccel_sequencer (
 
 	/**** Back-End ****/
 
-	reg [31:0] next_insn;
-	reg next_insn_valid;
-	reg keep_next_insn;
+	reg [31:0] queue_insn;
+	reg queue_insn_valid;
+
+	reg [31:0] buffer_insn;
+	reg buffer_insn_valid;
+
+	wire insn_valid = queue_insn_valid || buffer_insn_valid;
+	wire [31:0] insn = buffer_insn_valid ? buffer_insn : queue_insn;
+
+	reg stall_queue;
+	reg next_buffer_insn_valid;
+	reg [31:0] next_buffer_insn;
+
+	always @* begin
+		stall_queue = 0;
+		next_buffer_insn = insn;
+		next_buffer_insn_valid = 0;
+
+		if (insn_valid) begin
+			if ((insn[5:0] == opcode_execute) && (insn[31:17] != 1)) begin
+				stall_queue = 1;
+				next_buffer_insn_valid = 1;
+				next_buffer_insn[31:17] = insn[31:17] - 1;
+				next_buffer_insn[16:6] = insn[16:6] + 1;
+			end
+		end
+	end
 
 	always @(posedge clock) begin
-		if (!keep_next_insn) begin
+		buffer_insn <= next_buffer_insn;
+		buffer_insn_valid <= next_buffer_insn_valid;
+
+		if (!stall_queue) begin
 			if (queue_iptr != queue_optr) begin
 				queue_optr <= queue_optr + 1;
-				next_insn <= queue[queue_optr];
-				next_insn_valid <= 1;
+				queue_insn <= queue[queue_optr];
+				queue_insn_valid <= 1;
 			end else begin
-				next_insn_valid <= 0;
+				queue_insn_valid <= 0;
 			end
 		end
 		
 		if (!comp_valid || comp_ready) begin
-			if (next_insn_valid) begin
+			if (insn_valid) begin
 				comp_valid <= 1;
-				comp_data <= next_insn;
+				comp_data <= insn;
 			end else begin
 				comp_valid <= 0;
 			end
 		end
 
 		if (reset || start) begin
+			queue_insn_valid <= 0;
+			buffer_insn_valid <= 0;
 			queue_optr <= 0;
-			next_insn_valid <= 0;
-			keep_next_insn <= 0;
 		end
 	end
 

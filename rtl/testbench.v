@@ -171,9 +171,9 @@ module testbench;
 		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 3
 		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 4
 		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 5
-		xfer_send_word({15'd 0, 11'd 0, 6'd 4});  // 6
+		xfer_send_word({15'd 1, 11'd 8, 6'd 3});  // 6
 		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 7
-		xfer_send_word({15'd 0, 11'd 0, 6'd 3});  // 8
+		xfer_send_word({15'd 4, 11'd 0, 6'd 3});  // 8
 		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 9
 		xfer_stop;
 

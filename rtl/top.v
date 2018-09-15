@@ -48,7 +48,6 @@ module mlaccel_top (
 	(* keep *) wire        comp_valid;
 	(* keep *) wire        comp_ready;
 	(* keep *) wire [31:0] comp_data;
-	(* keep *) wire        comp_op;
 
 	/********** Reset Generator **********/
 
@@ -310,8 +309,7 @@ module mlaccel_top (
 
 		.comp_valid (comp_valid),
 		.comp_ready (comp_ready),
-		.comp_data  (comp_data ),
-		.comp_op    (comp_op   )
+		.comp_data  (comp_data )
 	);
 
 	assign comp_ready = 1;
