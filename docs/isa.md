@@ -86,17 +86,14 @@ executing at that address. Stop if the call stack is empty.
 - LoadCode (MC-Format, OP=4): Load one (4-byte) word at MADDR and store it at CADDR in
 compute code memory.
 
-- LoadCoeff0 (MC-Format, OP=5): Load one (SZ-byte) word at MADDR and store it at CADDR
+- ContinueLoad (A-Format, OP=5): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
+Continue loading ARG words from memory and store in compute code or coefficient memory.
+
+- LoadCoeff0 (MC-Format, OP=6): Load one (SZ-byte) word at MADDR and store it at CADDR
 coefficient bank 0.
 
-- LoadCoeff1 (MC-Format, OP=6): Load one (SZ-byte) word at MADDR and store it at CADDR
+- LoadCoeff1 (MC-Format, OP=7): Load one (SZ-byte) word at MADDR and store it at CADDR
 coefficient bank 1.
-
-- ContinueLoadC (C-Format, OP=7): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
-Continue loading ARG words from memory and store at CADDR.
-
-- ContinueLoadM (M-Format, OP=8): Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
-Load ARG words from memory at MADDR and continue storing in destination memory.
 
 
 Compute Instructions
