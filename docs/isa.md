@@ -114,14 +114,14 @@ from compute code memory using the Execute instruction.
 
 - AddCBP (C-Format, OP=11, ARG=1): Add CADDR to the coefficient base pointer.
 
-- Store (MX-Format, OP=12, ARG[8:7]=0): Right-shift accumulator by the amount
-specified in ARG[4:0], saurate it to a signed 8-bit value, and store the result
+- Store/Store0/Store1 (MX-Format, OP=12, ARG[4:2]=0): Right-shift accumulator by the
+amount specified in ARG[8:5], saurate it to a signed 8-bit value, and store the result
 to main memory at MXADDR (relative to SBP). (The shifted and saturated value is
-only stored in memory. The accumulator itself is unchanged.) If ARG[5] enables
-bank 0 and ARG[6] enables bank 1. (Bank 1 stores at MXADDR + SBP + 1.)
+only stored in memory. The accumulator itself is unchanged.) If ARG[0] enables
+bank 0 and ARG[1] enables bank 1. (Bank 1 stores at MXADDR + SBP + 1.)
 
-- ReLU (MX-Format, OP=12, ARG[8:7]=1): Like Store, but replace negative values
-with zero.
+- ReLU/ReLU0/ReLU1 (MX-Format, OP=12, ARG[4:2]=1): Like Store, but replace
+negative values with zero.
 
 - Save0 (M-Format, OP=12, ARG=0): Store the bank 0 accumulator in the 32-bit
 word addressed by MADDR (relative to SBP).

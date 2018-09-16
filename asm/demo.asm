@@ -1,5 +1,5 @@
-.sym indata, 0x10000
-.sym outdata, 0x12000
+.sym indata 0x10000
+.sym outdata 0x12000
 
 .code 0x00000
 SetLBP 0
@@ -63,9 +63,9 @@ Call run_conv_5x5x8_kernel_1_line
 Call run_conv_5x5x8_kernel_1_line
 Call run_conv_5x5x8_kernel_1_line
 Call run_conv_5x5x8_kernel_1_line
-SetCBP 25
+AddCBP 25
 AddLBP -8192
-AddSBP -12544+2
+AddSBP -6272+2
 Return
 
 run_conv_5x5x8_kernel_4_lines:
@@ -131,7 +131,7 @@ MACC  32 + 1024, 24
 
 ReLU 0, 16
 AddLBP 8
-AddSBP 16
+AddSBP 8
 
 conv_5x5x8_kernel_end:
 

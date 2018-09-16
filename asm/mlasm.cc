@@ -78,7 +78,7 @@ void MlAsm::parseLine(const char *line)
 	while (1) {
 		const char *args_delim = ",\r\n";
 
-		if (state == STATE_DATA && !cmd.empty() && cmd[0] != '.')
+		if (state == STATE_DATA || cmd.empty() || cmd[0] == '.')
 			args_delim = " \t\r\n";
 
 		char *t = strtok_r(nullptr, args_delim, &strtok_saveptr);
@@ -271,9 +271,29 @@ void MlAsm::parseLine(const char *line)
 		{
 			insn.opcode = 12;
 			insn.format = FMT_MX;
-			insn.arg = 4*(cmd == "AddCBP");
+			insn.arg = 3 | (cmd == "ReLU" ? 4 : 0);
 			parseArg(args[0], FIELD_MADDR);
-			parseArg(args[1], FIELD_ARG, 8);
+			parseArg(args[1], FIELD_ARG, 32);
+			return;
+		}
+
+		if ((cmd == "Store0" || cmd == "ReLU0") && args.size() == 2)
+		{
+			insn.opcode = 12;
+			insn.format = FMT_MX;
+			insn.arg = 1 | (cmd == "ReLU0" ? 4 : 0);
+			parseArg(args[0], FIELD_MADDR);
+			parseArg(args[1], FIELD_ARG, 32);
+			return;
+		}
+
+		if ((cmd == "Store1" || cmd == "ReLU1") && args.size() == 2)
+		{
+			insn.opcode = 12;
+			insn.format = FMT_MX;
+			insn.arg = 2 | (cmd == "ReLU0" ? 4 : 0);
+			parseArg(args[0], FIELD_MADDR);
+			parseArg(args[1], FIELD_ARG, 32);
 			return;
 		}
 
