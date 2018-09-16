@@ -100,6 +100,9 @@ int main(int argc, char **argv)
 
 	worker.run(start_addr);
 
+	if (verbose)
+		printf("simulation finished.\n");
+
 	if (!hex_filename.empty()) {
 		FILE *fOut = stdout;
 		if (hex_filename != "-") {

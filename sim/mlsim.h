@@ -48,6 +48,9 @@ public:
 	std::vector<uint64_t> coeff0_mem;
 	std::vector<uint64_t> coeff1_mem;
 
+	int32_t LBP = 0, SBP = 0, CBP = 0;
+	int32_t acc0 = 0, acc1 = 0;
+
 	MlSim()
 	{
 		main_mem.resize(128 * 1024);
@@ -58,6 +61,7 @@ public:
 		coeff1_mem.resize(512);
 	}
 
+	void exec(insn_t insn);
 	void run(int addr);
 	void readBinFile(FILE *f);
 	void writeHexFile(FILE *f);

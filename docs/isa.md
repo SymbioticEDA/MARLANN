@@ -97,7 +97,7 @@ The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
     +---------------------------------+-----------------+-----------+
     |             MADDR               |      CADDR      | 101000 40 |  MACC
     |             MADDR               |      CADDR      | 101001 41 |  MMAX
-    |             MADDR               |      CADDR      | 101010 42 |  MMACZ
+    |             MADDR               |      CADDR      | 101010 42 |  MACCZ
     |             MADDR               |      CADDR      | 101011 43 |  MMAXZ
     |             -----               |      -----      | 101100 44 |  ---
     |             CADDR               |      CADDR      | 101101 45 |  MMAXN
@@ -204,11 +204,11 @@ Performing computations:
 - MACC: Load 8 bytes from MADDR+LBP, multiply with coefficients at CADDR+CBP,
 and add the results to the accumulators. (MADDR+LBP must be 2-bytes-aligned.)
 
-- MMAX: Like MMAC, but store the max value in the accumulator instead of the
+- MMAX: Like MACC, but store the max value in the accumulator instead of the
 sum. In MAX mode a coefficient of 0x80 (most negative number) is a special
 symbol for values that should be ignored.
 
-- MACCZ/MMAXZ: Like MMAC/MMAX, but reset the accumulator to zero before
+- MACCZ/MMAXZ: Like MACC/MMAX, but reset the accumulator to zero before
 performing the operation.
 
 - MMAXN: Like MMAX but set the accumulator to the most negative value before

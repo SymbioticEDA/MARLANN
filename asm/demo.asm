@@ -56,13 +56,13 @@ Return
 
 run_conv_5x5x8_kernel_2_layers:
 // produce 7*4=28 output lines
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
-Call run_conv_5x5x8_kernel_1_line
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
+Call run_conv_5x5x8_kernel_4_lines
 AddCBP 25
 AddLBP -8192
 AddSBP -6272+2
