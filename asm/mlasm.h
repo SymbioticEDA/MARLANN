@@ -19,6 +19,7 @@
 #define MLASM_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <vector>
 #include <string>
 #include <map>
