@@ -426,6 +426,9 @@ void MlAsm::assemble()
 			exit(1);
 		}
 
+		if (verbose)
+			printf("symbol %s at %d (0x%05x).\n", sym_name.c_str(), sym.position, sym.position);
+
 		for (auto &act : sym.actions) {
 			auto &insn = insns[act.insn_idx];
 			int val = sym.position * act.factor;
@@ -457,7 +460,7 @@ void MlAsm::assemble()
 	}
 }
 
-void MlAsm::printHexFile(FILE *f)
+void MlAsm::writeHexFile(FILE *f)
 {
 	bool print_addr = true;
 
@@ -465,8 +468,11 @@ void MlAsm::printHexFile(FILE *f)
 		if (!data_valid[i/4]) {
 			print_addr = true;
 		} else {
-			if (print_addr)
+			if (print_addr) {
+				if (verbose)
+					printf("new hex file section at 0x%05x.\n", i);
 				fprintf(f, "@%05x\n", i);
+			}
 
 			uint8_t a = data[i/4];
 			uint8_t b = data[i/4] >> 8;
@@ -477,4 +483,26 @@ void MlAsm::printHexFile(FILE *f)
 			print_addr = false;
 		}
 	}
+}
+
+void MlAsm::writeBinFile(FILE *f)
+{
+	int sz = int(data_valid.size());
+
+	while (sz > 0 && !data_valid[sz-1])
+		sz--;
+
+	if (verbose)
+		printf("writing %d bytes bin file.\n", 4*sz);
+
+	uint8_t buffer[4*sz];
+
+	for (int i = 0; i < sz; i++) {
+		buffer[4*i+0] = data[i];
+		buffer[4*i+1] = data[i] >> 8;
+		buffer[4*i+2] = data[i] >> 16;
+		buffer[4*i+3] = data[i] >> 24;
+	}
+
+	fwrite(buffer, 4*sz, 1, f);
 }

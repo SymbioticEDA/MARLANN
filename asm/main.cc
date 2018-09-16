@@ -23,52 +23,105 @@
 
 #include "mlasm.h"
 
-void help(const char *progname)
+void help(const char *progname, int rc)
 {
-	fprintf(stderr, "Usage: %s [-n] [-t nsecs] [input-file]\n", progname);
-	exit(1);
+	printf("\n");
+	printf("Usage: %s [options] [input-file]\n", progname);
+	printf("\n");
+	printf("  -h\n");
+	printf("    print help message\n");
+	printf("\n");
+	printf("  -v\n");
+	printf("    verbose output\n");
+	printf("\n");
+	printf("  -o filename\n");
+	printf("    write Verilog .hex file\n");
+	printf("\n");
+	printf("  -b filename\n");
+	printf("    write binary file\n");
+	printf("\n");
+	exit(rc);
 }
 
 int main(int argc, char **argv)
 {
 	int opt;
-	FILE *f = stdin;
 	char buffer[4096];
+	FILE *fIn = stdin;
+	bool verbose = false;
+	std::string hex_filename;
+	std::string bin_filename;
 
-	while ((opt = getopt(argc, argv, "nt:")) != -1)
+	while ((opt = getopt(argc, argv, "hvo:b:")) != -1)
 	{
 		switch (opt)
 		{
-		case 'n':
-			printf("Got -n flag.\n");
+		case 'h':
+			help(argv[0], 0);
 			break;
-		case 't':
-			printf("nsecs = %d\n", atoi(optarg));
+		case 'v':
+			verbose = true;
+			break;
+		case 'o':
+			hex_filename = optarg;
+			break;
+		case 'b':
+			bin_filename = optarg;
 			break;
 		default:
-			help(argv[0]);
+			help(argv[0], 1);
 		}
 	}
 
 	if (optind+1 == argc)
 	{
-		f = fopen(argv[optind++], "r");
-		if (f == nullptr) {
+		fIn = fopen(argv[optind++], "r");
+		if (fIn == nullptr) {
 			perror("Open input file");
 			exit(1);
 		}
 	}
 
 	if (optind != argc)
-		help(argv[0]);
+		help(argv[0], 1);
 	
 	MlAsm worker;
 
-	while (fgets(buffer, 4096, f))
+	if (verbose)
+		worker.verbose = true;
+
+	while (fgets(buffer, 4096, fIn))
 		worker.parseLine(buffer);
 	
 	worker.assemble();
-	worker.printHexFile(stdout);
+
+	if (!hex_filename.empty()) {
+		FILE *fOut = stdout;
+		if (hex_filename != "-") {
+			fOut = fopen(hex_filename.c_str(), "wt");
+			if (fOut == nullptr) {
+				perror("Open output hex file");
+				exit(1);
+			}
+		}
+		worker.writeHexFile(fOut);
+		if (hex_filename != "-")
+			fclose(fOut);
+	}
+
+	if (!bin_filename.empty()) {
+		FILE *fOut = stdout;
+		if (bin_filename != "-") {
+			fOut = fopen(bin_filename.c_str(), "wt");
+			if (fOut == nullptr) {
+				perror("Open output bin file");
+				exit(1);
+			}
+		}
+		worker.writeBinFile(fOut);
+		if (bin_filename != "-")
+			fclose(fOut);
+	}
 
 	return 0;
 }

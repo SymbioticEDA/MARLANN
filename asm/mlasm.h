@@ -55,9 +55,9 @@ private:
 		std::vector<symaction_t> actions;
 	};
 
-	int cursor;
-	int linenr;
-	state_t state;
+	int cursor = 0;
+	int linenr = 0;
+	state_t state = STATE_NONE;
 
 	std::vector<uint32_t> data;
 	std::vector<bool> data_valid;
@@ -68,18 +68,18 @@ private:
 	void parseArg(const std::string &s, field_t field, int factor = 1, int divider = 1);
 
 public:
+	bool verbose = false;
+
 	MlAsm()
 	{
-		cursor = 0;
-		linenr = 0;
-		state = STATE_NONE;
 		data.resize(128 * 1024);
 		data_valid.resize(128 * 1024);
 	}
 
 	void parseLine(const char *line);
 	void assemble();
-	void printHexFile(FILE *f);
+	void writeHexFile(FILE *f);
+	void writeBinFile(FILE *f);
 };
 
 #endif
