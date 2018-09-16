@@ -132,14 +132,14 @@ can be at most 512.)
 - LoadCode: Load one (4-byte) word at MADDR and store it at CADDR in compute
 code memory. (MADDR must be 4-bytes-aligned.)
 
-- ContinueLoad: Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
-Continue loading ARG words from memory and store in compute code or coefficient memory.
-
 - LoadCoeff0: Load one 8-byte word at MADDR and store it at CADDR coefficient
 bank 0.
 
 - LoadCoeff1: Load one 8-byte word at MADDR and store it at CADDR coefficient
 bank 1.
+
+- ContinueLoad: Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
+Continue loading ARG words from memory and store in compute code or coefficient memory.
 
 
 Compute Instructions
@@ -154,9 +154,9 @@ Manipulating the base pointers:
 
 - AddLBP: Add MADDR to the load base pointer.
 
-- SetSBP: Set the load base pointer to MXADDR.
+- SetSBP: Set the load base pointer to MADDR.
 
-- AddSBP: Add MXADDR to the load base pointer.
+- AddSBP: Add MADDR to the load base pointer.
 
 - SetCBP: Set the coefficient base pointer to CADDR.
 
@@ -183,9 +183,7 @@ Storing and loading 32-bit intermediate results:
 - Save: Store the first accumulator in the 32-bit word addressed by MADDR+SBP,
 and store the second accumulator at MADDR+SBP+4. (MADDR+SBP must be 2-bytes-aligned.)
 
-- Save0: Like Save,  but only store the first accumulator.
-
-- Save1: Like Save,  but only store the second accumulator.
+- Save0/Save1: Like Save, but only for the first/second accumulator.
 
 - LdSet: Load the 32-bit word addressed by MADDR+LBP into the first accumulator
 and MADDR+LBP+4 into the second accumulator. (MADDR+LBP must be 2-bytes-aligned.)
