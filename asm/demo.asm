@@ -8,7 +8,7 @@ SetCBP 0
 
 // Load convolution kernel to address 0 in code memory
 LoadCode conv_5x5x8_kernel_begin, 0
-ContinueLoad conv_5x5x8_kernel_end-conv_5x5x8_kernel_begin-1
+ContinueLoad conv_5x5x8_kernel_end/4 - conv_5x5x8_kernel_begin/4 - 1
 
 // Load all coefficients
 LoadCoeff0 coeff0, 0
@@ -89,10 +89,10 @@ AddLBP 32
 Return
 
 run_conv_5x5x8_kernel_4_pixels:
-Execute 0, conv_5x5x8_kernel_end-conv_5x5x8_kernel_begin
-Execute 0, conv_5x5x8_kernel_end-conv_5x5x8_kernel_begin
-Execute 0, conv_5x5x8_kernel_end-conv_5x5x8_kernel_begin
-Execute 0, conv_5x5x8_kernel_end-conv_5x5x8_kernel_begin
+Execute 0, conv_5x5x8_kernel_end/4 - conv_5x5x8_kernel_begin/4
+Execute 0, conv_5x5x8_kernel_end/4 - conv_5x5x8_kernel_begin/4
+Execute 0, conv_5x5x8_kernel_end/4 - conv_5x5x8_kernel_begin/4
+Execute 0, conv_5x5x8_kernel_end/4 - conv_5x5x8_kernel_begin/4
 Return
 
 // Kernel Compute code

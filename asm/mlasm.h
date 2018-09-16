@@ -56,7 +56,7 @@ private:
 	};
 
 	struct symaction_t {
-		int insn_idx, factor;
+		int insn_idx, factor, divider;
 		field_t field;
 	};
 
@@ -75,7 +75,7 @@ private:
 	std::vector<insn_t> insns;
 	std::map<std::string, symbol_t> symbols;
 
-	void parseArg(const std::string &s, field_t field, int factor = 1);
+	void parseArg(const std::string &s, field_t field, int factor = 1, int divider = 1);
 
 public:
 	MlAsm()

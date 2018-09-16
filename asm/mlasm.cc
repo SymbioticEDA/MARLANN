@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-void MlAsm::parseArg(const std::string &s, field_t field, int factor)
+void MlAsm::parseArg(const std::string &s, field_t field, int factor, int divider)
 {
 	for (int i = 1; i < int(s.size()); i++) {
 		if (s[i] == '+' || s[i] == '-') {
@@ -30,13 +30,32 @@ void MlAsm::parseArg(const std::string &s, field_t field, int factor)
 	}
 
 	const char *p = s.c_str();
+	int poffset = 0;
 
 	if (*p == '-') {
 		factor *= -1;
+		poffset = 1;
 		p++;
 	} else
 	if (*p == '+') {
+		poffset = 1;
 		p++;
+	}
+
+	int scan_start = strlen(p) - 1;
+	for (int i = scan_start; i > 0; i--) {
+		if (p[i] == '*' && i < scan_start) {
+			parseArg(s.substr(poffset, i), field,
+					factor*atoi(p+i+1), divider);
+			return;
+		}
+		if (p[i] == '/' && i < scan_start) {
+			parseArg(s.substr(poffset, i), field,
+					factor, divider*atoi(p+i+1));
+			return;
+		}
+		if (p[i] < '0' || p[i] > '9')
+			break;
 	}
 
 	char *endptr = nullptr;
@@ -47,6 +66,7 @@ void MlAsm::parseArg(const std::string &s, field_t field, int factor)
 		symaction_t act;
 		act.insn_idx = insns.size()-1;
 		act.factor = factor;
+		act.divider = divider;
 		act.field = field;
 
 		symbols[p].actions.push_back(act);
@@ -355,7 +375,7 @@ void MlAsm::assemble()
 		auto &sym = sym_it.second;
 
 		if (sym.position < 0) {
-			fprintf(stderr, "MlAsm symbol error: Symbol %s is used but not defined. ",
+			fprintf(stderr, "MlAsm symbol error: Symbol %s is used but not defined.\n",
 					sym_name.c_str());
 			exit(1);
 		}
@@ -363,6 +383,14 @@ void MlAsm::assemble()
 		for (auto &act : sym.actions) {
 			auto &insn = insns[act.insn_idx];
 			int val = sym.position * act.factor;
+
+			if (val % act.divider != 0) {
+				fprintf(stderr, "MlAsm symbol error: Symbol %s is divided by %d but is not a multiple of %d (%d).\n",
+						sym_name.c_str(), act.divider, act.divider, val);
+				exit(1);
+			}
+
+			val /= act.divider;
 
 			if (act.field == FIELD_MADDR)
 				insn.maddr += val;
