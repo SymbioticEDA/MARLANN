@@ -341,6 +341,7 @@ module mlaccel_top (
 
 	reg mem_client_qmem;
 	reg mem_client_smem;
+	reg mem_client_cmem;
 
 	reg  [15:0] mem_addr;
 	reg  [ 1:0] mem_wen;
@@ -352,22 +353,24 @@ module mlaccel_top (
 	always @* begin
 		mem_client_qmem = 0;
 		mem_client_smem = 0;
+		mem_client_cmem = 0;
 
 		mem_addr = cmem_addr;
 		mem_wen = cmem_wen;
 		mem_wdata = cmem_wdata;
 
-		if (!cmem_ren && !cmem_wen) begin
-			if ((qmem_read || qmem_write) && !qmem_done) begin
-				mem_client_qmem = 1;
-				mem_addr = qmem_addr;
-				mem_wen = qmem_write;
-				mem_wdata = qmem_wdata;
-			end else
-			if (smem_valid && !smem_state) begin
-				mem_client_smem = 1;
-				mem_addr = smem_addr;
-			end
+		if (cmem_ren || cmem_wen) begin
+			mem_client_cmem = 1;
+		end else
+		if ((qmem_read || qmem_write) && !qmem_done) begin
+			mem_client_qmem = 1;
+			mem_addr = qmem_addr;
+			mem_wen = qmem_write;
+			mem_wdata = qmem_wdata;
+		end else
+		if (smem_valid && !smem_state) begin
+			mem_client_smem = 1;
+			mem_addr = smem_addr;
 		end
 	end
 
