@@ -39,29 +39,43 @@ void MlSim::exec(insn_t insn)
 		return;
 	}
 
-	// SetSBP
+	// SetBBP
 	if (insn.op() == 10) {
+		assert(insn.caddr() == 0);
+		BBP = insn.maddr();
+		return;
+	}
+
+	// AddBBP
+	if (insn.op() == 11) {
+		assert(insn.caddr() == 0);
+		BBP = (BBP + insn.maddr()) & 0x1ffff;
+		return;
+	}
+
+	// SetSBP
+	if (insn.op() == 12) {
 		assert(insn.caddr() == 0);
 		SBP = insn.maddr();
 		return;
 	}
 
 	// AddSBP
-	if (insn.op() == 11) {
+	if (insn.op() == 13) {
 		assert(insn.caddr() == 0);
 		SBP = (SBP + insn.maddr()) & 0x1ffff;
 		return;
 	}
 
 	// SetCBP
-	if (insn.op() == 12) {
+	if (insn.op() == 14) {
 		assert(insn.maddr() == 0);
 		CBP = insn.caddr();
 		return;
 	}
 
 	// AddCBP
-	if (insn.op() == 13) {
+	if (insn.op() == 15) {
 		assert(insn.maddr() == 0);
 		CBP = (CBP + insn.caddr()) & 0x1ff;
 		return;

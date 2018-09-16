@@ -12,8 +12,8 @@ as it has 2-byte alignment. The compute core can write any consecutive 2-byte bl
 in main memory.
 
 All memory operations the compute core performs are relative to a base-pointer.
-The compute core has two such base pointers: A store base pointer (SBP) and a
-load base pointer (LBP).
+The compute core has three such base pointers: A store base pointer (SBP), a
+load base pointer (LBP), and a bias base pointer (BBP).
 
 All compute operations using coefficients address those coefficients relative
 to a coefficient base pointer (CBP).
@@ -58,12 +58,12 @@ The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
     +---------------------------------+-----------------+-----------+
     |             MADDR               |      -----      | 001000  8 |  SetLBP
     |             MADDR               |      -----      | 001001  9 |  AddLBP
-    |             MADDR               |      -----      | 001010 10 |  SetSBP
-    |             MADDR               |      -----      | 001011 11 |  AddSBP
-    |             -----               |      CADDR      | 001100 12 |  SetCBP
-    |             -----               |      CADDR      | 001101 13 |  AddCBP
-    |             -----               |      -----      | 001110 14 |  ---
-    |             -----               |      -----      | 001111 15 |  ---
+    |             MADDR               |      -----      | 001010 10 |  SetBBP
+    |             MADDR               |      -----      | 001011 11 |  AddBBP
+    |             MADDR               |      -----      | 001100 12 |  SetSBP
+    |             MADDR               |      -----      | 001101 13 |  AddSBP
+    |             -----               |      CADDR      | 001110 14 |  SetCBP
+    |             -----               |      CADDR      | 001111 15 |  AddCBP
     +---------------------------------+-----------------+-----------+
     |             MADDR               |       ARG       | 010000 16 |  Store
     |             MADDR               |       ARG       | 010001 17 |  Store0
@@ -154,6 +154,10 @@ Manipulating the base pointers:
 
 - AddLBP: Add MADDR to the load base pointer.
 
+- SetBBP: Set the bias base pointer to MADDR.
+
+- AddBBP: Add MADDR to the bias base pointer.
+
 - SetSBP: Set the load base pointer to MADDR.
 
 - AddSBP: Add MADDR to the load base pointer.
@@ -185,8 +189,8 @@ and store the second accumulator at MADDR+SBP+4. (MADDR+SBP must be 2-bytes-alig
 
 - Save0/Save1: Like Save, but only for the first/second accumulator.
 
-- LdSet: Load the 32-bit word addressed by MADDR+LBP into the first accumulator
-and MADDR+LBP+4 into the second accumulator. (MADDR+LBP must be 2-bytes-aligned.)
+- LdSet: Load the 32-bit word addressed by MADDR+BBP into the first accumulator
+and MADDR+LBP+4 into the second accumulator. (MADDR+BBP must be 2-bytes-aligned.)
 
 - LdSet0/Ldset1: Like LdSet, but only for the first/second accumulator.
 

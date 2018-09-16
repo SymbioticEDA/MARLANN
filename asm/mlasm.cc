@@ -249,7 +249,7 @@ void MlAsm::parseLine(const char *line)
 			return;
 		}
 
-		if ((cmd == "SetLBP" || cmd == "AddLBP" || cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
+		if ((cmd == "SetLBP" || cmd == "AddLBP" || cmd == "SetBBP" || cmd == "AddBBP" || cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
 		{
 			if (cmd == "SetLBP")
 				insn.opcode = 8;
@@ -257,11 +257,17 @@ void MlAsm::parseLine(const char *line)
 			if (cmd == "AddLBP")
 				insn.opcode = 9;
 
-			if (cmd == "SetSBP")
+			if (cmd == "SetBBP")
 				insn.opcode = 10;
 
-			if (cmd == "AddSBP")
+			if (cmd == "AddBBP")
 				insn.opcode = 11;
+
+			if (cmd == "SetSBP")
+				insn.opcode = 12;
+
+			if (cmd == "AddSBP")
+				insn.opcode = 13;
 
 			parseArg(args[0], FIELD_MADDR);
 			return;
@@ -270,10 +276,10 @@ void MlAsm::parseLine(const char *line)
 		if ((cmd == "SetCBP" || cmd == "AddCBP") && args.size() == 1)
 		{
 			if (cmd == "SetCBP")
-				insn.opcode = 12;
+				insn.opcode = 14;
 
 			if (cmd == "AddCBP")
-				insn.opcode = 13;
+				insn.opcode = 15;
 
 			parseArg(args[0], FIELD_CADDR);
 			return;
