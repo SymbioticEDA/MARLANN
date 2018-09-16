@@ -40,7 +40,7 @@ format.
 `LEN` = A 10-bit wide argument (stored in instruction bits 24..15)  
 `ARG` = A 9-bit wide argument
 
-Unused bits (marked with `----`) should be set to zero.
+Unused bits (marked with `----`) must be set to zero.
 
 The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
 
