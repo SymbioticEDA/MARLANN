@@ -26,20 +26,10 @@
 class MlAsm
 {
 private:
-	enum fmt_t {
-		FMT_NONE = 0,
-		FMT_MC   = 1,
-		FMT_M    = 2,
-		FMT_C    = 3,
-		FMT_A    = 4,
-		FMT_MX   = 5
-	};
-
 	enum field_t {
 		FIELD_NONE  = 0,
 		FIELD_MADDR = 1,
-		FIELD_CADDR = 2,
-		FIELD_ARG   = 3
+		FIELD_CADDR = 2
 	};
 
 	enum state_t {
@@ -50,9 +40,9 @@ private:
 
 	struct insn_t {
 		int position = -1;
-		fmt_t format = FMT_NONE;
-		uint32_t opcode = 0, arg = 0;
-		uint32_t maddr = 0, caddr = 0;
+		int opcode = -1;
+		int maddr = 0;
+		int caddr = 0;
 	};
 
 	struct symaction_t {

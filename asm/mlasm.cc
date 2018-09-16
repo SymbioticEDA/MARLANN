@@ -80,9 +80,6 @@ void MlAsm::parseArg(const std::string &s, field_t field, int factor, int divide
 
 		if (field == FIELD_CADDR)
 			insn.caddr += val;
-
-		if (field == FIELD_ARG)
-			insn.arg += val;
 	}
 }
 
@@ -197,14 +194,12 @@ void MlAsm::parseLine(const char *line)
 		if (cmd == "Sync" && args.size() == 0)
 		{
 			insn.opcode = 0;
-			insn.format = FMT_A;
 			return;
 		}
 
 		if (cmd == "Call" && args.size() == 1)
 		{
 			insn.opcode = 1;
-			insn.format = FMT_M;
 			parseArg(args[0], FIELD_MADDR);
 			return;
 		}
@@ -212,40 +207,28 @@ void MlAsm::parseLine(const char *line)
 		if (cmd == "Return" && args.size() == 0)
 		{
 			insn.opcode = 2;
-			insn.format = FMT_A;
 			return;
 		}
 
 		if (cmd == "Execute" && args.size() == 2)
 		{
 			insn.opcode = 3;
-			insn.format = FMT_C;
 			parseArg(args[0], FIELD_CADDR);
-			parseArg(args[1], FIELD_ARG);
+			parseArg(args[1], FIELD_MADDR);
 			return;
 		}
 
 		if (cmd == "LoadCode" && args.size() == 2)
 		{
 			insn.opcode = 4;
-			insn.format = FMT_MC;
 			parseArg(args[0], FIELD_MADDR);
 			parseArg(args[1], FIELD_CADDR);
 			return;
 		}
 
-		if (cmd == "ContinueLoad" && args.size() == 1)
-		{
-			insn.opcode = 5;
-			insn.format = FMT_A;
-			parseArg(args[0], FIELD_ARG);
-			return;
-		}
-
 		if (cmd == "LoadCoeff0" && args.size() == 2)
 		{
-			insn.opcode = 6;
-			insn.format = FMT_MC;
+			insn.opcode = 5;
 			parseArg(args[0], FIELD_MADDR);
 			parseArg(args[1], FIELD_CADDR);
 			return;
@@ -253,74 +236,137 @@ void MlAsm::parseLine(const char *line)
 
 		if (cmd == "LoadCoeff1" && args.size() == 2)
 		{
-			insn.opcode = 7;
-			insn.format = FMT_MC;
+			insn.opcode = 6;
 			parseArg(args[0], FIELD_MADDR);
 			parseArg(args[1], FIELD_CADDR);
 			return;
 		}
 
-		if ((cmd == "SetLBP" || cmd == "AddLBP") && args.size() == 1)
+		if (cmd == "ContinueLoad" && args.size() == 1)
 		{
-			insn.opcode = 9;
-			insn.format = FMT_M;
-			insn.arg = (cmd == "AddLBP");
-			parseArg(args[0], FIELD_MADDR);
+			insn.opcode = 7;
+			parseArg(args[0], FIELD_CADDR);
 			return;
 		}
 
-		if ((cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
+		if ((cmd == "SetLBP" || cmd == "AddLBP" || cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
 		{
-			insn.opcode = 9;
-			insn.format = FMT_MX;
-			insn.arg = (cmd == "AddSBP");
+			if (cmd == "SetLBP")
+				insn.opcode = 8;
+
+			if (cmd == "AddLBP")
+				insn.opcode = 9;
+
+			if (cmd == "SetSBP")
+				insn.opcode = 10;
+
+			if (cmd == "AddSBP")
+				insn.opcode = 11;
+
 			parseArg(args[0], FIELD_MADDR);
 			return;
 		}
 
 		if ((cmd == "SetCBP" || cmd == "AddCBP") && args.size() == 1)
 		{
-			insn.opcode = 9;
-			insn.format = FMT_C;
-			insn.arg = (cmd == "AddCBP");
+			if (cmd == "SetCBP")
+				insn.opcode = 12;
+
+			if (cmd == "AddCBP")
+				insn.opcode = 13;
+
 			parseArg(args[0], FIELD_CADDR);
 			return;
 		}
 
-		if ((cmd == "Store" || cmd == "ReLU") && args.size() == 2)
+		if ((cmd == "Store" || cmd == "Store0" || cmd == "Store1" ||
+				cmd == "ReLU" || cmd == "ReLU0" || cmd == "ReLU1") && args.size() == 2)
 		{
-			insn.opcode = 12;
-			insn.format = FMT_MX;
-			insn.arg = 3 | (cmd == "ReLU" ? 4 : 0);
+			if (cmd == "Store")
+				insn.opcode = 16;
+
+			if (cmd == "Store0")
+				insn.opcode = 17;
+
+			if (cmd == "Store1")
+				insn.opcode = 18;
+
+			if (cmd == "ReLU")
+				insn.opcode = 20;
+
+			if (cmd == "ReLU0")
+				insn.opcode = 21;
+
+			if (cmd == "ReLU1")
+				insn.opcode = 22;
+
 			parseArg(args[0], FIELD_MADDR);
-			parseArg(args[1], FIELD_ARG, 32);
+			parseArg(args[1], FIELD_CADDR);
 			return;
 		}
 
-		if ((cmd == "Store0" || cmd == "ReLU0") && args.size() == 2)
+		if ((cmd == "Save" || cmd == "Save0" || cmd == "Save1" ||
+				cmd == "LdSet" || cmd == "LdSet0" || cmd == "LdSet1" ||
+				cmd == "LdAdd" || cmd == "LdAdd0" || cmd == "LdAdd1" ||
+				cmd == "LdMax" || cmd == "LdMax0" || cmd == "LdMax1") && args.size() == 1)
 		{
-			insn.opcode = 12;
-			insn.format = FMT_MX;
-			insn.arg = 1 | (cmd == "ReLU0" ? 4 : 0);
+			if (cmd == "Save")
+				insn.opcode = 24;
+
+			if (cmd == "Save0")
+				insn.opcode = 25;
+
+			if (cmd == "Save1")
+				insn.opcode = 26;
+
+			if (cmd == "LdSet")
+				insn.opcode = 28;
+
+			if (cmd == "LdSet0")
+				insn.opcode = 29;
+
+			if (cmd == "LdSet1")
+				insn.opcode = 30;
+
+			if (cmd == "LdAdd")
+				insn.opcode = 32;
+
+			if (cmd == "LdAdd0")
+				insn.opcode = 33;
+
+			if (cmd == "LdAdd1")
+				insn.opcode = 34;
+
+			if (cmd == "LdMax")
+				insn.opcode = 36;
+
+			if (cmd == "LdMax0")
+				insn.opcode = 37;
+
+			if (cmd == "LdMax1")
+				insn.opcode = 38;
+
 			parseArg(args[0], FIELD_MADDR);
-			parseArg(args[1], FIELD_ARG, 32);
 			return;
 		}
 
-		if ((cmd == "Store1" || cmd == "ReLU1") && args.size() == 2)
+		if ((cmd == "MACC" || cmd == "MMAX" || cmd == "MACCZ" || cmd == "MMAXZ" || cmd == "MMAXN" ) && args.size() == 2)
 		{
-			insn.opcode = 12;
-			insn.format = FMT_MX;
-			insn.arg = 2 | (cmd == "ReLU0" ? 4 : 0);
-			parseArg(args[0], FIELD_MADDR);
-			parseArg(args[1], FIELD_ARG, 32);
-			return;
-		}
+			if (cmd == "MACC")
+				insn.opcode = 40;
 
-		if ((cmd == "MACC" || cmd == "MACCZ") && args.size() == 2)
-		{
-			insn.opcode = (cmd == "MACC") ? 14 : 16;
-			insn.format = FMT_MC;
+			if (cmd == "MMAX")
+				insn.opcode = 41;
+
+			if (cmd == "MACCZ")
+				insn.opcode = 42;
+
+			if (cmd == "MMAXZ")
+				insn.opcode = 43;
+
+			if (cmd == "MMAZN")
+				insn.opcode = 45;
+
 			parseArg(args[0], FIELD_MADDR);
 			parseArg(args[1], FIELD_CADDR);
 			return;
@@ -397,53 +443,17 @@ void MlAsm::assemble()
 
 			if (act.field == FIELD_CADDR)
 				insn.caddr += val;
-
-			if (act.field == FIELD_ARG)
-				insn.arg += val;
 		}
 	}
 
 	for (auto &insn : insns)
 	{
-		if (insn.format == FMT_MC) {
-			uint32_t maddr = insn.maddr & 0x1fffc;
-			uint32_t caddr = insn.caddr & 0x7ff;
-			uint32_t opcode = insn.opcode & 0x3f;
-			data.at(insn.position/4) = (maddr << 15) | (caddr << 6) | opcode;
-			data_valid.at(insn.position/4) = true;
-		}
+		uint32_t maddr = insn.maddr & 0x1ffff;
+		uint32_t caddr = insn.caddr & 0x1ff;
+		uint32_t opcode = insn.opcode & 0x3f;
 
-		if (insn.format == FMT_M) {
-			uint32_t maddr = insn.maddr & 0x1fffc;
-			uint32_t arg = insn.arg & 0x7ff;
-			uint32_t opcode = insn.opcode & 0x3f;
-			data.at(insn.position/4) = (maddr << 15) | (arg << 6) | opcode;
-			data_valid.at(insn.position/4) = true;
-		}
-
-		if (insn.format == FMT_C) {
-			uint32_t arg = insn.arg & 0x1fffc;
-			uint32_t caddr = insn.caddr & 0x7ff;
-			uint32_t opcode = insn.opcode & 0x3f;
-			data.at(insn.position/4) = (arg << 17) | (caddr << 6) | opcode;
-			data_valid.at(insn.position/4) = true;
-		}
-
-		if (insn.format == FMT_A) {
-			uint32_t arg = insn.arg;
-			uint32_t opcode = insn.opcode & 0x3f;
-			data.at(insn.position/4) = (arg << 6) | opcode;
-			data_valid.at(insn.position/4) = true;
-		}
-
-		if (insn.format == FMT_MX) {
-			uint32_t maddr = insn.maddr & 0x1ffff;
-			uint32_t arg = insn.arg & 0x1ff;
-			uint32_t opcode = insn.opcode & 0x3f;
-			data.at(insn.position/4) = (maddr << 15) | (arg << 6) | opcode;
-			data_valid.at(insn.position/4) = true;
-		}
-
+		data.at(insn.position/4) = (maddr << 15) | (caddr << 6) | opcode;
+		data_valid.at(insn.position/4) = true;
 	}
 }
 
