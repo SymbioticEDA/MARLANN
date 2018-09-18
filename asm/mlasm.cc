@@ -249,18 +249,18 @@ void MlAsm::parseLine(const char *line)
 			return;
 		}
 
-		if ((cmd == "SetLBP" || cmd == "AddLBP" || cmd == "SetBBP" || cmd == "AddBBP" || cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
+		if ((cmd == "SetVBP" || cmd == "AddVBP" || cmd == "SetLBP" || cmd == "AddLBP" || cmd == "SetSBP" || cmd == "AddSBP") && args.size() == 1)
 		{
-			if (cmd == "SetLBP")
+			if (cmd == "SetVBP")
 				insn.opcode = 8;
 
-			if (cmd == "AddLBP")
+			if (cmd == "AddVBP")
 				insn.opcode = 9;
 
-			if (cmd == "SetBBP")
+			if (cmd == "SetLBP")
 				insn.opcode = 10;
 
-			if (cmd == "AddBBP")
+			if (cmd == "AddLBP")
 				insn.opcode = 11;
 
 			if (cmd == "SetSBP")

@@ -12,8 +12,8 @@ as it has 2-byte alignment. The compute core can write any consecutive 2-byte bl
 in main memory.
 
 All memory operations the compute core performs are relative to a base-pointer.
-The compute core has three such base pointers: A store base pointer (SBP), a
-load base pointer (LBP), and a bias base pointer (BBP).
+The compute core has three such base pointers: A variable base pointer (VBP), a
+load base pointer (LBP), and a store base pointer (SBP).
 
 All compute operations using coefficients address those coefficients relative
 to a coefficient base pointer (CBP).
@@ -56,10 +56,10 @@ The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
     |             MADDR               |      CADDR      | 000110  6 |  LoadCoeff1
     |             -----               |       ARG       | 000111  7 |  ContinueLoad
     +---------------------------------+-----------------+-----------+
-    |             MADDR               |      -----      | 001000  8 |  SetLBP
-    |             MADDR               |      -----      | 001001  9 |  AddLBP
-    |             MADDR               |      -----      | 001010 10 |  SetBBP
-    |             MADDR               |      -----      | 001011 11 |  AddBBP
+    |             MADDR               |      -----      | 001000  8 |  SetVBP
+    |             MADDR               |      -----      | 001001  9 |  AddVBP
+    |             MADDR               |      -----      | 001010 10 |  SetLBP
+    |             MADDR               |      -----      | 001011 11 |  AddLBP
     |             MADDR               |      -----      | 001100 12 |  SetSBP
     |             MADDR               |      -----      | 001101 13 |  AddSBP
     |             -----               |      CADDR      | 001110 14 |  SetCBP
@@ -150,21 +150,21 @@ from compute code memory using the Execute instruction.
 
 Manipulating the base pointers:
 
-- SetLBP: Set the load base pointer to MADDR.
+- SetVBP: Set the variable base pointer (VBP) to MADDR.
 
-- AddLBP: Add MADDR to the load base pointer.
+- AddVBP: Add MADDR to the variable base pointer (VBP).
 
-- SetBBP: Set the bias base pointer to MADDR.
+- SetLBP: Set the load base pointer (LBP) to MADDR.
 
-- AddBBP: Add MADDR to the bias base pointer.
+- AddLBP: Add MADDR to the load base pointer (LBP).
 
-- SetSBP: Set the load base pointer to MADDR.
+- SetSBP: Set the store base pointer (SBP) to MADDR.
 
-- AddSBP: Add MADDR to the load base pointer.
+- AddSBP: Add MADDR to the store base pointer (SBP).
 
-- SetCBP: Set the coefficient base pointer to CADDR.
+- SetCBP: Set the coefficient base pointer (CBP) to CADDR.
 
-- AddCBP: Add CADDR to the coefficient base pointer.
+- AddCBP: Add CADDR to the coefficient base pointer (CBP).
 
 Storing results:
 
@@ -189,8 +189,8 @@ and store the second accumulator at MADDR+SBP+4. (MADDR+SBP must be 2-bytes-alig
 
 - Save0/Save1: Like Save, but only for the first/second accumulator.
 
-- LdSet: Load the 32-bit word addressed by MADDR+BBP into the first accumulator
-and MADDR+LBP+4 into the second accumulator. (MADDR+BBP must be 2-bytes-aligned.)
+- LdSet: Load the 32-bit word addressed by MADDR+LBP into the first accumulator
+and MADDR+LBP+4 into the second accumulator. (MADDR+LBP must be 2-bytes-aligned.)
 
 - LdSet0/Ldset1: Like LdSet, but only for the first/second accumulator.
 
@@ -205,8 +205,8 @@ accumulators.
 
 Performing computations:
 
-- MACC: Load 8 bytes from MADDR+LBP, multiply with coefficients at CADDR+CBP,
-and add the results to the accumulators. (MADDR+LBP must be 2-bytes-aligned.)
+- MACC: Load 8 bytes from MADDR+VBP, multiply with coefficients at CADDR+CBP,
+and add the results to the accumulators. (MADDR+VBP must be 2-bytes-aligned.)
 
 - MMAX: Like MACC, but store the max value in the accumulator instead of the
 sum. In MAX mode a coefficient of 0x80 (most negative number) is a special

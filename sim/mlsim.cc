@@ -25,31 +25,31 @@ void MlSim::exec(insn_t insn)
 		printf("exec:       %08x (maddr=%05x, caddr=%03x, op=%d)\n",
 				insn.x, insn.maddr(), insn.caddr(), insn.op());
 
-	// SetLBP
+	// SetVBP
 	if (insn.op() == 8) {
+		assert(insn.caddr() == 0);
+		VBP = insn.maddr();
+		return;
+	}
+
+	// AddVBP
+	if (insn.op() == 9) {
+		assert(insn.caddr() == 0);
+		VBP = (VBP + insn.maddr()) & 0x1ffff;
+		return;
+	}
+
+	// SetLBP
+	if (insn.op() == 10) {
 		assert(insn.caddr() == 0);
 		LBP = insn.maddr();
 		return;
 	}
 
 	// AddLBP
-	if (insn.op() == 9) {
-		assert(insn.caddr() == 0);
-		LBP = (LBP + insn.maddr()) & 0x1ffff;
-		return;
-	}
-
-	// SetBBP
-	if (insn.op() == 10) {
-		assert(insn.caddr() == 0);
-		BBP = insn.maddr();
-		return;
-	}
-
-	// AddBBP
 	if (insn.op() == 11) {
 		assert(insn.caddr() == 0);
-		BBP = (BBP + insn.maddr()) & 0x1ffff;
+		LBP = (LBP + insn.maddr()) & 0x1ffff;
 		return;
 	}
 
@@ -90,15 +90,15 @@ void MlSim::exec(insn_t insn)
 		int32_t v0 = acc0 >> insn.caddr();
 		int32_t v1 = acc1 >> insn.caddr();
 
-		v0 = std::max(v0, 127);
-		v1 = std::max(v1, 127);
+		v0 = std::min(v0, 127);
+		v1 = std::min(v1, 127);
 
 		if (insn.op() == 20 || insn.op() == 21 || insn.op() == 22) {
-			v0 = std::min(v0, 0);
-			v1 = std::min(v1, 0);
+			v0 = std::max(v0, 0);
+			v1 = std::max(v1, 0);
 		} else {
-			v0 = std::min(v0, -128);
-			v1 = std::min(v1, -128);
+			v0 = std::max(v0, -128);
+			v1 = std::max(v1, -128);
 		}
 
 		if (insn.op() == 16 || insn.op() == 17 || insn.op() == 20 || insn.op() == 21) {
@@ -119,23 +119,83 @@ void MlSim::exec(insn_t insn)
 	}
 
 	// Save
-	if (insn.op() == 24 || insn.op() == 25 || insn.op() == 26) {
-		printf("FIXME %s:%d\n", __FILE__, __LINE__);
-		// return;
+	if (insn.op() == 24 || insn.op() == 25 || insn.op() == 26)
+	{
+		int maddr = (SBP + insn.maddr()) & 0x1ffff;
+
+		if (insn.op() == 24 || insn.op() == 25)
+		{
+			main_mem_tags[maddr] = true;
+			main_mem_tags[maddr+1] = true;
+			main_mem_tags[maddr+2] = true;
+			main_mem_tags[maddr+3] = true;
+
+			main_mem[maddr] = acc0;
+			main_mem[maddr+1] = acc0 >> 8;
+			main_mem[maddr+2] = acc0 >> 16;
+			main_mem[maddr+3] = acc0 >> 24;
+		}
+
+		if (insn.op() == 24 || insn.op() == 26)
+		{
+			main_mem_tags[maddr+4] = true;
+			main_mem_tags[maddr+5] = true;
+			main_mem_tags[maddr+6] = true;
+			main_mem_tags[maddr+7] = true;
+
+			main_mem[maddr+4] = acc1;
+			main_mem[maddr+5] = acc1 >> 8;
+			main_mem[maddr+6] = acc1 >> 16;
+			main_mem[maddr+7] = acc1 >> 24;
+		}
+
+		return;
 	}
 
 	// LdSet/LdAdd/LdMax
 	if (insn.op() == 28 || insn.op() == 29 || insn.op() == 30 ||
 			insn.op() == 32 || insn.op() == 33 || insn.op() == 34 ||
-			insn.op() == 36 || insn.op() == 37 || insn.op() == 38) {
-		printf("FIXME %s:%d\n", __FILE__, __LINE__);
-		// return;
+			insn.op() == 36 || insn.op() == 37 || insn.op() == 38)
+	{
+		int maddr = (LBP + insn.maddr()) & 0x1ffff;
+
+		int32_t v0 = 0;
+		v0 |= main_mem[maddr];
+		v0 |= main_mem[maddr+1] << 8;
+		v0 |= main_mem[maddr+2] << 16;
+		v0 |= main_mem[maddr+3] << 24;
+
+		int32_t v1 = 0;
+		v1 |= main_mem[maddr+4];
+		v1 |= main_mem[maddr+5] << 8;
+		v1 |= main_mem[maddr+6] << 16;
+		v1 |= main_mem[maddr+7] << 24;
+
+		if (insn.op() == 28 || insn.op() == 29)
+			acc0 = v0;
+
+		if (insn.op() == 28 || insn.op() == 30)
+			acc1 = v1;
+
+		if (insn.op() == 32 || insn.op() == 33)
+			acc0 += v0;
+
+		if (insn.op() == 32 || insn.op() == 34)
+			acc1 += v1;
+
+		if (insn.op() == 36 || insn.op() == 37)
+			acc0 = std::max(acc0, v0);
+
+		if (insn.op() == 36 || insn.op() == 38)
+			acc1 = std::max(acc1, v1);
+
+		return;
 	}
 
 	// MACC/MMAX
 	if (insn.op() == 40 || insn.op() == 41 || insn.op() == 42 || insn.op() == 43 || insn.op() == 45)
 	{
-		int maddr = (LBP + insn.maddr()) & 0x1ffff;
+		int maddr = (VBP + insn.maddr()) & 0x1ffff;
 		int caddr = (CBP + insn.caddr()) & 0x1ff;
 		assert(maddr % 2 == 0);
 

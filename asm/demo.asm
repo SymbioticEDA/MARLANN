@@ -3,6 +3,7 @@
 
 .code 0x00000
 SetLBP 0
+SetVBP 0
 SetSBP 0
 SetCBP 0
 
@@ -36,7 +37,8 @@ LoadCoeff1 coeff7, 75
 ContinueLoad 24
 
 // Set pointers
-SetLBP indata
+SetLBP bias
+SetVBP indata
 SetSBP outdata
 SetCBP 0
 
@@ -63,9 +65,10 @@ Call run_conv_5x5x8_kernel_4_lines
 Call run_conv_5x5x8_kernel_4_lines
 Call run_conv_5x5x8_kernel_4_lines
 Call run_conv_5x5x8_kernel_4_lines
-AddCBP 25
-AddLBP -8192
+AddLBP 8
+AddVBP -8192
 AddSBP -6272+2
+AddCBP 25
 Return
 
 run_conv_5x5x8_kernel_4_lines:
@@ -85,7 +88,7 @@ Call run_conv_5x5x8_kernel_4_pixels
 Call run_conv_5x5x8_kernel_4_pixels
 Call run_conv_5x5x8_kernel_4_pixels
 // advance by 4 pixels to get to next line
-AddLBP 32
+AddVBP 32
 Return
 
 run_conv_5x5x8_kernel_4_pixels:
@@ -99,7 +102,9 @@ Return
 
 conv_5x5x8_kernel_begin:
 
-MACCZ  0 +    0,  0
+LdSet 0
+
+MACC   0 +    0,  0
 MACC   8 +    0,  1
 MACC  16 +    0,  2
 MACC  24 +    0,  3
@@ -130,12 +135,22 @@ MACC  24 + 1024, 23
 MACC  32 + 1024, 24
 
 ReLU 0, 16
-AddLBP 8
+AddVBP 8
 AddSBP 8
 
 conv_5x5x8_kernel_end:
 
-.data 0x08000
+.data
+
+bias:
+0x01 0x02 0x03 0x04
+0x02 0x02 0x03 0x04
+0x03 0x02 0x03 0x04
+0x04 0x02 0x03 0x04
+0x05 0x02 0x03 0x04
+0x06 0x02 0x03 0x04
+0x07 0x02 0x03 0x04
+0x08 0x02 0x03 0x04
 
 coeff0:
 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08
