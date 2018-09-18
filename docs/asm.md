@@ -63,7 +63,7 @@ MMAXZ  <maddr>, <caddr>
 MMAXN  <maddr>, <caddr>
 ```
 
-Instruction arguments (<maddr>, <caddr>, <arg>, <len>) can be integers (decimal, octal,
+Instruction arguments (`<maddr>`, `<caddr>`, `<arg>`, `<len>`) can be integers (decimal, octal,
 or hexadecimal), labels, or more complex expressions:
 
 ```
@@ -81,8 +81,8 @@ term:
 	term "/" integer;
 ```
 
-Labels at the location counter are defined with a `<label-name>:` line. Labels at an
-arbitrary address are defined with a `.sym <label-name> <addr>` line.
+Labels at the location counter are defined with a `<label>:` line. Labels at an
+arbitrary address are defined with a `.sym <label> <addr>` line.
 
 Data sections starting at the location counter start with a `.data` line. Data sections
 starting at a different location start with `.data <addr>`, where `<addr>` can be a
