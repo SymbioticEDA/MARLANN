@@ -40,6 +40,8 @@ public:
 	};
 
 	bool verbose = false;
+	int cycle_cnt = 0;
+	int ops_cnt = 0;
 
 	std::vector<uint8_t> main_mem;
 	std::vector<bool> main_mem_tags;

@@ -21,6 +21,8 @@
 
 void MlSim::exec(insn_t insn)
 {
+	cycle_cnt++;
+
 	if (verbose)
 		printf("exec:       %08x (maddr=%05x, caddr=%03x, op=%d)\n",
 				insn.x, insn.maddr(), insn.caddr(), insn.op());
@@ -122,6 +124,7 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 24 || insn.op() == 25 || insn.op() == 26)
 	{
 		int maddr = (SBP + insn.maddr()) & 0x1ffff;
+		assert(maddr % 2 == 0);
 
 		if (insn.op() == 24 || insn.op() == 25)
 		{
@@ -158,6 +161,7 @@ void MlSim::exec(insn_t insn)
 			insn.op() == 36 || insn.op() == 37 || insn.op() == 38)
 	{
 		int maddr = (LBP + insn.maddr()) & 0x1ffff;
+		assert(maddr % 2 == 0);
 
 		int32_t v0 = 0;
 		v0 |= main_mem[maddr];
@@ -198,6 +202,8 @@ void MlSim::exec(insn_t insn)
 		int maddr = (VBP + insn.maddr()) & 0x1ffff;
 		int caddr = (CBP + insn.caddr()) & 0x1ff;
 		assert(maddr % 2 == 0);
+
+		ops_cnt++;
 
 		// MACCZ/MMAXZ
 		if ((insn.op() & 2) != 0) {
@@ -252,6 +258,7 @@ void MlSim::run(int addr)
 
 	// Sync
 	if (insn.op() == 0) {
+		cycle_cnt += 8;
 		return run(addr+4);
 	}
 
@@ -286,6 +293,7 @@ void MlSim::run(int addr)
 		v |= main_mem[insn.maddr()+2] << 16;
 		v |= main_mem[insn.maddr()+3] << 24;
 		code_mem[insn.caddr()] = v;
+		cycle_cnt++;
 		goto continueLoad;
 	}
 
@@ -304,6 +312,7 @@ void MlSim::run(int addr)
 			coeff0_mem[insn.caddr()] = v;
 		else
 			coeff1_mem[insn.caddr()] = v;
+		cycle_cnt++;
 		goto continueLoad;
 	}
 
@@ -318,6 +327,8 @@ continueLoad:;
 
 		if (insn2.op() == 7)
 		{
+			cycle_cnt += insn2.caddr();
+
 			for (int i = 1; i <= insn2.caddr(); i++)
 			{
 				// LoadCode
