@@ -357,9 +357,42 @@ module mlaccel_compute #(
 		s8_en <= 1;
 		s8_insn <= s7_insn;
 
-		if (s7_en && s7_insn[5:3] == 3'b 101) begin
-			acc0 <= new_acc0;
-			acc1 <= new_acc1;
+		if (s7_en) begin
+			/* MACC, MMAX, MMACZ, MMAXZ, MMAXN */
+			if (s7_insn[5:3] == 3'b 101) begin
+				acc0 <= new_acc0;
+				acc1 <= new_acc1;
+			end
+
+			/* LdSet, LdSet0 */
+			if (s7_insn[5:0] == 28 || s7_insn[5:0] == 29) begin
+				acc0 <= mem_rdata[31:0];
+			end
+
+			/* LdSet, LdSet1 */
+			if (s7_insn[5:0] == 28 || s7_insn[5:0] == 30) begin
+				acc1 <= mem_rdata[63:32];
+			end
+
+			/* LdAdd, LdAdd0 */
+			if (s7_insn[5:0] == 32 || s7_insn[5:0] == 33) begin
+				acc0 <= acc0 + mem_rdata[31:0];
+			end
+
+			/* LdAdd, LdAdd1 */
+			if (s7_insn[5:0] == 32 || s7_insn[5:0] == 34) begin
+				acc1 <= acc1 + mem_rdata[63:32];
+			end
+
+			/* LdMax, LdMax0 */
+			if (s7_insn[5:0] == 36 || s7_insn[5:0] == 37) begin
+				acc0 <= 0; // FIXME
+			end
+
+			/* LdMax, LdMax1 */
+			if (s7_insn[5:0] == 36 || s7_insn[5:0] == 38) begin
+				acc1 <= 0; // FIXME
+			end
 		end
 
 		if (&acc0_shifted[23:7] == |acc0_shifted[23:7])
