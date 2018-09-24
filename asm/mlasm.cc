@@ -245,7 +245,7 @@ void MlAsm::parseLine(const char *line)
 		if (cmd == "ContinueLoad" && args.size() == 1)
 		{
 			insn.opcode = 7;
-			parseArg(args[0], FIELD_CADDR);
+			parseArg(args[0], FIELD_MADDR);
 			return;
 		}
 

@@ -54,7 +54,7 @@ The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
     |             MADDR               |      CADDR      | 000100  4 |  LoadCode
     |             MADDR               |      CADDR      | 000101  5 |  LoadCoeff0
     |             MADDR               |      CADDR      | 000110  6 |  LoadCoeff1
-    |             -----               |       ARG       | 000111  7 |  ContinueLoad
+    |              LEN                |      -----      | 000111  7 |  ContinueLoad
     +---------------------------------+-----------------+-----------+
     |             MADDR               |      -----      | 001000  8 |  SetVBP
     |             MADDR               |      -----      | 001001  9 |  AddVBP
@@ -139,7 +139,7 @@ bank 0.
 bank 1.
 
 - ContinueLoad: Must follow directly LoadCode, LoadCoeff0, or LoadCoeff1.
-Continue loading ARG words from memory and store in compute code or coefficient memory.
+Continue loading LEN words from memory and store in compute code or coefficient memory.
 
 
 Compute Instructions

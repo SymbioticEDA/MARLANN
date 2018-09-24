@@ -331,9 +331,12 @@ continueLoad:;
 				printf("seq: @%05x %08x (maddr=%05x, caddr=%03x, op=%d)\n",
 						addr+4, insn2.x, insn2.maddr(), insn2.caddr(), insn2.op());
 
-			cycle_cnt += insn2.caddr();
+			int len = insn2.maddr();
+			assert(len < 512);
 
-			for (int i = 1; i <= insn2.caddr(); i++)
+			cycle_cnt += len;
+
+			for (int i = 1; i <= len; i++)
 			{
 				// LoadCode
 				if (insn.op() == 4) {

@@ -62,16 +62,16 @@ module mlaccel_top (
 	wire [15:0] smem_addr;
 	wire [31:0] smem_data;
 
-	(* keep *) wire        comp_valid;
-	(* keep *) wire        comp_ready;
-	(* keep *) wire [31:0] comp_data;
+	wire        comp_valid;
+	wire        comp_ready;
+	wire [31:0] comp_insn;
 
-	(* keep *) wire        comp_busy;
+	wire        comp_busy;
 
 	wire        cmem_ren;
-	wire [ 1:0] cmem_wen;
+	wire [ 7:0] cmem_wen;
 	wire [15:0] cmem_addr;
-	wire [15:0] cmem_wdata;
+	wire [63:0] cmem_wdata;
 	wire [63:0] cmem_rdata;
 
 	/********** Reset Generator **********/
@@ -333,7 +333,7 @@ module mlaccel_top (
 
 		.comp_valid (comp_valid),
 		.comp_ready (comp_ready),
-		.comp_data  (comp_data )
+		.comp_insn  (comp_insn )
 	);
 
 	mlaccel_compute comp (
@@ -343,7 +343,7 @@ module mlaccel_top (
 
 		.cmd_valid (comp_valid),
 		.cmd_ready (comp_ready),
-		.cmd_data  (comp_data ),
+		.cmd_insn  (comp_insn ),
 
 		.mem_ren   (cmem_ren  ),
 		.mem_wen   (cmem_wen  ),
@@ -352,7 +352,16 @@ module mlaccel_top (
 		.mem_rdata (cmem_rdata)
 	);
 
-	assign busy = seq_busy || comp_busy;
+	reg [3:0] busy_q;
+
+	always @(posedge clock) begin
+		if (reset)
+			busy_q <= 0;
+		else
+			busy_q <= {busy_q, seq_busy || comp_busy};
+	end
+
+	assign busy = busy_q || seq_busy || comp_busy;
 
 	/********** Main Memory **********/
 
@@ -361,8 +370,8 @@ module mlaccel_top (
 	reg mem_client_cmem;
 
 	reg  [15:0] mem_addr;
-	reg  [ 1:0] mem_wen;
-	reg  [15:0] mem_wdata;
+	reg  [ 7:0] mem_wen;
+	reg  [63:0] mem_wdata;
 	wire [63:0] mem_rdata;
 
 	reg [1:0] smem_state;

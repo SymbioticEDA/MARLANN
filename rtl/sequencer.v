@@ -29,12 +29,13 @@ module mlaccel_sequencer (
 
 	output reg        comp_valid,
 	input             comp_ready,
-	output reg [31:0] comp_data
+	output reg [31:0] comp_insn
 );
-	localparam [5:0] opcode_sync     = 0;
-	localparam [5:0] opcode_call     = 1;
-	localparam [5:0] opcode_return   = 2;
-	localparam [5:0] opcode_execute  = 3;
+	localparam [5:0] opcode_sync    = 0;
+	localparam [5:0] opcode_call    = 1;
+	localparam [5:0] opcode_return  = 2;
+	localparam [5:0] opcode_execute = 3;
+	localparam [5:0] opcode_contld  = 7;
 
 	/**** Front-End ****/
 
@@ -108,11 +109,11 @@ module mlaccel_sequencer (
 		next_buffer_insn_valid = 0;
 
 		if (insn_valid) begin
-			if ((insn[5:0] == opcode_execute) && (insn[31:17] != 1)) begin
+			if (((insn[5:0] == opcode_execute) || (insn[5:0] == opcode_contld)) && (insn[24:15] != 1)) begin
 				stall_queue = 1;
 				next_buffer_insn_valid = 1;
-				next_buffer_insn[31:17] = insn[31:17] - 1;
-				next_buffer_insn[16:6] = insn[16:6] + 1;
+				next_buffer_insn[24:15] = insn[24:15] - 1;
+				next_buffer_insn[14:6] = insn[14:6] + 1;
 			end
 		end
 	end
@@ -134,7 +135,12 @@ module mlaccel_sequencer (
 		if (!comp_valid || comp_ready) begin
 			if (insn_valid) begin
 				comp_valid <= 1;
-				comp_data <= insn;
+				if (insn[5:0] == opcode_contld) begin
+					comp_insn[31:15] <= comp_insn[31:15] + (comp_insn[5:0] == 4 ? 4 : 8);
+					comp_insn[14:6] <= comp_insn[14:6] + 1;
+				end else begin
+					comp_insn <= insn;
+				end
 			end else begin
 				comp_valid <= 0;
 			end
@@ -150,6 +156,6 @@ module mlaccel_sequencer (
 	/**** Busy ****/
 
 	always @(posedge clock) begin
-		busy <= !reset && (running || queue_iptr != queue_optr || start);
+		busy <= !reset && (running || queue_iptr != queue_optr || start || stall_queue || comp_valid);
 	end
 endmodule
