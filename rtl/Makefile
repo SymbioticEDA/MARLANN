@@ -1,10 +1,8 @@
-all: testbench.vcd
+all: testbench
+	vvp -N testbench
 
 testbench: testbench.v top.v memory.v sequencer.v compute.v
 	iverilog -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v $(shell yosys-config --datdir/ice40/cells_sim.v)
-
-testbench.vcd: testbench
-	vvp -N testbench
 
 compute_tb: compute_tb.v compute_old.v memory.v
 	iverilog -s mlaccel_compute_tb -o compute_tb compute_tb.v compute_old.v memory.v $(shell yosys-config --datdir/ice40/cells_sim.v)

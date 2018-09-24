@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Fri Sep 14 11:31:50 2018
+[*] Mon Sep 24 10:37:41 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/rtl/testbench.vcd"
-[dumpfile_mtime] "Fri Sep 14 11:30:48 2018"
-[dumpfile_size] 143780
+[dumpfile_mtime] "Mon Sep 24 10:37:03 2018"
+[dumpfile_size] 18044682
 [savefile] "/home/clifford/Work/mlaccel/rtl/testbench.gtkw"
-[timestart] 0
+[timestart] 58000
 [size] 1250 826
-[pos] 91 -51
-*-11.000000 1790 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -30 9
+*-15.000000 101770 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [treeopen] testbench.uut.mem.
@@ -55,12 +55,30 @@ testbench.uut.din_data[7:0]
 testbench.uut.state[5:0]
 @200
 -
-@25
+@24
 testbench.uut.buffer_len[10:0]
 testbench.uut.buffer_ptr[10:0]
 @200
 -
+@22
+testbench.uut.seq.pc[16:0]
+@200
+-
+@28
+testbench.uut.seq.smem_valid
+testbench.uut.seq.smem_ready
+@22
+testbench.uut.seq.smem_addr[15:0]
+testbench.uut.seq.smem_data[31:0]
+@200
+-
 -Main Memory
+@28
+testbench.uut.mem_client_qmem
+testbench.uut.mem_client_smem
+testbench.uut.mem_client_cmem
+@200
+-
 @28
 testbench.uut.mem.wen[1:0]
 @22
@@ -71,9 +89,9 @@ testbench.uut.mem.rdata[63:0]
 -
 @28
 testbench.uut.qmem_done
-testbench.uut.qmem_read
-testbench.uut.qmem_rdone
+testbench.uut.qmem_write[1:0]
 @22
-testbench.uut.qmem_rdata[15:0]
+testbench.uut.qmem_addr[15:0]
+testbench.uut.qmem_wdata[15:0]
 [pattern_trace] 1
 [pattern_trace] 0

@@ -23,7 +23,7 @@ module testbench;
 		$dumpvars(0, testbench);
 
 		#5 clock = 0;
-		repeat (10000) #5 clock = ~clock;
+		forever #5 clock = ~clock;
 	end
 
 	reg qpi_csb;
@@ -58,6 +58,7 @@ module testbench;
 
 	task xfer_start;
 		begin
+			#(2*17);
 			qpi_clk = 1;
 			qpi_csb = 0;
 			#17;
@@ -173,40 +174,56 @@ module testbench;
 		end
 	endtask
 
-	integer i;
+	integer cursor, len, i;
+	reg [7:0] memdata [0:128*1024-1];
 
 	initial begin
 		xfer_stop;
 
 		#200;
 
-		xfer_start;
-		xfer_send_byte(8'h 21);
-		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 0
-		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 1
-		xfer_send_word({15'd 4, 11'd 0, 6'd 1});  // 2
-		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 3
-		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 4
-		xfer_send_word({15'd 8, 11'd 0, 6'd 1});  // 5
-		xfer_send_word({15'd 1, 11'd 8, 6'd 3});  // 6
-		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 7
-		xfer_send_word({15'd 4, 11'd 0, 6'd 3});  // 8
-		xfer_send_word({15'd 0, 11'd 0, 6'd 2});  // 9
-		xfer_stop;
+		$display("Uploading demo kernel.");
 
-		#20;
+		cursor = 0;
+		$readmemh("../asm/demo.hex", memdata);
+		while (cursor < 128*1024) begin
+			if (memdata[cursor] !== 8'h XX) begin
+				len = 1;
+				while ((len < 1000) && (len+cursor < 128*1024) &&
+						(memdata[cursor+len] !== 8'h XX)) len = len+1;
 
-		xfer_start;
-		xfer_send_byte(8'h 23);
-		xfer_send_hword(16'h 0000);
-		xfer_send_byte(8'd 10);
-		xfer_wait;
-		xfer_recv;
-		while (xfer != 8'h 00)
-			xfer_recv;
-		xfer_stop;
+				if ((cursor % 2) != 0) begin
+					cursor = cursor - 1;
+					len = len + 1;
+				end
 
-		#20;
+				if ((len % 4) != 0) begin
+					len = len - (len % 4) + 4;
+				end
+
+				xfer_start;
+				xfer_send_byte(8'h 21);
+				for (i = 0; i < len; i = i+1)
+					xfer_send_byte(memdata[cursor+i]);
+				xfer_stop;
+
+				xfer_start;
+				xfer_send_byte(8'h 23);
+				xfer_send_hword(cursor >> 1);
+				xfer_send_byte(len >> 2);
+				xfer_wait;
+				xfer_recv;
+				while (xfer != 8'h 00)
+					xfer_recv;
+				xfer_stop;
+
+				cursor = cursor + len;
+			end else begin
+				cursor = cursor + 1;
+			end
+		end
+
+		$display("Running kernel.");
 
 		xfer_start;
 		xfer_send_byte(8'h 25);
@@ -221,5 +238,10 @@ module testbench;
 		while (xfer != 8'h 00)
 			xfer_recv;
 		xfer_stop;
+
+		$display("Done.");
+
+		repeat (100) @(posedge clock);
+		$finish;
 	end
 endmodule

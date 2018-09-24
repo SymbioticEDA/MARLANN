@@ -207,9 +207,9 @@ module mlaccel_top (
 				case (state)
 					state_wbuf: begin
 						if (!buffer_ptr[0])
-							buffer[buffer_ptr[8:1]][7:0] <= din_data;
+							buffer[buffer_ptr[9:1]][7:0] <= din_data;
 						else
-							buffer[buffer_ptr[8:1]][15:8] <= din_data;
+							buffer[buffer_ptr[9:1]][15:8] <= din_data;
 						buffer_ptr <= buffer_ptr + 1;
 					end
 
@@ -266,9 +266,9 @@ module mlaccel_top (
 				dout_valid <= !dout_ready;
 				buffer_ptr <= buffer_ptr + dout_ready;
 				if (!buffer_ptr[0])
-					dout_data <= buffer[buffer_ptr[8:1]][7:0];
+					dout_data <= buffer[buffer_ptr[9:1]][7:0];
 				else
-					dout_data <= buffer[buffer_ptr[8:1]][15:8];
+					dout_data <= buffer[buffer_ptr[9:1]][15:8];
 			end
 
 			if (state == state_wmem3) begin
@@ -278,7 +278,7 @@ module mlaccel_top (
 				end else
 				if (buffer_ptr != buffer_len && !qmem_write) begin
 					qmem_write <= 3;
-					qmem_wdata <= buffer[buffer_ptr[8:1]];
+					qmem_wdata <= buffer[buffer_ptr[9:1]];
 				end
 				if (dout_ready)
 					dout_data <= {8{buffer_ptr != buffer_len}};
@@ -286,7 +286,7 @@ module mlaccel_top (
 
 			if (state == state_rmem3) begin
 				if (qmem_rdone) begin
-					buffer[buffer_ptr[8:1]] <= qmem_rdata;
+					buffer[buffer_ptr[9:1]] <= qmem_rdata;
 					buffer_ptr <= buffer_ptr + 2;
 					qmem_addr <= qmem_addr + 1;
 				end else
@@ -388,6 +388,7 @@ module mlaccel_top (
 		if (smem_valid && !smem_state) begin
 			mem_client_smem = 1;
 			mem_addr = smem_addr;
+			mem_wen = 0;
 		end
 	end
 

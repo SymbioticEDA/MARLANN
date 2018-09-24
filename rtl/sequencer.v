@@ -39,7 +39,7 @@ module mlaccel_sequencer (
 	/**** Front-End ****/
 
 	reg running;
-	reg [15:0] pc;
+	reg [16:0] pc;
 
 	reg [8:0] callstack_ptr;
 	reg [15:0] callstack [0:511];
@@ -53,32 +53,32 @@ module mlaccel_sequencer (
 			smem_valid <= 0;
 			if (smem_data[5:0] == opcode_call) begin
 				callstack_ptr <= callstack_ptr + 1;
-				callstack[callstack_ptr+1] <= pc + 2;
-				pc <= smem_data[31:17] << 1;
+				callstack[callstack_ptr+1] <= (pc + 4) >> 1;
+				pc <= smem_data[31:15];
 			end else
 			if (smem_data[5:0] == opcode_return) begin
 				if (callstack_ptr) begin
 					callstack_ptr <= callstack_ptr - 1;
-					pc <= callstack[callstack_ptr];
+					pc <= callstack[callstack_ptr] << 1;
 				end else begin
 					running <= 0;
 				end
 			end else begin
 				queue_iptr <= queue_iptr + 1;
 				queue[queue_iptr] <= smem_data;
-				pc <= pc + 2;
+				pc <= pc + 4;
 			end
 		end
 
 		if (running && !smem_valid && !queue_full) begin
 			smem_valid <= 1;
-			smem_addr <= pc;
+			smem_addr <= pc >> 1;
 		end
 
 		queue_full <= (queue_iptr - queue_optr) >= 496;
 
 		if (reset || start) begin
-			pc <= addr;
+			pc <= addr << 1;
 			running <= start;
 			smem_valid <= 0;
 			callstack_ptr <= 0;
