@@ -406,8 +406,7 @@ void MlSim::writeHexFile(FILE *f)
 				fprintf(f, "@%05x\n", i);
 			}
 
-			cnt++;
-			if (cnt == 16) {
+			if (cnt++ == 16) {
 				fprintf(f, "\n");
 				cnt = 1;
 			} else if (cnt != 1) {
