@@ -1,0 +1,13 @@
+[options]
+mode prove
+depth 15
+
+[engines]
+smtbmc boolector
+
+[script]
+read_verilog -formal compute.v
+prep -top mlaccel_compute
+
+[files]
+compute.v

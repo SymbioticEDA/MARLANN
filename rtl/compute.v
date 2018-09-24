@@ -42,22 +42,36 @@ module mlaccel_compute #(
 
 	reg [31:0] acc0, acc1;
 
-	reg        mem_rd_en;
-	reg [15:0] mem_rd_addr;
+	reg [16:0] VBP, LBP, SBP, CBP;
+
+	reg        mem_rd0_en;
+	reg [15:0] mem_rd0_addr;
+
+	reg        mem_rd1_en;
+	reg [15:0] mem_rd1_addr;
 
 	reg [ 7:0] mem_wr_en;
 	reg [15:0] mem_wr_addr;
 	reg [63:0] mem_wr_wdata;
 
-	assign mem_ren = mem_rd_en;
+	assign mem_ren = mem_rd0_en || mem_rd1_en;
 	assign mem_wen = mem_wr_en;
-	assign mem_addr = mem_ren ? mem_rd_addr : mem_wr_addr;
+	assign mem_addr = ({16{mem_rd0_en}} & mem_rd0_addr) | ({16{mem_rd1_en}} & mem_rd1_addr) | ({16{|mem_wr_en}} & mem_wr_addr);
 	assign mem_wdata = mem_wr_wdata;
 
 `ifdef FORMAL
+	reg init_cycle = 1;
+
+	always @(posedge clock) begin
+		init_cycle <= 0;
+	end
+
 	always @* begin
+		if (init_cycle) begin
+			assume (reset);
+		end
 		if (!reset) begin
-			assert ((mem_rd_en + mem_wr_en) < 2);
+			assert ((mem_rd0_en + mem_rd1_en + |mem_wr_en) < 2);
 		end
 	end
 `endif
@@ -66,10 +80,12 @@ module mlaccel_compute #(
 	wire [8:0] cmd_insn_caddr = cmd_insn[14:6];
 	wire [5:0] cmd_insn_opcode = cmd_insn[5:0];
 
+
 	/**** staging ****/
 
 	reg                 s1_en;
 	wire [        31:0] s1_insn;
+	wire                s1_stall;
 
 	reg                 s2_en;
 	reg  [        31:0] s2_insn;
@@ -94,7 +110,44 @@ module mlaccel_compute #(
 	reg                 s8_en;
 	reg  [        31:0] s8_insn;
 
-	assign cmd_ready = 1;
+
+	/**** memory interlock ****/
+
+	reg [7:0] mlock_res;
+	reg [7:0] mlock_mask;
+
+	always @* begin
+		mlock_mask = 0;
+
+		case (s1_insn[5:0])
+			/* LoadCode, LoadCoeff0, LoadCoeff1 */
+			4, 5, 6: mlock_mask = 1 << 0;
+
+			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
+			28, 29, 30, 32, 33, 34, 36, 37, 38: mlock_mask = 1 << 3;
+
+			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
+			40, 41, 42, 43, 45: mlock_mask = 1 << 0;
+
+			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
+			16, 17, 18, 20, 21, 22: mlock_mask = 1 << 7;
+		endcase
+
+		if (!s1_en || reset)
+			mlock_mask = 0;
+	end
+
+	assign s1_stall = |(mlock_res & mlock_mask);
+
+	always @(posedge clock) begin
+		mlock_res <= (mlock_res | mlock_mask) >> 1;
+
+		if (reset)
+			mlock_res <= 0;
+	end
+
+	assign cmd_ready = !s1_stall;
+
 	assign busy = |{s1_en, s2_en, s3_en, s4_en, s5_en, s6_en, s7_en, s8_en};
 
 
@@ -111,10 +164,12 @@ module mlaccel_compute #(
 	wire [5:0] s1_insn_opcode = s1_insn[5:0];
 
 	always @(posedge clock) begin
-		s1_en <= cmd_valid && cmd_ready;
-		s1_insn_direct <= cmd_insn;
-		s1_insn_codemem <= code_mem[cmd_insn[14:6]];
-		s1_insn_sel <= cmd_insn[5:0] == 3;
+		if (!s1_stall) begin
+			s1_en <= cmd_valid && cmd_ready;
+			s1_insn_direct <= cmd_insn;
+			s1_insn_codemem <= code_mem[cmd_insn[14:6]];
+			s1_insn_sel <= cmd_insn[5:0] == 3;
+		end
 
 		if (reset) begin
 			s1_en <= 0;
@@ -124,18 +179,18 @@ module mlaccel_compute #(
 
 	/**** stage 2 ****/
 
-	reg [16:0] VBP, LBP;
-
 	always @(posedge clock) begin
 		s2_en <= 1;
 		s2_insn <= s1_insn;
-		mem_rd_en <= 0;
+
+		mem_rd0_en <= 0;
+		mem_rd0_addr <= 'bx;
 
 		case (s1_insn[5:0])
 			/* LoadCode, LoadCoeff0, LoadCoeff1 */
 			4, 5, 6: begin
-				mem_rd_addr <= s1_insn[31:15] >> 1;
-				mem_rd_en <= 1;
+				mem_rd0_en <= 1;
+				mem_rd0_addr <= s1_insn[31:15] >> 1;
 			end
 
 			/* SetVBP, AddVBP */
@@ -143,26 +198,15 @@ module mlaccel_compute #(
 				VBP <= s1_insn[31:15] + (s1_insn[0] ? VBP : 0);
 			end
 
-			/* SetLBP, AddLBP */
-			10, 11: begin
-				LBP <= s1_insn[31:15] + (s1_insn[0] ? LBP : 0);
-			end
-
-			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-			28, 29, 30, 32, 33, 34, 36, 37, 38: begin
-				mem_rd_addr <= (s1_insn[31:15] + LBP) >> 1;
-				mem_rd_en <= 1;
-			end
-
 			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
 			40, 41, 42, 43, 45: begin
-				mem_rd_addr <= (s1_insn[31:15] + VBP) >> 1;
-				mem_rd_en <= 1;
+				mem_rd0_en <= 1;
+				mem_rd0_addr <= (s1_insn[31:15] + VBP) >> 1;
 			end
 		endcase
 
-		if (reset || !s1_en) begin
-			mem_rd_en <= 0;
+		if (reset || !s1_en || s1_stall) begin
+			mem_rd0_en <= 0;
 			s2_en <= 0;
 		end
 	end
@@ -213,7 +257,24 @@ module mlaccel_compute #(
 			coeff_mem[s4_insn[14:6]][128:64] <= mem_rdata;
 		end
 
+		mem_rd1_en <= 0;
+		mem_rd1_addr <= 'bx;
+
+		case (s4_insn[5:0])
+			/* SetLBP, AddLBP */
+			10, 11: begin
+				LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
+			end
+
+			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
+			28, 29, 30, 32, 33, 34, 36, 37, 38: begin
+				mem_rd1_en <= 1;
+				mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
+			end
+		endcase
+
 		if (reset || !s4_en) begin
+			mem_rd1_en <= 0;
 			s5_en <= 0;
 		end
 	end
@@ -318,8 +379,6 @@ module mlaccel_compute #(
 
 
 	/**** write back ****/
-
-	reg [16:0] SBP;
 
 	reg [ 7:0] pre_mem_wr_en;
 	reg [16:0] pre_mem_wr_addr;

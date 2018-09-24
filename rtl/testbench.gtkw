@@ -1,19 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Mon Sep 24 14:51:24 2018
+[*] Mon Sep 24 18:45:28 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/rtl/testbench.vcd"
-[dumpfile_mtime] "Mon Sep 24 14:49:00 2018"
-[dumpfile_size] 156186206
+[dumpfile_mtime] "Mon Sep 24 18:40:22 2018"
+[dumpfile_size] 154254793
 [savefile] "/home/clifford/Work/mlaccel/rtl/testbench.gtkw"
-[timestart] 0
+[timestart] 524743
 [size] 1250 826
 [pos] -1 -1
-*-21.000000 509506 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.000000 525060 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [sst_width] 256
-[signals_width] 321
+[signals_width] 242
 [sst_expanded] 1
 [sst_vpaned_height] 240
 @28
@@ -75,7 +75,8 @@ testbench.uut.comp.s1_insn_opcode[5:0]
 @200
 -
 @28
-testbench.uut.comp.mem_rd_en
+testbench.uut.comp.mem_rd0_en
+testbench.uut.comp.mem_rd1_en
 @22
 testbench.uut.comp.mem_wr_en[7:0]
 testbench.uut.comp.mem_wr_addr[15:0]
