@@ -101,9 +101,7 @@ int main(int argc, char **argv)
 	worker.run(start_addr);
 
 	if (verbose) {
-		printf("simulation finished.\n",
-				worker.cycle_cnt, (16.0*worker.ops_cnt) / worker.cycle_cnt,
-				(100.0*worker.ops_cnt) / worker.cycle_cnt);
+		printf("simulation finished.\n");
 		printf("est %d cycles, avg %f ops/cycle, %.1f%% utilization\n",
 				worker.cycle_cnt, (16.0*worker.ops_cnt) / worker.cycle_cnt,
 				(100.0*worker.ops_cnt) / worker.cycle_cnt);

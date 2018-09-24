@@ -327,6 +327,10 @@ continueLoad:;
 
 		if (insn2.op() == 7)
 		{
+			if (verbose)
+				printf("seq: @%05x %08x (maddr=%05x, caddr=%03x, op=%d)\n",
+						addr+4, insn2.x, insn2.maddr(), insn2.caddr(), insn2.op());
+
 			cycle_cnt += insn2.caddr();
 
 			for (int i = 1; i <= insn2.caddr(); i++)
