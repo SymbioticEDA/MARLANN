@@ -37,6 +37,9 @@ void help(const char *progname, int rc)
 	printf("  -r addr\n");
 	printf("    start address (default = 0)\n");
 	printf("\n");
+	printf("  -t filename\n");
+	printf("    write instruction trace file\n");
+	printf("\n");
 	printf("  -o filename\n");
 	printf("    write Verilog .hex file\n");
 	printf("\n");
@@ -52,10 +55,11 @@ int main(int argc, char **argv)
 	FILE *fIn = stdin;
 	bool verbose = false;
 	int start_addr = 0;
+	std::string trace_filename;
 	std::string hex_filename;
 	std::string bin_filename;
 
-	while ((opt = getopt(argc, argv, "hvr:o:b:")) != -1)
+	while ((opt = getopt(argc, argv, "hvr:t:o:b:")) != -1)
 	{
 		switch (opt)
 		{
@@ -67,6 +71,9 @@ int main(int argc, char **argv)
 			break;
 		case 'r':
 			start_addr = strtol(optarg, nullptr, 0);
+			break;
+		case 't':
+			trace_filename = optarg;
 			break;
 		case 'o':
 			hex_filename = optarg;
@@ -95,6 +102,17 @@ int main(int argc, char **argv)
 
 	if (verbose)
 		worker.verbose = true;
+
+	if (!trace_filename.empty()) {
+		worker.trace = stdout;
+		if (trace_filename != "-") {
+			worker.trace = fopen(trace_filename.c_str(), "wt");
+			if (worker.trace == nullptr) {
+				perror("Open output trace file");
+				exit(1);
+			}
+		}
+	}
 
 	worker.readBinFile(fIn);
 
@@ -133,6 +151,11 @@ int main(int argc, char **argv)
 		worker.writeBinFile(fOut);
 		if (bin_filename != "-")
 			fclose(fOut);
+	}
+
+	if (!trace_filename.empty() && trace_filename != "-") {
+		fclose(worker.trace);
+		worker.trace = nullptr;
 	}
 
 	return 0;

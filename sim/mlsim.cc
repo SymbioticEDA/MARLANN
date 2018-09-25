@@ -31,6 +31,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 8) {
 		assert(insn.caddr() == 0);
 		VBP = insn.maddr();
+		if (trace)
+			fprintf(trace, "SetVBP 0x%05x // -> 0x%05x\n", insn.maddr(), VBP);
 		return;
 	}
 
@@ -38,6 +40,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 9) {
 		assert(insn.caddr() == 0);
 		VBP = (VBP + insn.maddr()) & 0x1ffff;
+		if (trace)
+			fprintf(trace, "AddVBP 0x%05x // -> 0x%05x\n", insn.maddr(), VBP);
 		return;
 	}
 
@@ -45,6 +49,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 10) {
 		assert(insn.caddr() == 0);
 		LBP = insn.maddr();
+		if (trace)
+			fprintf(trace, "SetLBP 0x%05x // -> 0x%05x\n", insn.maddr(), LBP);
 		return;
 	}
 
@@ -52,6 +58,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 11) {
 		assert(insn.caddr() == 0);
 		LBP = (LBP + insn.maddr()) & 0x1ffff;
+		if (trace)
+			fprintf(trace, "AddLBP 0x%05x // -> 0x%05x\n", insn.maddr(), LBP);
 		return;
 	}
 
@@ -59,6 +67,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 12) {
 		assert(insn.caddr() == 0);
 		SBP = insn.maddr();
+		if (trace)
+			fprintf(trace, "SetSBP 0x%05x // -> 0x%05x\n", insn.maddr(), SBP);
 		return;
 	}
 
@@ -66,6 +76,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 13) {
 		assert(insn.caddr() == 0);
 		SBP = (SBP + insn.maddr()) & 0x1ffff;
+		if (trace)
+			fprintf(trace, "AddSBP 0x%05x // -> 0x%05x\n", insn.maddr(), SBP);
 		return;
 	}
 
@@ -73,6 +85,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 14) {
 		assert(insn.maddr() == 0);
 		CBP = insn.caddr();
+		if (trace)
+			fprintf(trace, "SetCBP 0x%03x // -> 0x%03x\n", insn.caddr(), CBP);
 		return;
 	}
 
@@ -80,6 +94,8 @@ void MlSim::exec(insn_t insn)
 	if (insn.op() == 15) {
 		assert(insn.maddr() == 0);
 		CBP = (CBP + insn.caddr()) & 0x1ff;
+		if (trace)
+			fprintf(trace, "AddCBP 0x%03x // -> 0x%03x\n", insn.caddr(), CBP);
 		return;
 	}
 
@@ -117,6 +133,20 @@ void MlSim::exec(insn_t insn)
 			main_mem[maddr+1] = v1;
 		}
 
+		if (trace) {
+			if (insn.op() == 16)
+				fprintf(trace, "Store 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%02x 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, acc1, v0, v1, maddr);
+			if (insn.op() == 17)
+				fprintf(trace, "Store0 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, v0, maddr);
+			if (insn.op() == 18)
+				fprintf(trace, "Store1 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc1, v1, maddr+1);
+			if (insn.op() == 20)
+				fprintf(trace, "ReLU 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%02x 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, acc1, v0, v1, maddr);
+			if (insn.op() == 21)
+				fprintf(trace, "ReLU0 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, v0, maddr);
+			if (insn.op() == 22)
+				fprintf(trace, "ReLU1 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc1, v1, maddr+1);
+		}
 		return;
 	}
 
@@ -152,6 +182,9 @@ void MlSim::exec(insn_t insn)
 			main_mem[maddr+7] = acc1 >> 24;
 		}
 
+		if (trace) {
+			// FIXME
+		}
 		return;
 	}
 
@@ -193,6 +226,26 @@ void MlSim::exec(insn_t insn)
 		if (insn.op() == 36 || insn.op() == 38)
 			acc1 = std::max(acc1, v1);
 
+		if (trace) {
+			if (insn.op() == 28)
+				fprintf(trace, "LdSet 0x%05x // -> 0x%08x 0x%08x\n", insn.maddr(), acc0, acc1);
+			if (insn.op() == 29)
+				fprintf(trace, "LdSet0 0x%05x // -> 0x%08x\n", insn.maddr(), acc0);
+			if (insn.op() == 30)
+				fprintf(trace, "LdSet1 0x%05x // -> 0x%08x\n", insn.maddr(), acc1);
+			if (insn.op() == 32)
+				fprintf(trace, "LdAdd 0x%05x // -> 0x%08x 0x%08x\n", insn.maddr(), acc0, acc1);
+			if (insn.op() == 33)
+				fprintf(trace, "LdAdd0 0x%05x // -> 0x%08x\n", insn.maddr(), acc0);
+			if (insn.op() == 34)
+				fprintf(trace, "LdAdd1 0x%05x // -> 0x%08x\n", insn.maddr(), acc1);
+			if (insn.op() == 36)
+				fprintf(trace, "LdMax 0x%05x // -> 0x%08x 0x%08x\n", insn.maddr(), acc0, acc1);
+			if (insn.op() == 37)
+				fprintf(trace, "LdMax0 0x%05x // -> 0x%08x\n", insn.maddr(), acc0);
+			if (insn.op() == 38)
+				fprintf(trace, "LdMax1 0x%05x // -> 0x%08x\n", insn.maddr(), acc1);
+		}
 		return;
 	}
 
@@ -235,6 +288,15 @@ void MlSim::exec(insn_t insn)
 			}
 		}
 
+		if (trace) {
+			uint64_t mdata = 0;
+			for (int i = 0; i < 8; i ++)
+				mdata |= uint64_t(main_mem[maddr+i]) << (8*i);
+			if (insn.op() == 40)
+				fprintf(trace, "MACC 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%05x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.maddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
+		}
 		return;
 	}
 

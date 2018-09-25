@@ -39,6 +39,7 @@ public:
 		int caddr() { return (x >> 6) & 0x1ff; }
 	};
 
+	FILE *trace = nullptr;
 	bool verbose = false;
 	int cycle_cnt = 0;
 	int ops_cnt = 0;

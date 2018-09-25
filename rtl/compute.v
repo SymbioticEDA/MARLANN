@@ -42,7 +42,8 @@ module mlaccel_compute #(
 
 	reg [31:0] acc0, acc1;
 
-	reg [16:0] VBP, LBP, SBP, CBP;
+	reg [16:0] VBP, LBP, SBP;
+	reg [ 8:0] CBP;
 
 	reg        mem_rd0_en;
 	reg [15:0] mem_rd0_addr;
@@ -59,7 +60,7 @@ module mlaccel_compute #(
 	assign mem_addr = ({16{mem_rd0_en}} & mem_rd0_addr) | ({16{mem_rd1_en}} & mem_rd1_addr) | ({16{|mem_wr_en}} & mem_wr_addr);
 	assign mem_wdata = mem_wr_wdata;
 
-`ifdef FORMAL
+`ifdef FORMAL_MLOCK_CHECK
 	reg init_cycle = 1;
 
 	always @(posedge clock) begin
@@ -180,45 +181,44 @@ module mlaccel_compute #(
 	/**** stage 2 ****/
 
 	always @(posedge clock) begin
-		s2_en <= 1;
+		s2_en <= 0;
 		s2_insn <= s1_insn;
 
 		mem_rd0_en <= 0;
 		mem_rd0_addr <= 'bx;
 
-		case (s1_insn[5:0])
-			/* LoadCode, LoadCoeff0, LoadCoeff1 */
-			4, 5, 6: begin
-				mem_rd0_en <= 1;
-				mem_rd0_addr <= s1_insn[31:15] >> 1;
-			end
+		if (!reset && s1_en && !s1_stall) begin
+			s2_en <= 1;
 
-			/* SetVBP, AddVBP */
-			8, 9: begin
-				VBP <= s1_insn[31:15] + (s1_insn[0] ? VBP : 0);
-			end
+			case (s1_insn[5:0])
+				/* LoadCode, LoadCoeff0, LoadCoeff1 */
+				4, 5, 6: begin
+					mem_rd0_en <= 1;
+					mem_rd0_addr <= s1_insn[31:15] >> 1;
+				end
 
-			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
-			40, 41, 42, 43, 45: begin
-				mem_rd0_en <= 1;
-				mem_rd0_addr <= (s1_insn[31:15] + VBP) >> 1;
-			end
-		endcase
+				/* SetVBP, AddVBP */
+				8, 9: begin
+					VBP <= s1_insn[31:15] + (s1_insn[0] ? VBP : 0);
+				end
 
-		if (reset || !s1_en || s1_stall) begin
-			mem_rd0_en <= 0;
-			s2_en <= 0;
+				/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
+				40, 41, 42, 43, 45: begin
+					mem_rd0_en <= 1;
+					mem_rd0_addr <= (s1_insn[31:15] + VBP) >> 1;
+				end
+			endcase
 		end
 	end
 
 	/**** stage 3 ****/
 
 	always @(posedge clock) begin
-		s3_en <= 1;
+		s3_en <= 0;
 		s3_insn <= s2_insn;
 
-		if (reset || !s2_en) begin
-			s3_en <= 0;
+		if (!reset && s2_en) begin
+			s3_en <= 1;
 		end
 	end
 
@@ -226,12 +226,17 @@ module mlaccel_compute #(
 	/**** stage 4 ****/
 
 	always @(posedge clock) begin
-		s4_en <= 1;
+		s4_en <= 0;
 		s4_insn <= s3_insn;
-		s4_coeff <= coeff_mem[s3_insn[14:6]];
+		s4_coeff <= coeff_mem[s3_insn[14:6] + CBP];
 
-		if (reset || !s3_en) begin
-			s4_en <= 0;
+		if (!reset && s3_en) begin
+			s4_en <= 1;
+
+			/* SetCBP, AddCBP */
+			if (s3_insn[5:0] == 14 || s3_insn[5:0] == 15) begin
+				CBP <= s3_insn[14:6] + (s3_insn[0] ? CBP : 0);
+			end
 		end
 	end
 
@@ -239,43 +244,42 @@ module mlaccel_compute #(
 	/**** stage 5 ****/
 
 	always @(posedge clock) begin
-		s5_en <= 1;
+		s5_en <= 0;
 		s5_insn <= s4_insn;
-
-		/* LoadCode */
-		if (s4_en && s4_insn[5:0] == 4) begin
-			code_mem[s4_insn[14:6]] <= mem_rdata[31:0];
-		end
-
-		/* LoadCoeff0 */
-		if (s4_en && s4_insn[5:0] == 5) begin
-			coeff_mem[s4_insn[14:6]][63:0] <= mem_rdata;
-		end
-
-		/* LoadCoeff1 */
-		if (s4_en && s4_insn[5:0] == 6) begin
-			coeff_mem[s4_insn[14:6]][128:64] <= mem_rdata;
-		end
 
 		mem_rd1_en <= 0;
 		mem_rd1_addr <= 'bx;
 
-		case (s4_insn[5:0])
-			/* SetLBP, AddLBP */
-			10, 11: begin
-				LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
+		if (!reset && s4_en) begin
+			s5_en <= 1;
+
+			/* LoadCode */
+			if (s4_insn[5:0] == 4) begin
+				code_mem[s4_insn[14:6]] <= mem_rdata[31:0];
 			end
 
-			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-			28, 29, 30, 32, 33, 34, 36, 37, 38: begin
-				mem_rd1_en <= 1;
-				mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
+			/* LoadCoeff0 */
+			if (s4_en && s4_insn[5:0] == 5) begin
+				coeff_mem[s4_insn[14:6]][63:0] <= mem_rdata;
 			end
-		endcase
 
-		if (reset || !s4_en) begin
-			mem_rd1_en <= 0;
-			s5_en <= 0;
+			/* LoadCoeff1 */
+			if (s4_en && s4_insn[5:0] == 6) begin
+				coeff_mem[s4_insn[14:6]][128:64] <= mem_rdata;
+			end
+
+			case (s4_insn[5:0])
+				/* SetLBP, AddLBP */
+				10, 11: begin
+					LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
+				end
+
+				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
+				28, 29, 30, 32, 33, 34, 36, 37, 38: begin
+					mem_rd1_en <= 1;
+					mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
+				end
+			endcase
 		end
 	end
 
@@ -283,11 +287,11 @@ module mlaccel_compute #(
 	/**** stage 6 ****/
 
 	always @(posedge clock) begin
-		s6_en <= 1;
+		s6_en <= 0;
 		s6_insn <= s5_insn;
 
-		if (reset || !s5_en) begin
-			s6_en <= 0;
+		if (!reset && s5_en) begin
+			s6_en <= 1;
 		end
 	end
 
@@ -304,11 +308,11 @@ module mlaccel_compute #(
 	);
 
 	always @(posedge clock) begin
-		s7_en <= 1;
+		s7_en <= 0;
 		s7_insn <= s6_insn;
 
-		if (reset || !s6_en) begin
-			s7_en <= 0;
+		if (!reset && s6_en) begin
+			s7_en <= 1;
 		end
 	end
 
@@ -354,10 +358,12 @@ module mlaccel_compute #(
 	end
 
 	always @(posedge clock) begin
-		s8_en <= 1;
+		s8_en <= 0;
 		s8_insn <= s7_insn;
 
-		if (s7_en) begin
+		if (!reset && s7_en) begin
+			s8_en <= 1;
+
 			/* MACC, MMAX, MMACZ, MMAXZ, MMAXN */
 			if (s7_insn[5:3] == 3'b 101) begin
 				acc0 <= new_acc0;
@@ -395,19 +401,15 @@ module mlaccel_compute #(
 			end
 		end
 
-		if (&acc0_shifted[23:7] == |acc0_shifted[23:7])
+		if (&acc0_shifted[31:7] == |acc0_shifted[31:7])
 			acc0_saturated <= acc0_shifted[7:0];
 		else
-			acc0_saturated <= acc0_shifted[23] << 7;
+			acc0_saturated <= acc0_shifted[31] ? -128 : 127;
 
-		if (&acc1_shifted[23:7] == |acc1_shifted[23:7])
+		if (&acc1_shifted[31:7] == |acc1_shifted[31:7])
 			acc1_saturated <= acc1_shifted[7:0];
 		else
-			acc1_saturated <= acc1_shifted[23] << 7;
-
-		if (reset || !s7_en) begin
-			s8_en <= 0;
-		end
+			acc1_saturated <= acc1_shifted[31] ? -128 : 127;
 	end
 
 
@@ -439,20 +441,102 @@ module mlaccel_compute #(
 			{8{!s8_insn[2] || !acc0_saturated[7]}} & acc0_saturated
 		};
 
-		/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
-		if (s8_insn[5:3] == 3'b 010) begin
-			pre_mem_wr_en <= {!s8_insn[0], !s8_insn[1]};
-		end
+		if (s8_en) begin
+			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
+			if (s8_insn[5:3] == 3'b 010) begin
+				pre_mem_wr_en <= {!s8_insn[0], !s8_insn[1]};
+			end
 
-		/* SetSBP, AddSBP */
-		if (s8_insn[5:0] == 12 || s8_insn[5:0] == 13) begin
-			SBP <= s8_insn[31:15] + (s8_insn[0] ? SBP : 0);
+			/* SetSBP, AddSBP */
+			if (s8_insn[5:0] == 12 || s8_insn[5:0] == 13) begin
+				SBP <= s8_insn[31:15] + (s8_insn[0] ? SBP : 0);
+			end
 		end
 
 		if (reset || !s8_en) begin
 			pre_mem_wr_en <= 0;
 		end
 	end
+
+
+	/**** trace function ****/
+
+`ifdef TRACE
+	reg trace_en;
+	reg [31:0] trace_insn;
+	wire [16:0] trace_maddr = trace_insn[31:15];
+	wire [8:0] trace_caddr = trace_insn[14:6];
+	wire [5:0] trace_opcode = trace_insn[5:0];
+
+	reg [7*17-1:0] trace_vbp_queue;
+	wire [16:0] trace_vbp = trace_vbp_queue >> (17*6);
+
+	reg [4*17-1:0] trace_lbp_queue;
+	wire [16:0] trace_lbp = trace_lbp_queue >> (17*3);
+
+	wire [16:0] trace_sbp = SBP;
+
+	reg [5*9-1:0] trace_cbp_queue;
+	wire [8:0] trace_cbp = trace_cbp_queue >> (9*4);
+
+	reg [31:0] trace_acc0, trace_acc1;
+
+	wire [7:0] trace_outb0 = pre_mem_wr_wdata[15:8];
+	wire [7:0] trace_outb1 = pre_mem_wr_wdata[7:0];
+	wire [16:0] trace_outaddr = pre_mem_wr_addr;
+
+	always @(posedge clock) begin
+		trace_en <= s8_en;
+		trace_insn <= s8_insn;
+
+		trace_vbp_queue <= {trace_vbp_queue, VBP};
+		trace_lbp_queue <= {trace_lbp_queue, LBP};
+		trace_cbp_queue <= {trace_cbp_queue, CBP};
+
+		trace_acc0 <= acc0;
+		trace_acc1 <= acc1;
+
+		if (!reset && trace_en) begin
+			case (trace_opcode)
+				 8: $display("TRACE %8t: SetVBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_vbp);
+				 9: $display("TRACE %8t: AddVBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_vbp);
+				10: $display("TRACE %8t: SetLBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_lbp);
+				11: $display("TRACE %8t: AddLBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_lbp);
+				12: $display("TRACE %8t: SetSBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_sbp);
+				13: $display("TRACE %8t: AddSBP 0x%05x // -> 0x%05x", $time, trace_maddr, trace_sbp);
+				14: $display("TRACE %8t: SetCBP 0x%03x // -> 0x%03x", $time, trace_caddr, trace_cbp);
+				15: $display("TRACE %8t: AddCBP 0x%03x // -> 0x%03x", $time, trace_caddr, trace_cbp);
+
+				16: $display("TRACE %8t: Store 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%02x 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_acc1, trace_outb0, trace_outb1, trace_outaddr);
+				17: $display("TRACE %8t: Store0 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_outb0, trace_outaddr);
+				18: $display("TRACE %8t: Store1 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc1, trace_outb1, trace_outaddr+1);
+
+				20: $display("TRACE %8t: ReLU 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%02x 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_acc1, trace_outb0, trace_outb1, trace_outaddr);
+				21: $display("TRACE %8t: ReLU0 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_outb0, trace_outaddr);
+				22: $display("TRACE %8t: ReLU1 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc1, trace_outb1, trace_outaddr+1);
+
+				28: $display("TRACE %8t: LdSet 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
+				29: $display("TRACE %8t: LdSet0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
+				30: $display("TRACE %8t: LdSet1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
+
+				32: $display("TRACE %8t: LdAdd 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
+				33: $display("TRACE %8t: LdAdd0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
+				34: $display("TRACE %8t: LdAdd1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
+
+				36: $display("TRACE %8t: LdMax 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
+				37: $display("TRACE %8t: LdMax0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
+				38: $display("TRACE %8t: LdMax1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
+			endcase
+			$fflush;
+		end
+	end
+`endif
 endmodule
 
 module mlaccel_compute_mul (

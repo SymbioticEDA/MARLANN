@@ -183,13 +183,14 @@ module testbench;
 		#200;
 
 		$display("Uploading demo kernel.");
+		$fflush;
 
 		cursor = 0;
 		$readmemh("../asm/demo.hex", memdata);
 		while (cursor < 128*1024) begin
 			if (memdata[cursor] !== 8'h XX) begin
 				len = 1;
-				while ((len < 1000) && (len+cursor < 128*1024) &&
+				while ((len < 1024) && (len+cursor < 128*1024) &&
 						(memdata[cursor+len] !== 8'h XX)) len = len+1;
 
 				if ((cursor % 2) != 0) begin
@@ -200,6 +201,9 @@ module testbench;
 				if ((len % 4) != 0) begin
 					len = len - (len % 4) + 4;
 				end
+
+				$display("  uploading %4d bytes to 0x%05x", len, cursor);
+				$fflush;
 
 				xfer_start;
 				xfer_send_byte(8'h 21);
@@ -224,6 +228,7 @@ module testbench;
 		end
 
 		$display("Running kernel.");
+		$fflush;
 
 		xfer_start;
 		xfer_send_byte(8'h 25);
@@ -240,6 +245,7 @@ module testbench;
 		xfer_stop;
 
 		$display("Done.");
+		$fflush;
 
 		repeat (100) @(posedge clock);
 		$finish;

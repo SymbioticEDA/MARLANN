@@ -1,5 +1,7 @@
 /testbench
 /testbench.vcd
+/testbench.log
+/testbench.trace
 /compute_tb
 /compute_tb.vcd
-/compute_abv
+/compute_mlock
