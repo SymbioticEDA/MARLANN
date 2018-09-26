@@ -76,6 +76,8 @@ module testbench;
 	wire ml_csb;
 	wire ml_clk;
 
+	wire cam_scl = 1'b0, cam_sda = 1'b0;
+
 	ctrlsoc ctrl (
 		.clk       (ctrl_clk ),
 
@@ -99,7 +101,10 @@ module testbench;
 		.led5      (led5     ),
 
 		.ml_csb    (ml_csb   ),
-		.ml_clk    (ml_clk   )
+		.ml_clk    (ml_clk   ),
+
+		.cam_scl   (cam_scl),
+		.cam_sda   (cam_sda)
 	);
 
 	spiflash flash (

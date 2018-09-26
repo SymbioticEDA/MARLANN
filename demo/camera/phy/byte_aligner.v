@@ -51,7 +51,7 @@ module dphy_rx_byte_align(
 
 	reg [7:0] curr_byte;
 	reg [7:0] last_byte;
-	reg [7:0] shifted_byte;
+	wire [7:0] shifted_byte;
 
 	reg found_sync;
 	reg [2:0] sync_offs; // found offset of sync pattern
@@ -94,7 +94,7 @@ module dphy_rx_byte_align(
 		found_sync = 1'b0;
 		sync_offs = 0;
 		for (i = 0; i < 8; i = i + 1) begin
-			if ((concat_word[(1+i) +: 8] == sync_word) && (last_byte[i:0]  == 0)) begin
+			if ((concat_word[(1+i) +: 8] == sync_word) /*&& (last_byte[i:0]  == 0)*/) begin
 				was_found = 1'b1;
 				offset = i;
 			end

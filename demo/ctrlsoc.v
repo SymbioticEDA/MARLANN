@@ -213,6 +213,9 @@ module ctrlsoc (
 				addr_flash: begin
 					buserror <= |mem_wstrb;
 				end
+                addr_camera: begin
+                    /* nothing to do here */
+                end
 				mem_addr == 32'h 02000000: begin
 					mem_ready <= 1;
 					if (mem_wstrb[0]) begin

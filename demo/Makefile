@@ -48,8 +48,8 @@ ctrlsoc.bin: ctrlsoc.asc
 	icetime -d up5k -c 12 -mtr ctrlsoc.rpt ctrlsoc.asc
 	icepack ctrlsoc.asc ctrlsoc.bin
 
-ctrlsoc_fw.elf: sections.lds start.S firmware.c demodat.inc
-	riscv32-unknown-elf-gcc -O1 -Wall -Wextra -march=rv32i -Wl,-Bstatic,-T,sections.lds,--strip-debug -ffreestanding -nostdlib -o ctrlsoc_fw.elf start.S firmware.c
+ctrlsoc_fw.elf: sections.lds start.S firmware.c demodat.inc camera/camera.c
+	riscv32-unknown-elf-gcc -O1 -Wall -Wextra -march=rv32i -Wl,-Bstatic,-T,sections.lds,--strip-debug -ffreestanding -nostdlib -o ctrlsoc_fw.elf start.S firmware.c camera/camera.c
 
 ctrlsoc_fw.hex: ctrlsoc_fw.elf
 	riscv32-unknown-elf-objcopy -O verilog ctrlsoc_fw.elf ctrlsoc_fw.hex
