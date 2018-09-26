@@ -19,7 +19,7 @@
 #define CAMERA_BASE 0x03000000
 
 #define reg_camera_i2c (*(volatile uint32_t*)CAMERA_BASE)
-#define reg_camera_fb  ((volatile uint32_t*)(CAMERA_BASE + 0x8000))
+#define reg_camera_fb  ((volatile uint8_t*)(CAMERA_BASE + 0x8000))
 
 static void i2c_delay() {
     for (volatile int i = 0; i < 10; i++)
