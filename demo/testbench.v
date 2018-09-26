@@ -29,7 +29,7 @@ module testbench;
 		#(clock_period / 2);
 		clk = 0;
 
-		repeat (700000) begin
+		repeat (3500000) begin
 			#(clock_period / 2);
 			clk = !clk;
 		end
@@ -62,6 +62,8 @@ module testbench;
 	wire ml_rdy = 0;
 	wire ml_err = 0;
 
+    wire cam_scl = 1'b0, cam_sda = 1'b0;
+
 	ctrlsoc ctrl (
 		.clk       (clk      ),
 
@@ -90,7 +92,10 @@ module testbench;
 
 		.ml_csb    (ml_csb   ),
 		.ml_rdy    (ml_rdy   ),
-		.ml_err    (ml_err   )
+		.ml_err    (ml_err   ),
+
+        .cam_scl   (cam_scl),
+        .cam_sda   (cam_sda)
 	);
 
 	spiflash flash (

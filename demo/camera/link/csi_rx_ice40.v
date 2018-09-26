@@ -67,12 +67,12 @@ module csi_rx_ice40 #(
 		.PACKAGE_PIN(dphy_clk_lane),
 		.D_IN_0(dphy_clk_pre)
 	);
-	
+
 	SB_GB clk_gbuf (
 		.USER_SIGNAL_TO_GLOBAL_BUFFER(dphy_clk_pre),
 		.GLOBAL_BUFFER_OUTPUT(dphy_clk)
 	);
-	
+
 	wire dphy_lp;
 	SB_IO #(
 		.PIN_TYPE(6'b000001),
@@ -89,7 +89,7 @@ module csi_rx_ice40 #(
 		else
 			div <= div + 1'b1;
 	assign word_clk = div[1];
-	
+
 	wire sreset;
 	reg [7:0] sreset_ctr;
 	always @(posedge word_clk or posedge areset)
@@ -97,9 +97,9 @@ module csi_rx_ice40 #(
 			sreset_ctr <= 0;
 		else if (!(&sreset_ctr))
 			sreset_ctr <= sreset_ctr + 1'b1;
-			
+
 	assign sreset = !(&sreset_ctr);
-	
+
 	wire byte_packet_done, wait_for_sync;
 	wire [LANES*8-1:0] aligned_bytes;
 	wire [LANES-1:0] aligned_bytes_valid;
@@ -107,7 +107,7 @@ module csi_rx_ice40 #(
 
 	generate
 	genvar ii;
-	for (ii = 0; ii < LANES; ii++) begin
+	for (ii = 0; ii < LANES; ii=ii+1) begin
 		wire [1:0] din_raw;
 		SB_IO #(
 			.PIN_TYPE(6'b000000),

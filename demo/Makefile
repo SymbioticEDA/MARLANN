@@ -12,8 +12,8 @@ CAMERA_RTL = camera/phy/dphy_iserdes.v camera/phy/byte_aligner.v camera/phy/word
 testbench.vcd: testbench flashinit.hex ctrlsoc_fw.hex
 	vvp -N testbench
 
-testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(CAMERA_RTL)
-	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(CAMERA_RTL) $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v ../rtl/compute.v $(CAMERA_RTL)
+	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v ../rtl/compute.v $(CAMERA_RTL) $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 flashinit.hex: flashinit.py
 	python3 flashinit.py
@@ -30,8 +30,8 @@ ctrlsoc.bin: ctrlsoc.asc
 	icetime -d up5k -c 12 -mtr ctrlsoc.rpt ctrlsoc.asc
 	icepack ctrlsoc.asc ctrlsoc.bin
 
-ctrlsoc_fw.elf: sections.lds start.S firmware.c
-	riscv32-unknown-elf-gcc -march=rv32i -Wl,-Bstatic,-T,sections.lds,--strip-debug -ffreestanding -nostdlib -o ctrlsoc_fw.elf start.S firmware.c
+ctrlsoc_fw.elf: sections.lds start.S firmware.c camera/camera.c
+	riscv32-unknown-elf-gcc -march=rv32i -Wl,-Bstatic,-T,sections.lds,--strip-debug -ffreestanding -nostdlib -o ctrlsoc_fw.elf start.S firmware.c camera/camera.c
 
 ctrlsoc_fw.hex: ctrlsoc_fw.elf
 	riscv32-unknown-elf-objcopy -O verilog ctrlsoc_fw.elf ctrlsoc_fw.hex

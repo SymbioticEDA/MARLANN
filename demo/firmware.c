@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "camera/camera.h"
+
 // a pointer to this is a null pointer, but the compiler does not
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
@@ -191,6 +193,8 @@ void ml_read(int addr, uint8_t *data, int len)
 void main()
 {
 	print("Booting..\n");
+    camera_init();
+    print ("Initialised camera\n");
 
 	char wbuf0[64] = "Hello World! This is a test and if you can\n";
 	char wbuf1[64] = "read this then everything is working fine.\n";

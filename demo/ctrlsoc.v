@@ -58,7 +58,7 @@ module ctrlsoc (
     input dphy_lp,
 
     inout cam_sda, cam_scl,
-    output cam_enable,
+    output cam_enable
 );
 	reg resetn = 0;
 	reg [5:0] reset_cnt = 0;
@@ -209,6 +209,9 @@ module ctrlsoc (
 				addr_flash: begin
 					buserror <= |mem_wstrb;
 				end
+                addr_camera: begin
+                    /* nothing to do here */
+                end
 				mem_addr == 32'h 02000000: begin
 					mem_ready <= 1;
 					if (mem_wstrb[0]) begin
