@@ -121,7 +121,7 @@ module cameraif(
         .PULLUP(1'b 1)
     ) scl_buf (
         .PACKAGE_PIN(cam_sda),
-        .OUTPUT_ENABLE(i2c_gpio[0]),
+        .OUTPUT_ENABLE(!i2c_gpio[0]),
         .D_OUT_0(1'b0),
         .D_IN_0(i2c_din[0])
     );
@@ -131,7 +131,7 @@ module cameraif(
         .PULLUP(1'b 1)
     ) sda_buf (
         .PACKAGE_PIN(cam_scl),
-        .OUTPUT_ENABLE(i2c_gpio[1]),
+        .OUTPUT_ENABLE(!i2c_gpio[1]),
         .D_OUT_0(1'b0),
         .D_IN_0(i2c_din[1])
     );
