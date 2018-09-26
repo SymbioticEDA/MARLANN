@@ -2,21 +2,44 @@ CTRLSOC_DEV =
 MLACCEL_DEV =
 SEED = 1234
 
+CAMERA_RTL =					\
+	camera/phy/dphy_iserdes.v		\
+	camera/phy/byte_aligner.v		\
+	camera/phy/word_combiner.v		\
+	camera/csi/header_ecc.v			\
+	camera/csi/rx_packet_handler.v		\
+	camera/link/csi_rx_ice40.v		\
+	camera/misc/downsample.v		\
+	camera/cameraif.v
+
+SPI_RTL = 					\
+	spiflash.v
+
+SOC_RTL =					\
+	ctrlsoc.v				\
+	picorv32.v
+
+ML_RTL =					\
+	../rtl/top.v				\
+	../rtl/sequencer.v			\
+	../rtl/compute.v			\
+	../rtl/memory.v
+
 #####################################################################
 
 testbench.vcd: testbench flashinit.hex ctrlsoc_fw.hex
 	vvp -N testbench
 
-testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
-	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v $(SPI_RTL) $(SOC_RTL) $(ML_RTL) $(CAMERA_RTL)
+	iverilog -s testbench -o $@ $^ $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 flashinit.hex: flashinit.py
 	python3 flashinit.py
 
 #####################################################################
 
-ctrlsoc.json: ctrlsoc.v picorv32.v flashinit.hex
-	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' ctrlsoc.v picorv32.v
+ctrlsoc.json: $(SOC_RTL) $(CAMERA_RTL) flashinit.hex
+	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $(filter %.v, $^)
 
 ctrlsoc.asc: ctrlsoc.pcf ctrlsoc.json
 	nextpnr-ice40 --freq 13 --up5k --asc ctrlsoc.asc --pcf ctrlsoc.pcf --json ctrlsoc.json
@@ -57,8 +80,8 @@ clean_ctrlsoc:
 #####################################################################
 
 mlaccel.blif: mlaccel.json
-mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
-	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json -blif mlaccel.blif' ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
+mlaccel.json: $(ML_RTL)
+	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json -blif mlaccel.blif' $(ML_RTL)
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --seed $(SEED) --freq 25 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json

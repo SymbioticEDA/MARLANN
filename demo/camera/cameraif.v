@@ -115,9 +115,26 @@ module cameraif(
     reg [1:0] i2c_gpio;
     reg [1:0] i2c_read;
 
-    assign i2c_din = {cam_scl, cam_sda};
-    assign cam_sda = i2c_gpio[0] ? 1'bz : 1'b0;
-    assign cam_scl = i2c_gpio[1] ? 1'bz : 1'b0;
+    SB_IO #(
+        .PIN_TYPE(6'b 1010_01),
+        .PULLUP(1'b 1)
+    ) scl_buf (
+        .PACKAGE_PIN(cam_sda),
+        .OUTPUT_ENABLE(i2c_gpio[0]),
+        .D_OUT_0(1'b0),
+        .D_IN_0(i2c_din[0])
+    );
+
+    SB_IO #(
+        .PIN_TYPE(6'b 1010_01),
+        .PULLUP(1'b 1)
+    ) sda_buf (
+        .PACKAGE_PIN(cam_scl),
+        .OUTPUT_ENABLE(i2c_gpio[1]),
+        .D_OUT_0(1'b0),
+        .D_IN_0(i2c_din[1])
+    );
+
     assign cam_enable = 1'b1;
 
     always @(posedge sys_clk) begin
