@@ -190,11 +190,34 @@ void ml_read(int addr, uint8_t *data, int len)
 
 // --------------------------------------------------------
 
+void print_image() {
+    uint8_t buf[30*40];
+    print("Acquiring image\n");
+    acquire_image(buf);
+    print("----------------------------------------\n");
+
+    int addr = 0;
+    for (int y = 0; y < 30; y++) {
+        for (int x = 0; x < 40; x++) {
+           print_hex(buf[addr++], 2);
+           print(" ");
+        }
+        print("\n");
+    }
+}
+
+// --------------------------------------------------------
+
 void main()
 {
 	print("Booting..\n");
     camera_init();
     print ("Initialised camera\n");
+    while (true) {
+        print_image();
+        for (volatile int i = 0; i < 10000; i++)
+            ;
+    }
 
 	char wbuf0[64] = "Hello World! This is a test and if you can\n";
 	char wbuf1[64] = "read this then everything is working fine.\n";
