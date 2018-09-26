@@ -31,3 +31,13 @@ set_io btn3       18
 set_io ml_csb     40
 set_io ml_rdy     41
 set_io ml_err     39
+
+# Camera pins
+set_io cam_enable   3 #P1A7
+set_io cam_sda      34 #P1B3
+set_io cam_scl      28 #P1B10
+
+set_io dphy_clk     32 #P1B9
+set_io dphy_data[0] 42 #P1B7
+set_io dphy_data[1] 43 #P1B1
+set_io dphy_lp      48 #P1A8

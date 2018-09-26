@@ -1,21 +1,27 @@
 CTRLSOC_DEV = -d d:001/071
 MLACCEL_DEV = -d d:001/072
 
+CAMERA_RTL = camera/phy/dphy_iserdes.v camera/phy/byte_aligner.v camera/phy/word_combiner.v \
+				camera/csi/header_ecc.v camera/csi/rx_packet_handler.v \
+				camera/link/csi_rx_ice40.v \
+				camera/misc/downsample.v \
+				camera/cameraif.v
+
 #####################################################################
 
 testbench.vcd: testbench flashinit.hex ctrlsoc_fw.hex
 	vvp -N testbench
 
-testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v
-	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(CAMERA_RTL)
+	iverilog -s testbench -o $@ testbench.v spiflash.v ctrlsoc.v picorv32.v ../rtl/top.v ../rtl/sequencer.v ../rtl/memory.v $(CAMERA_RTL) $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 flashinit.hex: flashinit.py
 	python3 flashinit.py
 
 #####################################################################
 
-ctrlsoc.json: ctrlsoc.v picorv32.v flashinit.hex
-	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' ctrlsoc.v picorv32.v
+ctrlsoc.json: ctrlsoc.v picorv32.v $(CAMERA_RTL) flashinit.hex
+	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' ctrlsoc.v picorv32.v $(CAMERA_RTL)
 
 ctrlsoc.asc: ctrlsoc.pcf ctrlsoc.json
 	nextpnr-ice40 --freq 13 --up5k --asc ctrlsoc.asc --pcf ctrlsoc.pcf --json ctrlsoc.json

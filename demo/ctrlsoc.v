@@ -50,7 +50,15 @@ module ctrlsoc (
 	// mlaccel ctrl pins
 	output ml_csb,
 	input  ml_rdy,
-	input  ml_err
+	input  ml_err,
+
+    // Camera interface (PMOD 1A/1B)
+    input dphy_clk,
+    input [1:0] dphy_data,
+    input dphy_lp,
+
+    inout cam_sda, cam_scl,
+    output cam_enable,
 );
 	reg resetn = 0;
 	reg [5:0] reset_cnt = 0;
@@ -73,8 +81,10 @@ module ctrlsoc (
 	assign ledg_n = flash_csb || ((|last_flash_clk) == (&last_flash_clk));
 
 	reg led5_r, led4_r, led3_r, led2_r, led1_r;
+    wire camera_heartbeat;
 
-	assign led1 = led1_r;
+	//assign led1 = led1_r;
+    assign led1 = camera_heartbeat;
 	assign led2 = led2_r;
 	assign led3 = led3_r;
 	assign led4 = led4_r;
@@ -99,6 +109,9 @@ module ctrlsoc (
 	wire rxtx_ready;
 	wire [31:0] rxtx_rdata;
 
+    wire camera_ready;
+    wire [31:0] camera_rdata;
+
 	picorv32 #(
 		.ENABLE_COUNTERS(0),
 		.CATCH_MISALIGN(1),
@@ -111,7 +124,7 @@ module ctrlsoc (
 		.trap      (trap     ),
 		.mem_valid (mem_valid),
 		.mem_instr (mem_instr),
-		.mem_ready (mem_ready || flash_ready || rxtx_ready),
+		.mem_ready (mem_ready || flash_ready || rxtx_ready || camera_ready),
 		.mem_addr  (mem_addr ),
 		.mem_wdata (mem_wdata),
 		.mem_wstrb (mem_wstrb),
@@ -121,6 +134,7 @@ module ctrlsoc (
 			spram1_rselect ? spram1_rdata :
 			flash_ready    ? flash_rdata  :
 			rxtx_ready     ? rxtx_rdata   :
+            camera_ready   ? camera_rdata :
 			mem_rdata
 		)
 	);
@@ -128,6 +142,7 @@ module ctrlsoc (
 	wire addr_spram0 = mem_addr < 64*1024;
 	wire addr_spram1 = (mem_addr < 128*1024) && !(mem_addr < 64*1024);
 	wire addr_flash = (mem_addr < 2*16*1024*1024) && !(mem_addr < 128*1024);
+    wire addr_camera = mem_addr[31:24] == 8'h03;
 
 	ctrlsoc_rxtx rxtx (
 		.clk    (clk      ),
@@ -278,6 +293,27 @@ module ctrlsoc (
 		.flash_io2_oe (flash_io2_oe),
 		.flash_io3_oe (flash_io3_oe)
 	);
+
+    cameraif cam (
+        .dphy_clk(dphy_clk),
+        .dphy_data(dphy_data),
+        .dphy_lp(dphy_lp),
+
+        .cam_sda(cam_sda),
+        .cam_scl(cam_scl),
+        .cam_enable(cam_enable),
+
+        .cam_heartbeat(camera_heartbeat),
+
+        .sys_clk(clk),
+        .resetn(resetn),
+        .addr(mem_addr[15:0]),
+        .wdata(mem_wdata),
+        .wstrb(mem_wstrb),
+        .valid(addr_camera && mem_valid && !camera_ready),
+        .rdata(camera_rdata),
+        .ready(camera_ready)
+    );
 endmodule
 
 module ctrlsoc_spram (
