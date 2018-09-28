@@ -119,9 +119,6 @@ module mlaccel_sequencer (
 	end
 
 	always @(posedge clock) begin
-		buffer_insn <= next_buffer_insn;
-		buffer_insn_valid <= next_buffer_insn_valid;
-
 		if (!stall_queue) begin
 			if (queue_iptr != queue_optr) begin
 				queue_optr <= queue_optr + 1;
@@ -133,6 +130,9 @@ module mlaccel_sequencer (
 		end
 		
 		if (!comp_valid || comp_ready) begin
+			buffer_insn <= next_buffer_insn;
+			buffer_insn_valid <= next_buffer_insn_valid;
+
 			if (insn_valid) begin
 				comp_valid <= 1;
 				if (insn[5:0] == opcode_contld) begin

@@ -293,8 +293,24 @@ void MlSim::exec(insn_t insn)
 			for (int i = 0; i < 8; i ++)
 				mdata |= uint64_t(main_mem[maddr+i]) << (8*i);
 			if (insn.op() == 40)
-				fprintf(trace, "MACC 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%05x -> 0x%08x 0x%08x\n",
-						insn.maddr(), insn.maddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+				fprintf(trace, "MACC 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%03x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.caddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
+			if (insn.op() == 41)
+				fprintf(trace, "MMAX 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%03x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.caddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
+			if (insn.op() == 42)
+				fprintf(trace, "MACCZ 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%03x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.caddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
+			if (insn.op() == 43)
+				fprintf(trace, "MMAXZ 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%03x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.caddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
+						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
+			if (insn.op() == 45)
+				fprintf(trace, "MMAXN 0x%05x, 0x%03x // 0x%016llx @ 0x%05x, 0x%016llx 0x%016llx @ 0x%03x -> 0x%08x 0x%08x\n",
+						insn.maddr(), insn.caddr(), (long long)mdata, maddr, (long long)coeff0_mem[caddr],
 						(long long)coeff1_mem[caddr], caddr, acc0, acc1);
 		}
 		return;

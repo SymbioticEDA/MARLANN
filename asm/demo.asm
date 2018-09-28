@@ -65,7 +65,7 @@ Call run_conv_5x5x8_kernel_4_lines
 Call run_conv_5x5x8_kernel_4_lines
 Call run_conv_5x5x8_kernel_4_lines
 AddLBP 8
-AddVBP -8192
+AddVBP -7168
 AddSBP -6272+2
 AddCBP 25
 Return
