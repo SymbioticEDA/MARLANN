@@ -1,24 +1,26 @@
 [*]
 [*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Mon Sep 24 19:12:41 2018
+[*] Fri Sep 28 15:04:54 2018
 [*]
 [dumpfile] "/home/clifford/Work/mlaccel/rtl/testbench.vcd"
-[dumpfile_mtime] "Mon Sep 24 18:56:12 2018"
-[dumpfile_size] 159727686
+[dumpfile_mtime] "Fri Sep 28 15:02:49 2018"
+[dumpfile_size] 482791155
 [savefile] "/home/clifford/Work/mlaccel/rtl/testbench.gtkw"
-[timestart] 590197
-[size] 1250 826
-[pos] 466 41
-*-6.000000 590265 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1193 826
+[pos] 1883 92
+*-20.000000 505250 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
+[treeopen] testbench.uut.comp.
 [sst_width] 256
-[signals_width] 242
+[signals_width] 510
 [sst_expanded] 1
 [sst_vpaned_height] 240
 @28
 testbench.clock
 testbench.uut.reset
+testbench.uut.busy
 @200
 -
 -QPI
@@ -53,6 +55,8 @@ testbench.uut.seq.busy
 @22
 testbench.uut.seq.pc[16:0]
 testbench.uut.seq.insn[31:0]
+@90023
+testbench.uut.seq.queue_fill[7:0]
 @200
 -
 -Compute
@@ -86,6 +90,7 @@ testbench.uut.comp.mem_wr_addr[15:0]
 testbench.uut.comp.VBP[16:0]
 testbench.uut.comp.LBP[16:0]
 testbench.uut.comp.SBP[16:0]
+testbench.uut.comp.CBP[8:0]
 @200
 -
 @22

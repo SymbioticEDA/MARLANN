@@ -124,7 +124,7 @@ module testbench;
 			#17;
 
 			qpi_clk = 1;
-			#(2*17);
+			#(4*17);
 		end
 	endtask
 
@@ -175,7 +175,13 @@ module testbench;
 	endtask
 
 	integer cursor, len, i;
-	reg [7:0] memdata [0:128*1024-1];
+	reg [7:0] indata [0:128*1024-1];
+	reg [7:0] outdata [0:128*1024-1];
+
+	initial begin
+		$readmemh("../asm/demo.hex", indata);
+		$readmemh("../sim/demo_out.hex", outdata);
+	end
 
 	initial begin
 		xfer_stop;
@@ -186,12 +192,11 @@ module testbench;
 		$fflush;
 
 		cursor = 0;
-		$readmemh("../asm/demo.hex", memdata);
 		while (cursor < 128*1024) begin
-			if (memdata[cursor] !== 8'h XX) begin
+			if (indata[cursor] !== 8'h XX) begin
 				len = 1;
 				while ((len < 1024) && (len+cursor < 128*1024) &&
-						(memdata[cursor+len] !== 8'h XX)) len = len+1;
+						(indata[cursor+len] !== 8'h XX)) len = len+1;
 
 				if ((cursor % 2) != 0) begin
 					cursor = cursor - 1;
@@ -202,13 +207,17 @@ module testbench;
 					len = len - (len % 4) + 4;
 				end
 
+				if (len > 1024) begin
+					len = 1024;
+				end
+
 				$display("  uploading %4d bytes to 0x%05x", len, cursor);
 				$fflush;
 
 				xfer_start;
 				xfer_send_byte(8'h 21);
 				for (i = 0; i < len; i = i+1)
-					xfer_send_byte(memdata[cursor+i]);
+					xfer_send_byte(indata[cursor+i]);
 				xfer_stop;
 
 				xfer_start;
@@ -243,6 +252,59 @@ module testbench;
 		while (xfer != 8'h 00)
 			xfer_recv;
 		xfer_stop;
+
+		$display("Checking results.");
+		$fflush;
+
+		cursor = 0;
+		while (cursor < 128*1024) begin
+			if (outdata[cursor] !== 8'h XX) begin
+				len = 1;
+				while ((len < 1024) && (len+cursor < 128*1024) &&
+						(outdata[cursor+len] !== 8'h XX)) len = len+1;
+
+				if ((cursor % 2) != 0) begin
+					cursor = cursor - 1;
+					len = len + 1;
+				end
+
+				if ((len % 4) != 0) begin
+					len = len - (len % 4) + 4;
+				end
+
+				if (len > 1024) begin
+					len = 1024;
+				end
+
+				$display("  downloading %4d bytes from 0x%05x", len, cursor);
+				$fflush;
+
+				xfer_start;
+				xfer_send_byte(8'h 24);
+				xfer_send_hword(cursor >> 1);
+				xfer_send_byte(len >> 2);
+				xfer_wait;
+				xfer_recv;
+				while (xfer != 8'h 00)
+					xfer_recv;
+				xfer_stop;
+
+				xfer_start;
+				xfer_send_byte(8'h 22);
+				xfer_wait;
+				for (i = 0; i < len; i = i+1) begin
+					xfer_recv;
+					if (outdata[cursor+i] !== 8'h XX && outdata[cursor+i] !== xfer) begin
+						$display("ERROR at %d: expected 0x%02x, got 0x%02x", cursor+i, outdata[cursor+i], xfer);
+					end
+				end
+				xfer_stop;
+
+				cursor = cursor + len;
+			end else begin
+				cursor = cursor + 1;
+			end
+		end
 
 		$display("Done.");
 		$fflush;

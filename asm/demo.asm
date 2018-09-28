@@ -103,39 +103,41 @@ conv_5x5x8_kernel_begin:
 
 LdSet 0
 
-MACC   0 +    0,  0
-MACC   8 +    0,  1
-MACC  16 +    0,  2
-MACC  24 +    0,  3
-MACC  32 +    0,  4
+MACC   0 +    0 - 0,  0
+MACC   8 +    0 - 0,  1
+MACC  16 +    0 - 0,  2
+MACC  24 +    0 - 0,  3
+MACC  32 +    0 - 0,  4
 
-MACC   0 +  256,  5
-MACC   8 +  256,  6
-MACC  16 +  256,  7
-MACC  24 +  256,  8
-MACC  32 +  256,  9
+MACC   0 +  256 - 0,  5
+MACC   8 +  256 - 0,  6
+MACC  16 +  256 - 0,  7
+MACC  24 +  256 - 0,  8
+MACC  32 +  256 - 0,  9
 
-MACC   0 +  512, 10
-MACC   8 +  512, 11
-MACC  16 +  512, 12
-MACC  24 +  512, 13
-MACC  32 +  512, 14
-
-MACC   0 +  768, 15
-MACC   8 +  768, 16
-MACC  16 +  768, 17
-MACC  24 +  768, 18
-MACC  32 +  768, 19
-
-MACC   0 + 1024, 20
-MACC   8 + 1024, 21
-MACC  16 + 1024, 22
-MACC  24 + 1024, 23
-MACC  32 + 1024, 24
-
-ReLU 0, 10
 AddVBP 8
+
+MACC   0 +  512 - 8, 10
+MACC   8 +  512 - 8, 11
+MACC  16 +  512 - 8, 12
+MACC  24 +  512 - 8, 13
+MACC  32 +  512 - 8, 14
+
 AddSBP 8
+
+MACC   0 +  768 - 8, 15
+MACC   8 +  768 - 8, 16
+MACC  16 +  768 - 8, 17
+MACC  24 +  768 - 8, 18
+MACC  32 +  768 - 8, 19
+
+MACC   0 + 1024 - 8, 20
+MACC   8 + 1024 - 8, 21
+MACC  16 + 1024 - 8, 22
+MACC  24 + 1024 - 8, 23
+MACC  32 + 1024 - 8, 24
+
+ReLU -8, 10
 
 conv_5x5x8_kernel_end:
 

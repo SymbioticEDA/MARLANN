@@ -67,6 +67,8 @@ module mlaccel_top (
 	wire [31:0] comp_insn;
 
 	wire        comp_busy;
+	wire        comp_simd;
+	wire        comp_nosimd;
 
 	wire        cmem_ren;
 	wire [ 7:0] cmem_wen;
@@ -337,19 +339,22 @@ module mlaccel_top (
 	);
 
 	mlaccel_compute comp (
-		.clock     (clock     ),
-		.reset     (reset     ),
-		.busy      (comp_busy ),
+		.clock       (clock      ),
+		.reset       (reset      ),
+		.busy        (comp_busy  ),
 
-		.cmd_valid (comp_valid),
-		.cmd_ready (comp_ready),
-		.cmd_insn  (comp_insn ),
+		.cmd_valid   (comp_valid ),
+		.cmd_ready   (comp_ready ),
+		.cmd_insn    (comp_insn  ),
 
-		.mem_ren   (cmem_ren  ),
-		.mem_wen   (cmem_wen  ),
-		.mem_addr  (cmem_addr ),
-		.mem_wdata (cmem_wdata),
-		.mem_rdata (cmem_rdata)
+		.mem_ren     (cmem_ren   ),
+		.mem_wen     (cmem_wen   ),
+		.mem_addr    (cmem_addr  ),
+		.mem_wdata   (cmem_wdata ),
+		.mem_rdata   (cmem_rdata ),
+
+		.tick_simd   (comp_simd  ),
+		.tick_nosimd (comp_nosimd)
 	);
 
 	reg [3:0] busy_q;
@@ -362,6 +367,49 @@ module mlaccel_top (
 	end
 
 	assign busy = busy_q || seq_busy || comp_busy;
+
+`ifdef TRACE
+	reg perfcount_active;
+	integer perfcount_cycles;
+	integer perfcount_simd;
+	integer perfcount_nosimd;
+
+	always @(posedge clock) begin
+		if (busy) begin
+			perfcount_active <= 1;
+			perfcount_cycles <= perfcount_cycles + 1;
+			perfcount_simd <= perfcount_simd + comp_simd;
+			perfcount_nosimd <= perfcount_nosimd + comp_nosimd;
+		end else
+		if (perfcount_active) begin
+			$display("-------------------");
+			$display("Number of clock cycles:          %d", perfcount_cycles);
+			$display("Number of SIMD-instructions:     %d", perfcount_simd);
+			$display("Number of non-SIMD-instructions: %d", perfcount_nosimd);
+			$display("");
+			$display("Avg. ops per cycle:       %8.2f", (1.0*perfcount_nosimd + 16.0*perfcount_simd) / perfcount_cycles);
+			$display("Avg. simd ops per cycle:  %8.2f", 16.0*perfcount_simd / perfcount_cycles);
+			$display("");
+			$display("Avg. insn per cycle:      %8.2f", (1.0*perfcount_nosimd + 1.0*perfcount_simd) / perfcount_cycles);
+			$display("Avg. simd insn per cycle: %8.2f", 1.0*perfcount_simd / perfcount_cycles);
+			$display("");
+			$display("MMACC/s at 35 MHz: %8.2f", 35*16.0*perfcount_simd / perfcount_cycles);
+			$display("-------------------");
+
+			perfcount_active <= 0;
+			perfcount_cycles <= 0;
+			perfcount_simd <= 0;
+			perfcount_nosimd <= 0;
+		end
+
+		if (reset) begin
+			perfcount_active <= 0;
+			perfcount_cycles <= 0;
+			perfcount_simd <= 0;
+			perfcount_nosimd <= 0;
+		end
+	end
+`endif
 
 	/********** Main Memory **********/
 

@@ -42,11 +42,13 @@ module mlaccel_sequencer (
 	reg running;
 	reg [16:0] pc;
 
-	reg [8:0] callstack_ptr;
-	reg [15:0] callstack [0:511];
+	reg [7:0] callstack_ptr;
+	reg [15:0] callstack [0:255];
 
-	reg [8:0] queue_iptr, queue_optr;
-	reg [31:0] queue [0:511];
+	reg [7:0] queue_iptr, queue_optr;
+	reg [31:0] queue [0:255];
+
+	wire [7:0] queue_fill = queue_iptr - queue_optr;
 	reg queue_full;
 
 	always @(posedge clock) begin
@@ -76,7 +78,7 @@ module mlaccel_sequencer (
 			smem_addr <= pc >> 1;
 		end
 
-		queue_full <= (queue_iptr - queue_optr) >= 496;
+		queue_full <= &queue_fill[7:5];
 
 		if (reset || start) begin
 			pc <= addr << 1;

@@ -32,7 +32,10 @@ module mlaccel_compute #(
 	output [ 7:0] mem_wen,
 	output [15:0] mem_addr,
 	output [63:0] mem_wdata,
-	input  [63:0] mem_rdata
+	input  [63:0] mem_rdata,
+
+	output        tick_simd,
+	output        tick_nosimd
 );
 	integer i;
 
@@ -179,9 +182,12 @@ module mlaccel_compute #(
 
 	/**** stage 2 ****/
 
+	reg s2_tick_simd;
+
 	always @(posedge clock) begin
 		s2_en <= 0;
 		s2_insn <= s1_insn;
+		s2_tick_simd <= 0;
 
 		mem_rd0_en <= 0;
 		mem_rd0_addr <= 'bx;
@@ -205,10 +211,15 @@ module mlaccel_compute #(
 				40, 41, 42, 43, 45: begin
 					mem_rd0_en <= 1;
 					mem_rd0_addr <= (s1_insn[31:15] + VBP) >> 1;
+					s2_tick_simd <= 1;
 				end
 			endcase
 		end
 	end
+
+	assign tick_simd = s2_tick_simd;
+	assign tick_nosimd = s2_en && !tick_simd;
+
 
 	/**** stage 3 ****/
 
