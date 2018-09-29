@@ -29,6 +29,8 @@ extern uint32_t sram;
 #define reg_uart (*(volatile uint32_t*)0x02000004)
 #define reg_qpio (*(volatile uint32_t*)0x02000008)
 
+#include "demodat.inc"
+
 // --------------------------------------------------------
 
 void *memset(void *s, int c, size_t n)
@@ -66,11 +68,41 @@ void print_hex(uint32_t v, int digits)
 
 void print_dec(uint32_t v)
 {
-	if (v >= 100) {
-		print(">=100");
+	if (v >= 10000) {
+		print(">=10000");
 		return;
 	}
 
+	if (v >= 1000) goto dig4;
+	if (v >= 100) goto dig3;
+	if (v >= 10) goto dig2;
+	goto dig1;
+
+dig4:
+	if      (v >= 9000) { putchar('9'); v -= 9000; }
+	else if (v >= 8000) { putchar('8'); v -= 8000; }
+	else if (v >= 7000) { putchar('7'); v -= 7000; }
+	else if (v >= 6000) { putchar('6'); v -= 6000; }
+	else if (v >= 5000) { putchar('5'); v -= 5000; }
+	else if (v >= 4000) { putchar('4'); v -= 4000; }
+	else if (v >= 3000) { putchar('3'); v -= 3000; }
+	else if (v >= 2000) { putchar('2'); v -= 2000; }
+	else if (v >= 1000) { putchar('1'); v -= 1000; }
+	else putchar('0');
+
+dig3:
+	if      (v >= 900) { putchar('9'); v -= 900; }
+	else if (v >= 800) { putchar('8'); v -= 800; }
+	else if (v >= 700) { putchar('7'); v -= 700; }
+	else if (v >= 600) { putchar('6'); v -= 600; }
+	else if (v >= 500) { putchar('5'); v -= 500; }
+	else if (v >= 400) { putchar('4'); v -= 400; }
+	else if (v >= 300) { putchar('3'); v -= 300; }
+	else if (v >= 200) { putchar('2'); v -= 200; }
+	else if (v >= 100) { putchar('1'); v -= 100; }
+	else putchar('0');
+
+dig2:
 	if      (v >= 90) { putchar('9'); v -= 90; }
 	else if (v >= 80) { putchar('8'); v -= 80; }
 	else if (v >= 70) { putchar('7'); v -= 70; }
@@ -80,7 +112,9 @@ void print_dec(uint32_t v)
 	else if (v >= 30) { putchar('3'); v -= 30; }
 	else if (v >= 20) { putchar('2'); v -= 20; }
 	else if (v >= 10) { putchar('1'); v -= 10; }
+	else putchar('0');
 
+dig1:
 	if      (v >= 9) { putchar('9'); v -= 9; }
 	else if (v >= 8) { putchar('8'); v -= 8; }
 	else if (v >= 7) { putchar('7'); v -= 7; }
@@ -116,74 +150,68 @@ char getchar()
 
 void ml_start()
 {
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x8C000000;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88000000;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 void ml_send(uint8_t byte)
 {
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88000f00 | (byte >> 4);
+
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88010f00 | (byte & 15);
+
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88000000;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 uint8_t ml_recv()
 {
 	uint8_t byte = 0;
 
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88000000;
 	byte |= (reg_qpio & 15) << 4;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
 
 	reg_qpio = 0x88010000;
 	byte |= reg_qpio & 15;
 
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x88000000;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	return byte;
 }
 
 void ml_stop()
 {
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x8C000000;
+
+	asm volatile ("nop; nop; nop" ::: "memory");
+
 	reg_qpio = 0x00000000;
-}
 
-// --------------------------------------------------------
-
-void ml_write(int addr, const uint8_t *data, int len)
-{
-	ml_start();
-	ml_send(0x21);
-	for (int i = 0; i < len; i++)
-		ml_send(data[i]);
-
-	ml_start();
-	ml_send(0x23);
-	ml_send(addr);
-	ml_send(addr >> 8);
-	ml_send(len >> 2);
-	ml_recv();
-	while (ml_recv() != 0) { }
-
-	ml_stop();
-}
-
-void ml_read(int addr, uint8_t *data, int len)
-{
-	ml_start();
-	ml_send(0x24);
-	ml_send(addr);
-	ml_send(addr >> 8);
-	ml_send(len >> 2);
-	ml_recv();
-	while (ml_recv() != 0) { }
-
-	ml_start();
-	ml_send(0x22);
-	ml_recv();
-	for (int i = 0; i < len; i++)
-		data[i] = ml_recv();
-
-	ml_stop();
+	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 // --------------------------------------------------------
@@ -192,25 +220,137 @@ void main()
 {
 	print("Booting..\n");
 
-	char wbuf0[64] = "Hello World! This is a test and if you can\n";
-	char wbuf1[64] = "read this then everything is working fine.\n";
-	char rbuf[64];
-
-	ml_write(0, wbuf0, 64);
-	ml_write(70, wbuf1, 64);
-
-	ml_read(0, rbuf, 64);
-	print(rbuf);
-
-	ml_read(70, rbuf, 64);
-	print(rbuf);
-
 	reg_leds = 127;
 	while (1) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
+
+reupload:
+	print("Uploading..\n");
+
+	for (int i = 0; i < sizeof(demo_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
+
+		print("  writing ");
+		print_dec(len);
+		print(" bytes to 0x");
+		print_hex(i, 5);
+		print(".\n");
+
+		char buffer[1024];
+		for (int j = 0; j < len; j++)
+			buffer[j] = demo_hex_data[i+j];
+
+		ml_start();
+		ml_send(0x21);
+		for (int j = 0; j < len; j++)
+			ml_send(buffer[j]);
+		ml_stop();
+
+		ml_start();
+		ml_send(0x23);
+		ml_send(i >> 1);
+		ml_send(i >> 9);
+		ml_send(len >> 2);
+		ml_recv();
+		while (ml_recv() != 0) { }
+		ml_stop();
+	}
+
+	print("Checking..\n");
+	bool found_errors = false;
+
+	for (int i = 0; i < sizeof(demo_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
+
+		print("  checking ");
+		print_dec(len);
+		print(" bytes to 0x");
+		print_hex(i, 5);
+		print(":");
+
+		ml_start();
+		ml_send(0x24);
+		ml_send(i >> 1);
+		ml_send(i >> 9);
+		ml_send(len >> 2);
+		ml_recv();
+		while (ml_recv() != 0) { }
+		ml_stop();
+
+		char buffer[1024];
+
+		ml_start();
+		ml_send(0x22);
+		ml_recv();
+		for (int j = 0; j < len; j++)
+			buffer[j] = ml_recv();
+		ml_stop();
+
+		int errcount = 0;
+		for (int j = 0; j < len; j++) {
+			if (buffer[j] != demo_hex_data[i+j])
+				errcount++;
+		}
+
+		if (errcount != 0) {
+			found_errors = true;
+			print(" detected ");
+			print_dec(errcount);
+			print(" errors!\n");
+#if 0
+			for (int j = 0; j < len; j += 16)
+			{
+				print("     ");
+				for (int k = 0; k < 16; k++) {
+					print(" ");
+					if (buffer[j+k] == demo_hex_data[i+j+k])
+						print("--");
+					else
+						print_hex(buffer[j+k], 2);
+				}
+				print("     ");
+				for (int k = 0; k < 16; k++) {
+					print(" ");
+					if (buffer[j+k] == demo_hex_data[i+j+k])
+						print("--");
+					else
+						print_hex(demo_hex_data[i+j+k], 2);
+				}
+				print("\n");
+			}
+#endif
+		} else {
+			print(" ok\n");
+		}
+	}
+
+	if (found_errors)
+		goto reupload;
+
+	print("Running..");
+
+	ml_start();
+	ml_send(0x25);
+	ml_send(0x00);
+	ml_send(0x00);
+	ml_stop();
+
+	ml_start();
+	ml_send(0x20);
+	ml_recv();
+	while (ml_recv() != 0) { print("."); }
+	ml_stop();
+
+	print("\n");
 
 	print("READY.\n");
 }
