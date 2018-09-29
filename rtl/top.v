@@ -393,6 +393,7 @@ module mlaccel_top (
 			$display("Avg. insn per cycle:      %8.2f", (1.0*perfcount_nosimd + 1.0*perfcount_simd) / perfcount_cycles);
 			$display("Avg. simd insn per cycle: %8.2f", 1.0*perfcount_simd / perfcount_cycles);
 			$display("");
+			$display("MMACC/s at 20 MHz: %8.2f", 20*16.0*perfcount_simd / perfcount_cycles);
 			$display("MMACC/s at 35 MHz: %8.2f", 35*16.0*perfcount_simd / perfcount_cycles);
 			$display("-------------------");
 
