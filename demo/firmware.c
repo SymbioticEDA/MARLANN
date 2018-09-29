@@ -254,8 +254,8 @@ reupload:
 
 		ml_start();
 		ml_send(0x23);
-		ml_send(i >> 1);
-		ml_send(i >> 9);
+		ml_send((demo_hex_start+i) >> 1);
+		ml_send((demo_hex_start+i) >> 9);
 		ml_send(len >> 2);
 		ml_recv();
 		while (ml_recv() != 0) { }
@@ -273,14 +273,14 @@ reupload:
 
 		print("  checking ");
 		print_dec(len);
-		print(" bytes to 0x");
-		print_hex(i, 5);
+		print(" bytes at 0x");
+		print_hex(demo_hex_start+i, 5);
 		print(":");
 
 		ml_start();
 		ml_send(0x24);
-		ml_send(i >> 1);
-		ml_send(i >> 9);
+		ml_send((demo_hex_start+i) >> 1);
+		ml_send((demo_hex_start+i) >> 9);
 		ml_send(len >> 2);
 		ml_recv();
 		while (ml_recv() != 0) { }
@@ -337,6 +337,7 @@ reupload:
 		goto reupload;
 
 	print("Running..");
+	char progress_dot[2] = {'.', 0};
 
 	ml_start();
 	ml_send(0x25);
@@ -347,10 +348,82 @@ reupload:
 	ml_start();
 	ml_send(0x20);
 	ml_recv();
-	while (ml_recv() != 0) { print("."); }
+	while (ml_recv() != 0) { putchar('.'); }
 	ml_stop();
 
 	print("\n");
+
+	print("Downloading..\n");
+	found_errors = false;
+
+	for (int i = 0; i < sizeof(demo_out_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_out_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
+
+		print("  checking ");
+		print_dec(len);
+		print(" bytes at 0x");
+		print_hex(demo_out_hex_start+i, 5);
+		print(":");
+
+		ml_start();
+		ml_send(0x24);
+		ml_send((demo_out_hex_start+i) >> 1);
+		ml_send((demo_out_hex_start+i) >> 9);
+		ml_send(len >> 2);
+		ml_recv();
+		while (ml_recv() != 0) { }
+		ml_stop();
+
+		char buffer[1024];
+
+		ml_start();
+		ml_send(0x22);
+		ml_recv();
+		for (int j = 0; j < len; j++)
+			buffer[j] = ml_recv();
+		ml_stop();
+
+		int errcount = 0;
+		for (int j = 0; j < len; j++) {
+			if (buffer[j] != demo_out_hex_data[i+j])
+				errcount++;
+		}
+
+		if (errcount != 0) {
+			found_errors = true;
+			print(" detected ");
+			print_dec(errcount);
+			print(" errors!\n");
+			for (int j = 0; j < len; j += 16)
+			{
+				print("     ");
+				for (int k = 0; k < 16; k++) {
+					print(" ");
+					if (buffer[j+k] == demo_out_hex_data[i+j+k])
+						print("--");
+					else
+						print_hex(buffer[j+k], 2);
+				}
+				print("     ");
+				for (int k = 0; k < 16; k++) {
+					print(" ");
+					if (buffer[j+k] == demo_out_hex_data[i+j+k])
+						print("--");
+					else
+						print_hex(demo_out_hex_data[i+j+k], 2);
+				}
+				print("\n");
+			}
+		} else {
+			print(" ok\n");
+		}
+	}
+
+	if (found_errors)
+		print("!!!! Test failed !!!!\n");
 
 	print("READY.\n");
 }
