@@ -337,7 +337,6 @@ reupload:
 		goto reupload;
 
 	print("Running..");
-	char progress_dot[2] = {'.', 0};
 
 	ml_start();
 	ml_send(0x25);
@@ -426,4 +425,5 @@ reupload:
 		print("!!!! Test failed !!!!\n");
 
 	print("READY.\n");
+	return main();
 }
