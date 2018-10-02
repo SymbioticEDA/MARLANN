@@ -116,9 +116,12 @@ module mlaccel_top (
 		.D_IN_0({qpi_csb_di, qpi_clk_di})
 	);
 
+	wire qpi_active;
+
 	mlaccel_qpi qpi (
 		.clock      (clock     ),
 		.reset      (reset     ),
+		.active     (qpi_active),
 
 		.qpi_csb_di (qpi_csb_di),
 		.qpi_clk_di (qpi_clk_di),
@@ -175,10 +178,16 @@ module mlaccel_top (
 		seq_start <= 0;
 		seq_stop <= 0;
 
+		if (!qpi_active || din_start) begin
+			dout_valid <= 0;
+		end
+
 		if (din_valid) begin
 			if (din_start) begin
 				case (din_data)
 					cmd_status: begin
+						dout_valid <= 1;
+						dout_data <= {8{busy}};
 						state <= state_status;
 					end
 					cmd_wbuf: begin
@@ -307,7 +316,7 @@ module mlaccel_top (
 			qmem_write <= 0;
 		end
 
-		if (reset || din_start) begin
+		if (reset) begin
 			dout_valid <= 0;
 		end
 
@@ -479,6 +488,7 @@ endmodule
 module mlaccel_qpi (
 	input            clock,
 	input            reset,
+	output           active,
 
 	input            qpi_csb_di,
 	input            qpi_clk_di,
@@ -487,102 +497,125 @@ module mlaccel_qpi (
 	output           qpi_err_do,
 
 	input      [3:0] qpi_io_di,
-	output     [3:0] qpi_io_do,
-	output     [3:0] qpi_io_oe,
+	output reg [3:0] qpi_io_do,
+	output reg [3:0] qpi_io_oe,
 
 	output reg       din_valid,
 	output reg       din_start,
 	output reg [7:0] din_data,
 
 	input            dout_valid,
-	output reg       dout_ready,
+	output           dout_ready,
 	input      [7:0] dout_data
 );
-	assign qpi_rdy_do = 0;
-	assign qpi_err_do = 0;
+	assign qpi_rdy_do = 1;
+	assign qpi_err_do = 1;
 
-	reg qpi_csb_q1, qpi_csb_q2;
-	reg qpi_clk_q0, qpi_clk_q1, qpi_clk_q2, qpi_clk_q3;
-	reg [3:0] qpi_di_q0, qpi_di_q1, qpi_di_q2, qpi_di_q3;
-	reg phase;
+	reg [3:0] di_data;
+	reg di_toggle;
+	reg di_start;
+	reg di_stx;
 
-	reg latched_reset;
-
-	reg out_enable_0;
-	reg out_enable_1;
-	reg next_out_enable_1;
-	reg [3:0] out_phase_0;
-	reg [3:0] out_phase_1;
-	reg [3:0] next_out_phase_1;
-
-	assign qpi_io_oe = qpi_clk_di ? {4{out_enable_1}} : {4{out_enable_0}};
-	assign qpi_io_do = qpi_clk_di ? out_phase_1 : out_phase_0;
-
-	always @(posedge clock) begin
-		dout_ready <= 0;
-
-		if (qpi_clk_q0) begin
-			if (dout_valid && !dout_ready && !next_out_enable_1) begin
-				dout_ready <= 1;
-				out_enable_0 <= 1;
-				out_phase_0 <= dout_data[7:4];
-				next_out_enable_1 <= 1;
-				next_out_phase_1 <= dout_data[3:0];
-			end
+	always @(posedge qpi_clk_di, posedge qpi_csb_di) begin
+		if (qpi_csb_di) begin
+			di_data <= 0;
+			di_toggle <= 1;
+			di_start <= 1;
+			di_stx <= 1;
 		end else begin
-			if (next_out_enable_1) begin
-				next_out_enable_1 <= 0;
-				out_enable_1 <= next_out_enable_1;
-				out_phase_1 <= next_out_phase_1;
-			end
-		end
-
-		if (qpi_csb_q2 || reset || latched_reset) begin
-			out_enable_0 <= 0;
-			out_enable_1 <= 0;
-			next_out_enable_1 <= 0;
+			di_data <= qpi_io_di;
+			di_toggle <= !di_toggle;
+			if (di_toggle)
+				di_stx <= 0;
+			if (di_toggle && !di_stx)
+				di_start <= 0;
 		end
 	end
+
+	reg [7:0] do_data;
+	reg [3:0] do_datax;
+	reg do_valid;
+	reg do_validx;
+	reg do_toggle;
+
+	always @(negedge qpi_clk_di, posedge qpi_csb_di) begin
+		if (qpi_csb_di) begin
+			qpi_io_oe <= 0;
+			qpi_io_do <= 0;
+			do_toggle <= 0;
+			do_validx <= 0;
+			do_datax <= 0;
+		end else begin
+			if (di_start)
+				do_toggle <= 0;
+			else
+				do_toggle <= !do_toggle;
+
+			if (do_toggle) begin
+				qpi_io_oe <= {4{do_valid}};
+				qpi_io_do <= do_data[7:4];
+			end else begin
+				qpi_io_oe <= {4{do_validx}};
+				qpi_io_do <= do_datax;
+			end
+
+			do_validx <= do_valid;
+			do_datax <= do_data;
+		end
+	end
+
+	reg clk_q0, clk_q1, clk_q2;
+	reg do_toggle_q0, do_toggle_q1;
+	reg active_q0, active_q1;
 
 	always @(negedge clock) begin
-		qpi_di_q0 <= qpi_io_di;
-		qpi_clk_q0 <= qpi_clk_di;
+		clk_q0 <= qpi_clk_di;
+		do_toggle_q0 <= do_toggle;
+		active_q0 <= !qpi_csb_di;
 	end
+
+	always @(posedge clock) begin
+		clk_q1 <= clk_q0;
+		clk_q2 <= clk_q1;
+		do_toggle_q1 <= do_toggle_q0;
+		active_q1 <= active_q0;
+	end
+
+	reg dout_busy;
+	assign dout_ready = do_toggle_q1 && dout_valid && !dout_busy;
+	assign active = active_q1;
 
 	always @(posedge clock) begin
 		din_valid <= 0;
-
-		qpi_csb_q1 <= qpi_csb_di;
-		qpi_csb_q2 <= qpi_csb_q1;
-
-		qpi_clk_q1 <= qpi_clk_di;
-		qpi_clk_q2 <= qpi_clk_q1;
-		qpi_clk_q3 <= qpi_clk_q2;
-
-		qpi_di_q1 <= qpi_di_q0;
-		qpi_di_q2 <= qpi_di_q1;
-		qpi_di_q3 <= qpi_di_q2;
-
-		if (reset)
-			latched_reset <= 1;
-		else if (qpi_csb_q2)
-			latched_reset <= 0;
-
-		if (din_valid)
+		if (clk_q1 && !clk_q2) begin
+			if (!di_toggle) begin
+				din_data[7:4] <= di_data;
+			end else begin
+				din_valid <= 1;
+				din_start <= di_start;
+				din_data[3:0] <= di_data;
+			end
+		end
+		if (dout_valid && dout_ready) begin
+			do_valid <= 1;
+			do_data <= dout_data;
+			dout_busy <= 1;
+		end
+		if (!do_toggle_q1) begin
+			dout_busy <= 0;
+		end
+		if (!active) begin
+			do_valid <= 0;
+			do_data <= 0;
+			dout_busy <= 0;
+		end
+		if (reset) begin
+			do_valid <= 0;
+			do_data <= 0;
+			din_valid <= 0;
 			din_start <= 0;
-
-		if (qpi_csb_q2 || reset || latched_reset) begin
-			phase <= 0;
-			din_start <= 1;
-		end else
-		if (!phase && qpi_clk_q2 && !qpi_clk_q3) begin
-			din_data[7:4] <= qpi_di_q3;
-			phase <= 1;
-		end else
-		if (phase && !qpi_clk_q2 && qpi_clk_q3) begin
-			din_data[3:0] <= qpi_di_q3;
-			din_valid <= 1;
-			phase <= 0;
+			din_data <= 0;
+			dout_busy <= 0;
 		end
 	end
 endmodule

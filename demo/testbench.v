@@ -29,7 +29,7 @@ module testbench;
 		#(clock_period / 2);
 		clk = 0;
 
-		repeat (700000) begin
+		repeat (900000) begin
 			#(clock_period / 2);
 			clk = !clk;
 		end

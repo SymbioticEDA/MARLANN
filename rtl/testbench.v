@@ -58,8 +58,7 @@ module testbench;
 
 	task xfer_start;
 		begin
-			#(2*17);
-			qpi_clk = 1;
+			#17;
 			qpi_csb = 0;
 			#17;
 		end
@@ -74,10 +73,14 @@ module testbench;
 			qpi_io3_reg = xfer[7];
 			#17;
 			qpi_clk = 1;
+			#17;
+			qpi_clk = 0;
 			qpi_io0_reg = xfer[0];
 			qpi_io1_reg = xfer[1];
 			qpi_io2_reg = xfer[2];
 			qpi_io3_reg = xfer[3];
+			#17;
+			qpi_clk = 1;
 			#17;
 		end
 	endtask
@@ -122,9 +125,12 @@ module testbench;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
 			#17;
-
 			qpi_clk = 1;
-			#(4*17);
+			#17;
+			qpi_clk = 0;
+			#17;
+			qpi_clk = 1;
+			#17;
 		end
 	endtask
 
@@ -135,26 +141,25 @@ module testbench;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#15;
-
+			#17;
+			qpi_clk = 1;
 			xfer[4] = qpi_io0;
 			xfer[5] = qpi_io1;
 			xfer[6] = qpi_io2;
 			xfer[7] = qpi_io3;
-			#2;
-
-			qpi_clk = 1;
+			#17;
+			qpi_clk = 0;
 			qpi_io0_reg = 1'bz;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#15;
-
+			#17;
+			qpi_clk = 1;
 			xfer[0] = qpi_io0;
 			xfer[1] = qpi_io1;
 			xfer[2] = qpi_io2;
 			xfer[3] = qpi_io3;
-			#2;
+			#17;
 		end
 	endtask
 
@@ -165,12 +170,11 @@ module testbench;
 			#17;
 
 			qpi_csb = 1;
-			qpi_clk = 1;
 			qpi_io0_reg = 1'bz;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#(2*17);
+			#17;
 		end
 	endtask
 

@@ -1,7 +1,7 @@
 QPI Host interface
 ------------------
 
-mlaccel provides a half-duplex Quad-SPI (QPI) DTR interface to the host. This
+mlaccel provides a half-duplex Quad-SPI (QPI) interface to the host. This
 interface supports the following operations using a very simple byte-based
 protocol.
 

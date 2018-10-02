@@ -150,68 +150,37 @@ char getchar()
 
 void ml_start()
 {
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x8C000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x88000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 void ml_send(uint8_t byte)
 {
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x88000f00 | (byte >> 4);
-
-	asm volatile ("nop; nop; nop" ::: "memory");
-
+	reg_qpio = 0x88010f00 | (byte >> 4);
+	reg_qpio = 0x88000f00 | (byte & 15);
 	reg_qpio = 0x88010f00 | (byte & 15);
-
-	asm volatile ("nop; nop; nop" ::: "memory");
-
-	reg_qpio = 0x88000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 uint8_t ml_recv()
 {
 	uint8_t byte = 0;
 
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x88000000;
+	reg_qpio = 0x88010000;
 	byte |= (reg_qpio & 15) << 4;
 
-	asm volatile ("nop; nop; nop" ::: "memory");
-
+	reg_qpio = 0x88000000;
 	reg_qpio = 0x88010000;
 	byte |= reg_qpio & 15;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
-
-	reg_qpio = 0x88000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
 
 	return byte;
 }
 
 void ml_stop()
 {
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x8C000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
-
 	reg_qpio = 0x00000000;
-
-	asm volatile ("nop; nop; nop" ::: "memory");
 }
 
 // --------------------------------------------------------
@@ -219,6 +188,45 @@ void ml_stop()
 void main()
 {
 	print("Booting..\n");
+
+	for (int i = 0; i < 4; i++)
+	{
+		char buffer[128];
+		char *p;
+
+		if (i == 0)
+			p = "Testing QPI connection to accelerator...\n";
+
+		if (i == 1)
+			p = "This is QPI test message 2 of 4.\n";
+
+		if (i == 2)
+			p = "And this is the third QPI test message.\n";
+
+		if (i == 3)
+			p = "If you can read this then QPI works fine, maybe.\n";
+
+		for (int j = 0; j < 128; j++)
+			if ((buffer[j] = *(p++)) == 0)
+				break;
+
+		ml_start();
+		ml_send(0x21);
+		for (int i = 0; buffer[i]; i++)
+			ml_send(buffer[i]);
+		ml_send(0);
+		ml_stop();
+
+		ml_start();
+		ml_send(0x22);
+		ml_recv();
+		while (1) {
+			char c = ml_recv();
+			if (!c) break;
+			putchar(c);
+		}
+		ml_stop();
+	}
 
 	reg_leds = 127;
 	while (1) {
@@ -230,7 +238,7 @@ void main()
 reupload:
 	print("Uploading..\n");
 
-	for (int i = 0; i < sizeof(demo_hex_data); i += 1024)
+	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
 		int len = sizeof(demo_hex_data) - i;
 		if (len > 1024)
@@ -265,7 +273,7 @@ reupload:
 	print("Checking..\n");
 	bool found_errors = false;
 
-	for (int i = 0; i < sizeof(demo_hex_data); i += 1024)
+	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
 		int len = sizeof(demo_hex_data) - i;
 		if (len > 1024)
@@ -355,7 +363,7 @@ reupload:
 	print("Downloading..\n");
 	found_errors = false;
 
-	for (int i = 0; i < sizeof(demo_out_hex_data); i += 1024)
+	for (int i = 0; i < (int)sizeof(demo_out_hex_data); i += 1024)
 	{
 		int len = sizeof(demo_out_hex_data) - i;
 		if (len > 1024)
