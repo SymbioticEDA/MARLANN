@@ -8,3 +8,8 @@ set_io qpi_io2     3
 set_io qpi_io3    48
 set_io qpi_rdy    46
 set_io qpi_err    44
+
+set_io dbg1       43
+set_io dbg2       38
+set_io dbg3       34
+set_io dbg4       31

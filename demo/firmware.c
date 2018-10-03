@@ -129,7 +129,7 @@ dig1:
 
 int getchar_timeout()
 {
-	for (int i = 0; i < 100000; i++) {
+	for (int i = 0; i < 1000000; i++) {
 		int32_t c = reg_uart;
 		if (c > 0)
 			return c;
@@ -195,10 +195,10 @@ void main()
 		char *p;
 
 		if (i == 0)
-			p = "Testing QPI connection to accelerator...\n";
+			p = "Testing QPI connection to accelerator.\n";
 
 		if (i == 1)
-			p = "This is QPI test message 2 of 4.\n";
+			p = "This is QPI test message two of four.\n";
 
 		if (i == 2)
 			p = "And this is the third QPI test message.\n";
@@ -234,6 +234,8 @@ void main()
 		if (getchar_timeout() == '\r')
 			break;
 	}
+
+	return main();
 
 reupload:
 	print("Uploading..\n");

@@ -21,17 +21,31 @@ module testbench;
 	localparam clock_period = 1000.0 / 12.0;
 	localparam ser_period = 1000.0 / 0.1152;
 
-	reg clk;
+	reg ctrl_clk;
+	reg accel_clk;
+
 	initial begin
 		$dumpfile("testbench.vcd");
 		$dumpvars(0, testbench);
+	end
 
+	initial begin
 		#(clock_period / 2);
-		clk = 0;
+		ctrl_clk = 0;
 
 		repeat (900000) begin
 			#(clock_period / 2);
-			clk = !clk;
+			ctrl_clk = !ctrl_clk;
+		end
+	end
+
+	initial begin
+		#(clock_period / 2);
+		accel_clk = 0;
+
+		repeat (900000) begin
+			#(clock_period / 2 + ($random & 31) - 15);
+			accel_clk = !accel_clk;
 		end
 	end
 
@@ -63,7 +77,7 @@ module testbench;
 	wire ml_err = 0;
 
 	ctrlsoc ctrl (
-		.clk       (clk      ),
+		.clk       (ctrl_clk ),
 
 		.ser_rx    (ser_rx   ),
 		.ser_tx    (ser_tx   ),
@@ -103,7 +117,7 @@ module testbench;
 	);
 
 	mlaccel_top mlacc (
-		.clock   (clk      ),
+		.clock   (accel_clk),
 		.qpi_csb (ml_csb   ),
 		.qpi_clk (flash_clk),
 		.qpi_io0 (flash_io0),

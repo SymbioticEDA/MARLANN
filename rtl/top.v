@@ -25,9 +25,19 @@ module mlaccel_top (
 	inout  qpi_io2,
 	inout  qpi_io3,
 	output qpi_rdy,
-	output qpi_err
+	output qpi_err,
+
+	output dbg1,
+	output dbg2,
+	output dbg3,
+	output dbg4
 );
 	integer i;
+
+	assign dbg1 = qpi_csb;
+	assign dbg2 = qpi_clk;
+	assign dbg3 = 0;
+	assign dbg4 = 0;
 
 	/********** Global Wires **********/
 

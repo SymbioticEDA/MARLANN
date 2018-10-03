@@ -1,5 +1,5 @@
-CTRLSOC_DEV = -d d:001/012
-MLACCEL_DEV = -d d:001/013
+CTRLSOC_DEV = -d d:001/021
+MLACCEL_DEV = -d d:001/020
 
 #####################################################################
 
@@ -55,7 +55,7 @@ mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
 	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
-	nextpnr-ice40 --freq 13 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
+	nextpnr-ice40 --freq 25 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
 
 mlaccel.bin: mlaccel.asc
 	icetime -d up5k -c 12 -mtr mlaccel.rpt mlaccel.asc
