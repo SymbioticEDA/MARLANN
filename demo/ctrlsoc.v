@@ -27,6 +27,7 @@ module ctrlsoc (
 
 	// SPI Flash
 	output flash_clk,
+	output flash_clk2,
 	output flash_csb,
 	inout  flash_io0,
 	inout  flash_io1,
@@ -159,6 +160,8 @@ module ctrlsoc (
 
 	assign flash_clk = flash_overwrite ? flash_overwrite_clk : flash_clk_do;
 	assign flash_csb = flash_overwrite ? flash_overwrite_csb : flash_csb_do;
+
+	assign flash_clk2 = flash_clk;
 
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),

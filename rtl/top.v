@@ -34,11 +34,6 @@ module mlaccel_top (
 );
 	integer i;
 
-	assign dbg1 = qpi_csb;
-	assign dbg2 = qpi_clk;
-	assign dbg3 = 0;
-	assign dbg4 = 0;
-
 	/********** Global Wires **********/
 
 	reg reset;
@@ -121,9 +116,17 @@ module mlaccel_top (
 	SB_IO #(
 		.PIN_TYPE(6'b 0000_01),
 		.PULLUP(1'b 1)
-	) qpi_in_buf [1:0] (
-		.PACKAGE_PIN({qpi_csb, qpi_clk}),
-		.D_IN_0({qpi_csb_di, qpi_clk_di})
+	) qpi_csb_buf (
+		.PACKAGE_PIN(qpi_csb),
+		.D_IN_0(qpi_csb_di)
+	);
+
+	SB_IO #(
+		.PIN_TYPE(6'b 0000_01),
+		.PULLUP(1'b 0)
+	) qpi_clk_buf (
+		.PACKAGE_PIN(qpi_clk),
+		.D_IN_0(qpi_clk_di)
 	);
 
 	wire qpi_active;
@@ -493,6 +496,24 @@ module mlaccel_top (
 		.wdata (mem_wdata),
 		.rdata (mem_rdata)
 	);
+
+	/********** Debug Pins **********/
+
+	reg clk_pos_toggle = 0;
+	reg clk_neg_toggle = 0;
+
+	always @(posedge qpi_clk_di) begin
+		clk_pos_toggle <= !clk_pos_toggle;
+	end
+
+	always @(negedge qpi_clk_di) begin
+		clk_neg_toggle <= !clk_neg_toggle;
+	end
+
+	assign dbg1 = qpi_csb_di;
+	assign dbg2 = qpi_clk_di;
+	assign dbg3 = clk_pos_toggle;
+	assign dbg4 = clk_neg_toggle;
 endmodule
 
 module mlaccel_qpi (

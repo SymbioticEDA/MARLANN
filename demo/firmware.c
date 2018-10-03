@@ -189,6 +189,13 @@ void main()
 {
 	print("Booting..\n");
 
+	reg_leds = 127;
+	while (1) {
+		print("Press ENTER to continue..\n");
+		if (getchar_timeout() == '\r')
+			break;
+	}
+
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
@@ -227,15 +234,6 @@ void main()
 		}
 		ml_stop();
 	}
-
-	reg_leds = 127;
-	while (1) {
-		print("Press ENTER to continue..\n");
-		if (getchar_timeout() == '\r')
-			break;
-	}
-
-	return main();
 
 reupload:
 	print("Uploading..\n");
