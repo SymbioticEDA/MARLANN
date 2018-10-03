@@ -180,6 +180,10 @@ uint8_t ml_recv()
 void ml_stop()
 {
 	reg_qpio = 0x8C000000;
+}
+
+void ml_finish()
+{
 	reg_qpio = 0x00000000;
 }
 
@@ -196,6 +200,7 @@ void main()
 			break;
 	}
 
+reupload:
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
@@ -233,9 +238,10 @@ void main()
 			putchar(c);
 		}
 		ml_stop();
+
+		ml_finish();
 	}
 
-reupload:
 	print("Uploading..\n");
 
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
@@ -268,6 +274,8 @@ reupload:
 		ml_recv();
 		while (ml_recv() != 0) { }
 		ml_stop();
+
+		ml_finish();
 	}
 
 	print("Checking..\n");
@@ -302,6 +310,8 @@ reupload:
 		for (int j = 0; j < len; j++)
 			buffer[j] = ml_recv();
 		ml_stop();
+
+		ml_finish();
 
 		int errcount = 0;
 		for (int j = 0; j < len; j++) {
@@ -358,6 +368,8 @@ reupload:
 	while (ml_recv() != 0) { putchar('.'); }
 	ml_stop();
 
+	ml_finish();
+
 	print("\n");
 
 	print("Downloading..\n");
@@ -392,6 +404,8 @@ reupload:
 		for (int j = 0; j < len; j++)
 			buffer[j] = ml_recv();
 		ml_stop();
+
+		ml_finish();
 
 		int errcount = 0;
 		for (int j = 0; j < len; j++) {
@@ -432,6 +446,8 @@ reupload:
 	if (found_errors)
 		print("!!!! Test failed !!!!\n");
 
-	print("READY.\n");
+	print("READY. Press ENTER to reboot.\n");
+	while (getchar() != '\r') { }
+
 	return main();
 }
