@@ -150,49 +150,61 @@ char getchar()
 
 void ml_start()
 {
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x8C000000;
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
+	asm volatile ("nop" : : : "memory");
 }
 
 void ml_send(uint8_t byte)
 {
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000f00 | (byte >> 4);
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010f00 | (byte >> 4);
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000f00 | (byte & 15);
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010f00 | (byte & 15);
+	asm volatile ("nop" : : : "memory");
 }
 
 uint8_t ml_recv()
 {
 	uint8_t byte = 0;
 
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010000;
 	byte |= (reg_qpio & 15) << 4;
-
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010000;
 	byte |= reg_qpio & 15;
+	asm volatile ("nop" : : : "memory");
 
 	return byte;
 }
 
 void ml_stop()
 {
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x8C000000;
+	asm volatile ("nop" : : : "memory");
 }
 
 void ml_finish()
 {
+	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x00000000;
+	asm volatile ("nop" : : : "memory");
 }
 
-// --------------------------------------------------------
-
-void main()
+void ml_test()
 {
-	print("Booting..\n");
-
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
@@ -233,16 +245,34 @@ void main()
 
 		ml_finish();
 	}
+}
 
+// --------------------------------------------------------
+
+void main()
+{
+	print("\n\n\n\n\n");
+	print("Booting..\n");
+	ml_test();
+
+#if 0
 	reg_leds = 127;
 	while (1) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
+#endif
 
+	bool reuploaded = false;
+
+	if (0) {
 reupload:
-	print("Uploading..\n");
+		print("Reuploading..\n");
+	} else {
+		print("Uploading..\n");
+		ml_test();
+	}
 
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
@@ -283,10 +313,12 @@ reupload:
 
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
+		bool rechecked = false;
 		int len = sizeof(demo_hex_data) - i;
 		if (len > 1024)
 			len = 1024;
 
+	recheck:
 		print("  checking ");
 		print_dec(len);
 		print(" bytes at 0x");
@@ -320,10 +352,11 @@ reupload:
 		}
 
 		if (errcount != 0) {
-			found_errors = true;
 			print(" detected ");
 			print_dec(errcount);
 			print(" errors!\n");
+			print("      /----------------- readback ------------------\\");
+			print("      /------------------ original -----------------\\\n");
 			for (int j = 0; j < len; j += 16)
 			{
 				print("     ");
@@ -344,13 +377,24 @@ reupload:
 				}
 				print("\n");
 			}
+			if (!rechecked) {
+				print("Rechecking..\n");
+				rechecked = true;
+				goto recheck;
+			}
+			found_errors = true;
 		} else {
 			print(" ok\n");
 		}
 	}
 
-	if (found_errors)
-		goto reupload;
+	if (found_errors) {
+		if (!reuploaded) {
+			reuploaded = true;
+			goto reupload;
+		}
+		goto test_failed;
+	}
 
 	print("Running..");
 
@@ -416,6 +460,8 @@ reupload:
 			print(" detected ");
 			print_dec(errcount);
 			print(" errors!\n");
+			print("      /----------------- readback ------------------\\");
+			print("      /------------------ original -----------------\\\n");
 			for (int j = 0; j < len; j += 16)
 			{
 				print("     ");
@@ -441,6 +487,7 @@ reupload:
 		}
 	}
 
+test_failed:
 	if (found_errors)
 		print("!!!! Test failed !!!!\n");
 

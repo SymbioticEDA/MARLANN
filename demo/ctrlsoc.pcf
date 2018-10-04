@@ -13,9 +13,6 @@ set_io flash_io1  17
 set_io flash_io2  12
 set_io flash_io3  13
 
-# Clock mirror on PMOD P1A1
-set_io flash_clk2  4
-
 # Status LEDs
 set_io ledr_n     11
 set_io ledg_n     37
