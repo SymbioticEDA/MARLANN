@@ -203,6 +203,88 @@ void ml_finish()
 	asm volatile ("nop" : : : "memory");
 }
 
+void ml_upload(int offset, const char *data, int len)
+{
+	ml_start();
+	ml_send(0x21);
+	for (int i = 0; i < len; i++)
+		ml_send(data[i]);
+	ml_stop();
+
+	ml_start();
+	ml_send(0x23);
+	ml_send(offset >> 1);
+	ml_send(offset >> 9);
+	ml_send(len >> 2);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+
+	ml_finish();
+}
+
+void ml_upload_buf(int offset, const char *data, int len)
+{
+	char buffer[1024];
+	for (int i = 0; i < len; i++)
+		buffer[i] = data[i];
+
+	ml_start();
+	ml_send(0x21);
+	for (int i = 0; i < len; i++)
+		ml_send(buffer[i]);
+	ml_stop();
+
+	ml_start();
+	ml_send(0x23);
+	ml_send(offset >> 1);
+	ml_send(offset >> 9);
+	ml_send(len >> 2);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+
+	ml_finish();
+}
+
+void ml_download(int offset, char *data, int len)
+{
+	ml_start();
+	ml_send(0x24);
+	ml_send(offset >> 1);
+	ml_send(offset >> 9);
+	ml_send(len >> 2);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+
+	ml_start();
+	ml_send(0x22);
+	ml_recv();
+	for (int j = 0; j < len; j++)
+		data[j] = ml_recv();
+	ml_stop();
+
+	ml_finish();
+}
+
+void ml_run(int start)
+{
+	ml_start();
+	ml_send(0x25);
+	ml_send(start >> 1);
+	ml_send(start >> 9);
+	ml_stop();
+
+	ml_start();
+	ml_send(0x20);
+	ml_recv();
+	while (ml_recv() != 0) { }
+	ml_stop();
+
+	ml_finish();
+}
+
 void ml_test()
 {
 	for (int i = 0; i < 4; i++)
@@ -254,15 +336,14 @@ void main()
 	print("\n\n\n\n\n");
 	print("Booting..\n");
 	ml_test();
+	print("\n");
 
-#if 0
 	reg_leds = 127;
 	while (1) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
-#endif
 
 	bool reuploaded = false;
 
@@ -270,8 +351,10 @@ void main()
 reupload:
 		print("Reuploading..\n");
 	} else {
-		print("Uploading..\n");
 		ml_test();
+		print("\n");
+
+		print("Uploading..\n");
 	}
 
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
@@ -286,26 +369,7 @@ reupload:
 		print_hex(i, 5);
 		print(".\n");
 
-		char buffer[1024];
-		for (int j = 0; j < len; j++)
-			buffer[j] = demo_hex_data[i+j];
-
-		ml_start();
-		ml_send(0x21);
-		for (int j = 0; j < len; j++)
-			ml_send(buffer[j]);
-		ml_stop();
-
-		ml_start();
-		ml_send(0x23);
-		ml_send((demo_hex_start+i) >> 1);
-		ml_send((demo_hex_start+i) >> 9);
-		ml_send(len >> 2);
-		ml_recv();
-		while (ml_recv() != 0) { }
-		ml_stop();
-
-		ml_finish();
+		ml_upload_buf(demo_hex_start+i, demo_hex_data+i, len);
 	}
 
 	print("Checking..\n");
@@ -325,25 +389,8 @@ reupload:
 		print_hex(demo_hex_start+i, 5);
 		print(":");
 
-		ml_start();
-		ml_send(0x24);
-		ml_send((demo_hex_start+i) >> 1);
-		ml_send((demo_hex_start+i) >> 9);
-		ml_send(len >> 2);
-		ml_recv();
-		while (ml_recv() != 0) { }
-		ml_stop();
-
 		char buffer[1024];
-
-		ml_start();
-		ml_send(0x22);
-		ml_recv();
-		for (int j = 0; j < len; j++)
-			buffer[j] = ml_recv();
-		ml_stop();
-
-		ml_finish();
+		ml_download(demo_hex_start+i, buffer, len);
 
 		int errcount = 0;
 		for (int j = 0; j < len; j++) {
@@ -396,23 +443,19 @@ reupload:
 		goto test_failed;
 	}
 
-	print("Running..");
+	print("Clearing output region..\n");
+	for (int i = 0; i < (int)sizeof(demo_out_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_out_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
 
-	ml_start();
-	ml_send(0x25);
-	ml_send(0x00);
-	ml_send(0x00);
-	ml_stop();
+		char buffer[1024] = { /* zeros */ };
+		ml_upload(demo_out_hex_start+i, buffer, len);
+	}
 
-	ml_start();
-	ml_send(0x20);
-	ml_recv();
-	while (ml_recv() != 0) { putchar('.'); }
-	ml_stop();
-
-	ml_finish();
-
-	print("\n");
+	print("Running..\n");
+	ml_run(0);
 
 	print("Downloading..\n");
 	found_errors = false;
@@ -429,25 +472,8 @@ reupload:
 		print_hex(demo_out_hex_start+i, 5);
 		print(":");
 
-		ml_start();
-		ml_send(0x24);
-		ml_send((demo_out_hex_start+i) >> 1);
-		ml_send((demo_out_hex_start+i) >> 9);
-		ml_send(len >> 2);
-		ml_recv();
-		while (ml_recv() != 0) { }
-		ml_stop();
-
 		char buffer[1024];
-
-		ml_start();
-		ml_send(0x22);
-		ml_recv();
-		for (int j = 0; j < len; j++)
-			buffer[j] = ml_recv();
-		ml_stop();
-
-		ml_finish();
+		ml_download(demo_out_hex_start+i, buffer, len);
 
 		int errcount = 0;
 		for (int j = 0; j < len; j++) {

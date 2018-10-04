@@ -499,21 +499,10 @@ module mlaccel_top (
 
 	/********** Debug Pins **********/
 
-	reg clk_pos_toggle = 0;
-	reg clk_neg_toggle = 0;
-
-	always @(posedge qpi_clk_di) begin
-		clk_pos_toggle <= !clk_pos_toggle;
-	end
-
-	always @(negedge qpi_clk_di) begin
-		clk_neg_toggle <= !clk_neg_toggle;
-	end
-
 	assign dbg1 = qpi_csb_di;
 	assign dbg2 = qpi_clk_di;
-	assign dbg3 = clk_pos_toggle;
-	assign dbg4 = clk_neg_toggle;
+	assign dbg3 = din_valid;
+	assign dbg4 = din_start;
 endmodule
 
 module mlaccel_qpi (
