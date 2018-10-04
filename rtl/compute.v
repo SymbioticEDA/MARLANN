@@ -112,12 +112,21 @@ module mlaccel_compute #(
 
 	reg                 s8_en;
 	reg  [        31:0] s8_insn;
+	reg  [        19:0] s8_sum0A;
+	reg  [        19:0] s8_sum0B;
+	reg  [        19:0] s8_sum1A;
+	reg  [        19:0] s8_sum1B;
+	reg  [        15:0] s8_max0;
+	reg  [        15:0] s8_max1;
+
+	reg                 s9_en;
+	reg  [        31:0] s9_insn;
 
 
 	/**** memory interlock ****/
 
-	reg [7:0] mlock_res;
-	reg [7:0] mlock_mask;
+	reg [8:0] mlock_res;
+	reg [8:0] mlock_mask;
 
 	always @* begin
 		mlock_mask = 0;
@@ -127,13 +136,13 @@ module mlaccel_compute #(
 			4, 5, 6: mlock_mask = 1 << 0;
 
 			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-			28, 29, 30, 32, 33, 34, 36, 37, 38: mlock_mask = 1 << 3;
+			28, 29, 30, 32, 33, 34, 36, 37, 38: mlock_mask = 1 << 4;
 
 			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
 			40, 41, 42, 43, 45: mlock_mask = 1 << 0;
 
 			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
-			16, 17, 18, 20, 21, 22: mlock_mask = 1 << 7;
+			16, 17, 18, 20, 21, 22: mlock_mask = 1 << 8;
 		endcase
 
 		if (!s1_en || reset)
@@ -257,9 +266,6 @@ module mlaccel_compute #(
 		s5_en <= 0;
 		s5_insn <= s4_insn;
 
-		mem_rd1_en <= 0;
-		mem_rd1_addr <= 'bx;
-
 		if (!reset && s4_en) begin
 			s5_en <= 1;
 
@@ -277,19 +283,6 @@ module mlaccel_compute #(
 			if (s4_insn[5:0] == 6) begin
 				coeff_mem[s4_insn[14:6]][128:64] <= mem_rdata;
 			end
-
-			case (s4_insn[5:0])
-				/* SetLBP, AddLBP */
-				10, 11: begin
-					LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
-				end
-
-				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-				28, 29, 30, 32, 33, 34, 36, 37, 38: begin
-					mem_rd1_en <= 1;
-					mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
-				end
-			endcase
 		end
 	end
 
@@ -300,8 +293,24 @@ module mlaccel_compute #(
 		s6_en <= 0;
 		s6_insn <= s5_insn;
 
+		mem_rd1_en <= 0;
+		mem_rd1_addr <= 'bx;
+
 		if (!reset && s5_en) begin
 			s6_en <= 1;
+
+			case (s5_insn[5:0])
+				/* SetLBP, AddLBP */
+				10, 11: begin
+					LBP <= s5_insn[31:15] + (s5_insn[0] ? LBP : 0);
+				end
+
+				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
+				28, 29, 30, 32, 33, 34, 36, 37, 38: begin
+					mem_rd1_en <= 1;
+					mem_rd1_addr <= (s5_insn[31:15] + LBP) >> 1;
+				end
+			endcase
 		end
 	end
 
@@ -329,6 +338,26 @@ module mlaccel_compute #(
 
 	/**** stage 8 ****/
 
+	always @(posedge clock) begin
+		s8_en <= 0;
+		s8_insn <= s7_insn;
+
+		s8_sum0A <= $signed(s7_prod[  0 +: 16]) + $signed(s7_prod[ 16 +: 16]) + $signed(s7_prod[ 32 +: 16]) + $signed(s7_prod[ 48 +: 16]);
+		s8_sum0B <= $signed(s7_prod[ 64 +: 16]) + $signed(s7_prod[ 80 +: 16]) + $signed(s7_prod[ 96 +: 16]) + $signed(s7_prod[112 +: 16]);
+		s8_sum1A <= $signed(s7_prod[128 +: 16]) + $signed(s7_prod[144 +: 16]) + $signed(s7_prod[160 +: 16]) + $signed(s7_prod[176 +: 16]);
+		s8_sum1B <= $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
+
+		s8_max0 <= 0;
+		s8_max1 <= 0;
+
+		if (!reset && s7_en) begin
+			s8_en <= 1;
+		end
+	end
+
+
+	/**** stage 9 ****/
+
 	reg [31:0] new_acc0_add;
 	reg [31:0] new_acc1_add;
 
@@ -338,75 +367,70 @@ module mlaccel_compute #(
 	reg [31:0] new_acc0;
 	reg [31:0] new_acc1;
 
-	wire [31:0] acc0_shifted = $signed(acc0) >>> s7_insn[14:6];
-	wire [31:0] acc1_shifted = $signed(acc1) >>> s7_insn[14:6];
+	wire [31:0] acc0_shifted = $signed(acc0) >>> s8_insn[14:6];
+	wire [31:0] acc1_shifted = $signed(acc1) >>> s8_insn[14:6];
 
 	reg [7:0] acc0_saturated;
 	reg [7:0] acc1_saturated;
 
 	always @* begin
-		new_acc0_add = s7_insn[1] ? 0 : acc0;
-		new_acc1_add = s7_insn[1] ? 0 : acc1;
+		new_acc0_add = s8_insn[1] ? 0 : acc0;
+		new_acc1_add = s8_insn[1] ? 0 : acc1;
 
-		new_acc0_max = s7_insn[2] ? 32'h 8000_0000 : new_acc0_add;
-		new_acc1_max = s7_insn[2] ? 32'h 8000_0000 : new_acc1_add;
+		new_acc0_max = s8_insn[2] ? 32'h 8000_0000 : new_acc0_add;
+		new_acc1_max = s8_insn[2] ? 32'h 8000_0000 : new_acc1_add;
 
-		for (i = 0; i < 8; i = i+1) begin
-			new_acc0_add = $signed(new_acc0_add) + $signed(s7_prod[16*i +: 16]);
-			new_acc1_add = $signed(new_acc1_add) + $signed(s7_prod[16*(i+8) +: 16]);
-
-			new_acc0_max = ($signed(new_acc0_max) > $signed(s7_prod[16*i +: 16])) ? new_acc0_max : s7_prod[16*i +: 16];
-			new_acc1_max = ($signed(new_acc1_max) > $signed(s7_prod[16*(i+8) +: 16])) ? new_acc1_max : s7_prod[16*(i+8) +: 16];
-		end
+		new_acc0_add = $signed(new_acc0_add) + $signed(s8_sum0A) + $signed(s8_sum0B);
+		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1A) + $signed(s8_sum1B);
 
 		// FIXME
 		new_acc0_max = 0;
 		new_acc1_max = 0;
 
-		new_acc0 = s7_insn[0] ? new_acc0_max : new_acc0_add;
-		new_acc1 = s7_insn[0] ? new_acc1_max : new_acc1_add;
+		new_acc0 = s8_insn[0] ? new_acc0_max : new_acc0_add;
+		new_acc1 = s8_insn[0] ? new_acc1_max : new_acc1_add;
 	end
 
 	always @(posedge clock) begin
-		s8_en <= 0;
-		s8_insn <= s7_insn;
+		s9_en <= 0;
+		s9_insn <= s8_insn;
 
-		if (!reset && s7_en) begin
-			s8_en <= 1;
+		if (!reset && s8_en) begin
+			s9_en <= 1;
 
 			/* MACC, MMAX, MMACZ, MMAXZ, MMAXN */
-			if (s7_insn[5:3] == 3'b 101) begin
+			if (s8_insn[5:3] == 3'b 101) begin
 				acc0 <= new_acc0;
 				acc1 <= new_acc1;
 			end
 
 			/* LdSet, LdSet0 */
-			if (s7_insn[5:0] == 28 || s7_insn[5:0] == 29) begin
+			if (s8_insn[5:0] == 28 || s8_insn[5:0] == 29) begin
 				acc0 <= mem_rdata[31:0];
 			end
 
 			/* LdSet, LdSet1 */
-			if (s7_insn[5:0] == 28 || s7_insn[5:0] == 30) begin
+			if (s8_insn[5:0] == 28 || s8_insn[5:0] == 30) begin
 				acc1 <= mem_rdata[63:32];
 			end
 
 			/* LdAdd, LdAdd0 */
-			if (s7_insn[5:0] == 32 || s7_insn[5:0] == 33) begin
+			if (s8_insn[5:0] == 32 || s8_insn[5:0] == 33) begin
 				acc0 <= acc0 + mem_rdata[31:0];
 			end
 
 			/* LdAdd, LdAdd1 */
-			if (s7_insn[5:0] == 32 || s7_insn[5:0] == 34) begin
+			if (s8_insn[5:0] == 32 || s8_insn[5:0] == 34) begin
 				acc1 <= acc1 + mem_rdata[63:32];
 			end
 
 			/* LdMax, LdMax0 */
-			if (s7_insn[5:0] == 36 || s7_insn[5:0] == 37) begin
+			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 37) begin
 				acc0 <= 0; // FIXME
 			end
 
 			/* LdMax, LdMax1 */
-			if (s7_insn[5:0] == 36 || s7_insn[5:0] == 38) begin
+			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 38) begin
 				acc1 <= 0; // FIXME
 			end
 		end
@@ -441,29 +465,29 @@ module mlaccel_compute #(
 		end
 	end
 
-	wire [5:0] s8_insn_opcode = s8_insn[5:0];
+	wire [5:0] s9_insn_opcode = s9_insn[5:0];
 
 	always @(posedge clock) begin
 		pre_mem_wr_en <= 0;
-		pre_mem_wr_addr <= s8_insn[31:15] + SBP;
+		pre_mem_wr_addr <= s9_insn[31:15] + SBP;
 		pre_mem_wr_wdata <= {
-			{8{!s8_insn[2] || !acc1_saturated[7]}} & acc1_saturated,
-			{8{!s8_insn[2] || !acc0_saturated[7]}} & acc0_saturated
+			{8{!s9_insn[2] || !acc1_saturated[7]}} & acc1_saturated,
+			{8{!s9_insn[2] || !acc0_saturated[7]}} & acc0_saturated
 		};
 
-		if (s8_en) begin
+		if (s9_en) begin
 			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
-			if (s8_insn[5:3] == 3'b 010) begin
-				pre_mem_wr_en <= {!s8_insn[0], !s8_insn[1]};
+			if (s9_insn[5:3] == 3'b 010) begin
+				pre_mem_wr_en <= {!s9_insn[0], !s9_insn[1]};
 			end
 
 			/* SetSBP, AddSBP */
-			if (s8_insn[5:0] == 12 || s8_insn[5:0] == 13) begin
-				SBP <= s8_insn[31:15] + (s8_insn[0] ? SBP : 0);
+			if (s9_insn[5:0] == 12 || s9_insn[5:0] == 13) begin
+				SBP <= s9_insn[31:15] + (s9_insn[0] ? SBP : 0);
 			end
 		end
 
-		if (reset || !s8_en) begin
+		if (reset || !s9_en) begin
 			pre_mem_wr_en <= 0;
 		end
 	end
@@ -478,16 +502,16 @@ module mlaccel_compute #(
 	wire [8:0] trace_caddr = trace_insn[14:6];
 	wire [5:0] trace_opcode = trace_insn[5:0];
 
-	reg [7*17-1:0] trace_vbp_queue;
-	wire [16:0] trace_vbp = trace_vbp_queue >> (17*6);
+	reg [8*17-1:0] trace_vbp_queue;
+	wire [16:0] trace_vbp = trace_vbp_queue >> (17*7);
 
 	reg [4*17-1:0] trace_lbp_queue;
 	wire [16:0] trace_lbp = trace_lbp_queue >> (17*3);
 
 	wire [16:0] trace_sbp = SBP;
 
-	reg [5*9-1:0] trace_cbp_queue;
-	wire [8:0] trace_cbp = trace_cbp_queue >> (9*4);
+	reg [6*9-1:0] trace_cbp_queue;
+	wire [8:0] trace_cbp = trace_cbp_queue >> (9*5);
 
 	reg [31:0] trace_acc0, trace_acc1;
 
@@ -495,21 +519,21 @@ module mlaccel_compute #(
 	wire [7:0] trace_outb1 = pre_mem_wr_wdata[15:8];
 	wire [16:0] trace_outaddr = pre_mem_wr_addr;
 
-	reg [5*64-1:0] trace_mdata_queue;
-	wire [63:0] trace_mdata = trace_mdata_queue >> (64*4);
+	reg [6*64-1:0] trace_mdata_queue;
+	wire [63:0] trace_mdata = trace_mdata_queue >> (64*5);
 
-	reg [5*64-1:0] trace_c0data_queue;
-	wire [63:0] trace_c0data = trace_c0data_queue >> (64*4);
+	reg [6*64-1:0] trace_c0data_queue;
+	wire [63:0] trace_c0data = trace_c0data_queue >> (64*5);
 
-	reg [5*64-1:0] trace_c1data_queue;
-	wire [63:0] trace_c1data = trace_c1data_queue >> (64*4);
+	reg [6*64-1:0] trace_c1data_queue;
+	wire [63:0] trace_c1data = trace_c1data_queue >> (64*5);
 
 	wire [17:0] trace_maddr_plus_vbp = trace_maddr + trace_vbp;
 	wire [8:0] trace_caddr_plus_cbp = trace_caddr + trace_cbp;
 
 	always @(posedge clock) begin
-		trace_en <= s8_en;
-		trace_insn <= s8_insn;
+		trace_en <= s9_en;
+		trace_insn <= s9_insn;
 
 		trace_vbp_queue <= {trace_vbp_queue, VBP};
 		trace_lbp_queue <= {trace_lbp_queue, LBP};
