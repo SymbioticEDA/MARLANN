@@ -56,32 +56,60 @@ module testbench;
 
 	reg [7:0] xfer;
 
+	task xfer_posedge;
+		begin
+			if ($random & 15) begin
+				#17;
+				qpi_clk = 1;
+			end else begin
+				#17;
+				qpi_clk = 1;
+				#1;
+				qpi_clk = 0;
+				#1;
+				qpi_clk = 1;
+			end
+		end
+	endtask
+
+	task xfer_negedge;
+		begin
+			if ($random & 15) begin
+				#17;
+				qpi_clk = 0;
+			end else begin
+				#17;
+				qpi_clk = 0;
+				#1;
+				qpi_clk = 1;
+				#1;
+				qpi_clk = 0;
+			end
+		end
+	endtask
+
 	task xfer_start;
 		begin
 			#17;
 			qpi_csb = 0;
-			#17;
 		end
 	endtask
 
 	task xfer_send;
 		begin
-			qpi_clk = 0;
+			xfer_negedge;
 			qpi_io0_reg = xfer[4];
 			qpi_io1_reg = xfer[5];
 			qpi_io2_reg = xfer[6];
 			qpi_io3_reg = xfer[7];
-			#17;
-			qpi_clk = 1;
-			#17;
-			qpi_clk = 0;
+			xfer_posedge;
+
+			xfer_negedge;
 			qpi_io0_reg = xfer[0];
 			qpi_io1_reg = xfer[1];
 			qpi_io2_reg = xfer[2];
 			qpi_io3_reg = xfer[3];
-			#17;
-			qpi_clk = 1;
-			#17;
+			xfer_posedge;
 		end
 	endtask
 
@@ -119,61 +147,58 @@ module testbench;
 
 	task xfer_wait;
 		begin
-			qpi_clk = 0;
+			xfer_negedge;
 			qpi_io0_reg = 1'bz;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#17;
-			qpi_clk = 1;
-			#17;
-			qpi_clk = 0;
-			#17;
-			qpi_clk = 1;
-			#17;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
 		end
 	endtask
 
 	task xfer_recv;
 		begin
-			qpi_clk = 0;
+			xfer_negedge;
 			qpi_io0_reg = 1'bz;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
-			#17;
-			qpi_clk = 1;
+			xfer_posedge;
+
 			xfer[4] = qpi_io0;
 			xfer[5] = qpi_io1;
 			xfer[6] = qpi_io2;
 			xfer[7] = qpi_io3;
-			#17;
-			qpi_clk = 0;
-			qpi_io0_reg = 1'bz;
-			qpi_io1_reg = 1'bz;
-			qpi_io2_reg = 1'bz;
-			qpi_io3_reg = 1'bz;
-			#17;
-			qpi_clk = 1;
+
+			xfer_negedge;
+			xfer_posedge;
+
 			xfer[0] = qpi_io0;
 			xfer[1] = qpi_io1;
 			xfer[2] = qpi_io2;
 			xfer[3] = qpi_io3;
-			#17;
 		end
 	endtask
 
 	task xfer_stop;
 		begin
-			xfer = 'bx;
-			qpi_clk = 0;
-			#17;
+			if ($random & 3) begin
+				xfer_negedge;
+			end else begin
+				#17;
+			end
 
-			qpi_csb = 1;
 			qpi_io0_reg = 1'bz;
 			qpi_io1_reg = 1'bz;
 			qpi_io2_reg = 1'bz;
 			qpi_io3_reg = 1'bz;
+			xfer = 'bx;
+
+			#17;
+			qpi_csb = 1;
 			#17;
 		end
 	endtask

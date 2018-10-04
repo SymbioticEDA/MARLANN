@@ -547,6 +547,42 @@ module mlaccel_qpi (
 	reg di_start;
 	reg di_stx;
 
+	reg [7:0] do_data;
+	reg [3:0] do_datax;
+	reg do_valid;
+	reg do_validx;
+	reg do_toggle;
+
+	reg glitch_guard_clock_q0;
+	reg glitch_guard_di_toggle_q0;
+	reg glitch_guard_do_toggle_q0;
+	reg glitch_guard_di_stx_q0;
+
+	reg glitch_guard_posedge;
+	reg glitch_guard_negedge;
+	reg glitch_guard_di_toggle;
+	reg glitch_guard_do_toggle;
+	reg glitch_guard_di_stx;
+
+	always @(negedge clock) begin
+		glitch_guard_clock_q0 <= qpi_clk_di;
+		glitch_guard_di_toggle_q0 <= di_toggle;
+		glitch_guard_do_toggle_q0 <= do_toggle;
+		glitch_guard_di_stx_q0 <= di_stx;
+	end
+
+	always @(posedge clock) begin
+		// protect against clock glitching: logic level of clock
+		// must have been low before posedge and high before negedge
+		glitch_guard_posedge <= !glitch_guard_clock_q0;
+		glitch_guard_negedge <= glitch_guard_clock_q0;
+
+		// delay some signals to protect against double clocking
+		glitch_guard_di_toggle <= glitch_guard_di_toggle_q0;
+		glitch_guard_do_toggle <= glitch_guard_do_toggle_q0;
+		glitch_guard_di_stx <= glitch_guard_di_stx_q0;
+	end
+
 	always @(posedge qpi_clk_di, posedge qpi_csb_di) begin
 		if (qpi_csb_di) begin
 			di_data <= 0;
@@ -554,20 +590,16 @@ module mlaccel_qpi (
 			di_start <= 1;
 			di_stx <= 1;
 		end else begin
-			di_data <= qpi_io_di;
-			di_toggle <= !di_toggle;
-			if (di_toggle)
-				di_stx <= 0;
-			if (di_toggle && !di_stx)
-				di_start <= 0;
+			if (glitch_guard_posedge) begin
+				di_data <= qpi_io_di;
+				di_toggle <= !glitch_guard_di_toggle;
+				if (glitch_guard_di_toggle)
+					di_stx <= 0;
+				if (glitch_guard_di_toggle && !glitch_guard_di_stx)
+					di_start <= 0;
+			end
 		end
 	end
-
-	reg [7:0] do_data;
-	reg [3:0] do_datax;
-	reg do_valid;
-	reg do_validx;
-	reg do_toggle;
 
 	always @(negedge qpi_clk_di, posedge qpi_csb_di) begin
 		if (qpi_csb_di) begin
@@ -577,21 +609,23 @@ module mlaccel_qpi (
 			do_validx <= 0;
 			do_datax <= 0;
 		end else begin
-			if (di_start)
-				do_toggle <= 0;
-			else
-				do_toggle <= !do_toggle;
+			if (glitch_guard_negedge) begin
+				if (di_start)
+					do_toggle <= 0;
+				else
+					do_toggle <= !glitch_guard_do_toggle;
 
-			if (do_toggle) begin
-				qpi_io_oe <= {4{do_valid}};
-				qpi_io_do <= do_data[7:4];
-			end else begin
-				qpi_io_oe <= {4{do_validx}};
-				qpi_io_do <= do_datax;
+				if (glitch_guard_do_toggle) begin
+					qpi_io_oe <= {4{do_valid}};
+					qpi_io_do <= do_data[7:4];
+				end else begin
+					qpi_io_oe <= {4{do_validx}};
+					qpi_io_do <= do_datax;
+				end
+
+				do_validx <= do_valid;
+				do_datax <= do_data;
 			end
-
-			do_validx <= do_valid;
-			do_datax <= do_data;
 		end
 	end
 

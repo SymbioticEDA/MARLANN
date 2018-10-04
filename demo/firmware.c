@@ -193,14 +193,6 @@ void main()
 {
 	print("Booting..\n");
 
-	reg_leds = 127;
-	while (1) {
-		print("Press ENTER to continue..\n");
-		if (getchar_timeout() == '\r')
-			break;
-	}
-
-reupload:
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
@@ -242,6 +234,14 @@ reupload:
 		ml_finish();
 	}
 
+	reg_leds = 127;
+	while (1) {
+		print("Press ENTER to continue..\n");
+		if (getchar_timeout() == '\r')
+			break;
+	}
+
+reupload:
 	print("Uploading..\n");
 
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
@@ -324,7 +324,6 @@ reupload:
 			print(" detected ");
 			print_dec(errcount);
 			print(" errors!\n");
-#if 0
 			for (int j = 0; j < len; j += 16)
 			{
 				print("     ");
@@ -345,7 +344,6 @@ reupload:
 				}
 				print("\n");
 			}
-#endif
 		} else {
 			print(" ok\n");
 		}
