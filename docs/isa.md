@@ -208,12 +208,13 @@ Performing computations:
 - MACC: Load 8 bytes from MADDR+VBP, multiply with coefficients at CADDR+CBP,
 and add the results to the accumulators. (MADDR+VBP must be 2-bytes-aligned.)
 
-- MMAX: Like MACC, but store the max value in the accumulator instead of the
+- MMAX: Like MACC, but store the max value in the first accumulator instead of the
 sum. In MAX mode a coefficient of 0x80 (most negative number) is a special
-symbol for values that should be ignored.
+symbol for values that should be ignored. (The second accumulator performs
+the same operation as in MACC.)
 
-- MACCZ/MMAXZ: Like MACC/MMAX, but reset the accumulator to zero before
+- MACCZ/MMAXZ: Like MACC/MMAX, but reset the accumulators to zero before
 performing the operation.
 
-- MMAXN: Like MMAX but set the accumulator to the most negative value before
-performing the operation.
+- MMAXN: Like MMAXZ but set the first accumulator to the most negative value
+before performing the operation.

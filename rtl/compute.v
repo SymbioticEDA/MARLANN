@@ -102,22 +102,22 @@ module mlaccel_compute #(
 
 	reg                 s5_en;
 	reg  [        31:0] s5_insn;
+	reg  [         7:0] s5_maxen;
 
 	reg                 s6_en;
 	reg  [        31:0] s6_insn;
+	reg  [         7:0] s6_maxen;
 
 	reg                 s7_en;
 	reg  [        31:0] s7_insn;
 	wire [  NB*128-1:0] s7_prod;
+	reg  [         7:0] s7_maxen;
 
 	reg                 s8_en;
 	reg  [        31:0] s8_insn;
-	reg  [        19:0] s8_sum0A;
-	reg  [        19:0] s8_sum0B;
-	reg  [        19:0] s8_sum1A;
-	reg  [        19:0] s8_sum1B;
+	reg  [        19:0] s8_sum0;
+	reg  [        19:0] s8_sum1;
 	reg  [        15:0] s8_max0;
-	reg  [        15:0] s8_max1;
 
 	reg                 s9_en;
 	reg  [        31:0] s9_insn;
@@ -266,6 +266,15 @@ module mlaccel_compute #(
 		s5_en <= 0;
 		s5_insn <= s4_insn;
 
+		s5_maxen[0] <= s4_coeff[ 0 +: 8] != 8'h80;
+		s5_maxen[1] <= s4_coeff[ 8 +: 8] != 8'h80;
+		s5_maxen[2] <= s4_coeff[16 +: 8] != 8'h80;
+		s5_maxen[3] <= s4_coeff[24 +: 8] != 8'h80;
+		s5_maxen[4] <= s4_coeff[32 +: 8] != 8'h80;
+		s5_maxen[5] <= s4_coeff[40 +: 8] != 8'h80;
+		s5_maxen[6] <= s4_coeff[48 +: 8] != 8'h80;
+		s5_maxen[7] <= s4_coeff[56 +: 8] != 8'h80;
+
 		if (!reset && s4_en) begin
 			s5_en <= 1;
 
@@ -292,6 +301,7 @@ module mlaccel_compute #(
 	always @(posedge clock) begin
 		s6_en <= 0;
 		s6_insn <= s5_insn;
+		s6_maxen <= s5_maxen;
 
 		mem_rd1_en <= 0;
 		mem_rd1_addr <= 'bx;
@@ -329,6 +339,7 @@ module mlaccel_compute #(
 	always @(posedge clock) begin
 		s7_en <= 0;
 		s7_insn <= s6_insn;
+		s7_maxen <= s6_maxen;
 
 		if (!reset && s6_en) begin
 			s7_en <= 1;
@@ -338,17 +349,40 @@ module mlaccel_compute #(
 
 	/**** stage 8 ****/
 
+	reg [15:0] m0, m1, m2, m3, m4, m5, m6, m7;
+	reg [15:0] m01, m23, m45, m67;
+	reg [15:0] m0123, m4567;
+
+	always @* begin
+		m0 = s7_maxen[0] ? $signed(s7_prod[  0 +: 16]) : 16'h 8000;
+		m1 = s7_maxen[0] ? $signed(s7_prod[ 16 +: 16]) : 16'h 8000;
+		m2 = s7_maxen[0] ? $signed(s7_prod[ 32 +: 16]) : 16'h 8000;
+		m3 = s7_maxen[0] ? $signed(s7_prod[ 48 +: 16]) : 16'h 8000;
+		m4 = s7_maxen[0] ? $signed(s7_prod[ 64 +: 16]) : 16'h 8000;
+		m5 = s7_maxen[0] ? $signed(s7_prod[ 80 +: 16]) : 16'h 8000;
+		m6 = s7_maxen[0] ? $signed(s7_prod[ 96 +: 16]) : 16'h 8000;
+		m7 = s7_maxen[0] ? $signed(s7_prod[112 +: 16]) : 16'h 8000;
+
+		m01 = $signed(m0) > $signed(m1) ? $signed(m0) : $signed(m1);
+		m23 = $signed(m2) > $signed(m3) ? $signed(m2) : $signed(m3);
+		m45 = $signed(m4) > $signed(m5) ? $signed(m4) : $signed(m5);
+		m67 = $signed(m6) > $signed(m7) ? $signed(m6) : $signed(m7);
+
+		m0123 = $signed(m01) > $signed(m23) ? $signed(m01) : $signed(m23);
+		m4567 = $signed(m45) > $signed(m67) ? $signed(m45) : $signed(m67);
+	end
+
 	always @(posedge clock) begin
 		s8_en <= 0;
 		s8_insn <= s7_insn;
 
-		s8_sum0A <= $signed(s7_prod[  0 +: 16]) + $signed(s7_prod[ 16 +: 16]) + $signed(s7_prod[ 32 +: 16]) + $signed(s7_prod[ 48 +: 16]);
-		s8_sum0B <= $signed(s7_prod[ 64 +: 16]) + $signed(s7_prod[ 80 +: 16]) + $signed(s7_prod[ 96 +: 16]) + $signed(s7_prod[112 +: 16]);
-		s8_sum1A <= $signed(s7_prod[128 +: 16]) + $signed(s7_prod[144 +: 16]) + $signed(s7_prod[160 +: 16]) + $signed(s7_prod[176 +: 16]);
-		s8_sum1B <= $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
+		s8_sum0 <= $signed(s7_prod[  0 +: 16]) + $signed(s7_prod[ 16 +: 16]) + $signed(s7_prod[ 32 +: 16]) + $signed(s7_prod[ 48 +: 16]) +
+		           $signed(s7_prod[ 64 +: 16]) + $signed(s7_prod[ 80 +: 16]) + $signed(s7_prod[ 96 +: 16]) + $signed(s7_prod[112 +: 16]);
 
-		s8_max0 <= 0;
-		s8_max1 <= 0;
+		s8_sum1 <= $signed(s7_prod[128 +: 16]) + $signed(s7_prod[144 +: 16]) + $signed(s7_prod[160 +: 16]) + $signed(s7_prod[176 +: 16]) +
+		           $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
+
+		s8_max0 <= $signed(m0123) > $signed(m4567) ? $signed(m0123) : $signed(m4567);
 
 		if (!reset && s7_en) begin
 			s8_en <= 1;
@@ -362,7 +396,6 @@ module mlaccel_compute #(
 	reg [31:0] new_acc1_add;
 
 	reg [31:0] new_acc0_max;
-	reg [31:0] new_acc1_max;
 
 	reg [31:0] new_acc0;
 	reg [31:0] new_acc1;
@@ -375,20 +408,18 @@ module mlaccel_compute #(
 
 	always @* begin
 		new_acc0_add = s8_insn[1] ? 0 : acc0;
-		new_acc1_add = s8_insn[1] ? 0 : acc1;
+		new_acc1_add = s8_insn[1] || s8_insn[2] ? 0 : acc1;
 
 		new_acc0_max = s8_insn[2] ? 32'h 8000_0000 : new_acc0_add;
-		new_acc1_max = s8_insn[2] ? 32'h 8000_0000 : new_acc1_add;
 
-		new_acc0_add = $signed(new_acc0_add) + $signed(s8_sum0A) + $signed(s8_sum0B);
-		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1A) + $signed(s8_sum1B);
+		new_acc0_add = $signed(new_acc0_add) + $signed(s8_sum0);
+		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1);
 
-		// FIXME
-		new_acc0_max = 0;
-		new_acc1_max = 0;
+		if (s8_max0 != 16'h 8000)
+			new_acc0_max = $signed(new_acc0_max) > $signed(s8_max0) ? new_acc0_max : s8_max0;
 
 		new_acc0 = s8_insn[0] ? new_acc0_max : new_acc0_add;
-		new_acc1 = s8_insn[0] ? new_acc1_max : new_acc1_add;
+		new_acc1 = new_acc1_add;
 	end
 
 	always @(posedge clock) begin
