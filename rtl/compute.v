@@ -15,6 +15,9 @@
  *
  */
 
+// disable SIMD MAX instructions
+`undef MLACCEL_COMPUTE_SIMD_MAX
+
 module mlaccel_compute #(
 	parameter integer NB = 2,
 	parameter integer CODE_SIZE = 512,
@@ -102,22 +105,30 @@ module mlaccel_compute #(
 
 	reg                 s5_en;
 	reg  [        31:0] s5_insn;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg  [         7:0] s5_maxen;
+`endif
 
 	reg                 s6_en;
 	reg  [        31:0] s6_insn;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg  [         7:0] s6_maxen;
+`endif
 
 	reg                 s7_en;
 	reg  [        31:0] s7_insn;
 	wire [  NB*128-1:0] s7_prod;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg  [         7:0] s7_maxen;
+`endif
 
 	reg                 s8_en;
 	reg  [        31:0] s8_insn;
 	reg  [        19:0] s8_sum0;
 	reg  [        19:0] s8_sum1;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg  [        15:0] s8_max0;
+`endif
 
 	reg                 s9_en;
 	reg  [        31:0] s9_insn;
@@ -266,6 +277,7 @@ module mlaccel_compute #(
 		s5_en <= 0;
 		s5_insn <= s4_insn;
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		s5_maxen[0] <= s4_coeff[ 0 +: 8] != 8'h80;
 		s5_maxen[1] <= s4_coeff[ 8 +: 8] != 8'h80;
 		s5_maxen[2] <= s4_coeff[16 +: 8] != 8'h80;
@@ -274,6 +286,7 @@ module mlaccel_compute #(
 		s5_maxen[5] <= s4_coeff[40 +: 8] != 8'h80;
 		s5_maxen[6] <= s4_coeff[48 +: 8] != 8'h80;
 		s5_maxen[7] <= s4_coeff[56 +: 8] != 8'h80;
+`endif
 
 		if (!reset && s4_en) begin
 			s5_en <= 1;
@@ -301,7 +314,9 @@ module mlaccel_compute #(
 	always @(posedge clock) begin
 		s6_en <= 0;
 		s6_insn <= s5_insn;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		s6_maxen <= s5_maxen;
+`endif
 
 		mem_rd1_en <= 0;
 		mem_rd1_addr <= 'bx;
@@ -339,7 +354,9 @@ module mlaccel_compute #(
 	always @(posedge clock) begin
 		s7_en <= 0;
 		s7_insn <= s6_insn;
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		s7_maxen <= s6_maxen;
+`endif
 
 		if (!reset && s6_en) begin
 			s7_en <= 1;
@@ -349,6 +366,7 @@ module mlaccel_compute #(
 
 	/**** stage 8 ****/
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg [15:0] m0, m1, m2, m3, m4, m5, m6, m7;
 	reg [15:0] m01, m23, m45, m67;
 	reg [15:0] m0123, m4567;
@@ -371,6 +389,7 @@ module mlaccel_compute #(
 		m0123 = $signed(m01) > $signed(m23) ? $signed(m01) : $signed(m23);
 		m4567 = $signed(m45) > $signed(m67) ? $signed(m45) : $signed(m67);
 	end
+`endif
 
 	always @(posedge clock) begin
 		s8_en <= 0;
@@ -382,7 +401,9 @@ module mlaccel_compute #(
 		s8_sum1 <= $signed(s7_prod[128 +: 16]) + $signed(s7_prod[144 +: 16]) + $signed(s7_prod[160 +: 16]) + $signed(s7_prod[176 +: 16]) +
 		           $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		s8_max0 <= $signed(m0123) > $signed(m4567) ? $signed(m0123) : $signed(m4567);
+`endif
 
 		if (!reset && s7_en) begin
 			s8_en <= 1;
@@ -395,7 +416,9 @@ module mlaccel_compute #(
 	reg [31:0] new_acc0_add;
 	reg [31:0] new_acc1_add;
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 	reg [31:0] new_acc0_max;
+`endif
 
 	reg [31:0] new_acc0;
 	reg [31:0] new_acc1;
@@ -410,15 +433,23 @@ module mlaccel_compute #(
 		new_acc0_add = s8_insn[1] ? 0 : acc0;
 		new_acc1_add = s8_insn[1] || s8_insn[2] ? 0 : acc1;
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		new_acc0_max = s8_insn[2] ? 32'h 8000_0000 : new_acc0_add;
+`endif
 
 		new_acc0_add = $signed(new_acc0_add) + $signed(s8_sum0);
 		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1);
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		if (s8_max0 != 16'h 8000)
 			new_acc0_max = $signed(new_acc0_max) > $signed(s8_max0) ? new_acc0_max : s8_max0;
+`endif
 
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 		new_acc0 = s8_insn[0] ? new_acc0_max : new_acc0_add;
+`else
+		new_acc0 = new_acc0_add;
+`endif
 		new_acc1 = new_acc1_add;
 	end
 
@@ -457,12 +488,12 @@ module mlaccel_compute #(
 
 			/* LdMax, LdMax0 */
 			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 37) begin
-				acc0 <= 0; // FIXME
+				acc0 <= $signed(acc0) > $signed(mem_rdata[31:0]) ? acc0 : mem_rdata[31:0];
 			end
 
 			/* LdMax, LdMax1 */
 			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 38) begin
-				acc1 <= 0; // FIXME
+				acc1 <= $signed(acc1) > $signed(mem_rdata[63:32]) ? acc0 : mem_rdata[63:32];
 			end
 		end
 
@@ -512,6 +543,12 @@ module mlaccel_compute #(
 				pre_mem_wr_en <= {!s9_insn[0], !s9_insn[1]};
 			end
 
+			/* Save, Save0, Save1 */
+			if (s9_insn[5:2] == 4'b 0110) begin
+				pre_mem_wr_en <= {{4{!s9_insn[0]}}, {4{!s9_insn[1]}}};
+				pre_mem_wr_wdata <= {acc1, acc0};
+			end
+
 			/* SetSBP, AddSBP */
 			if (s9_insn[5:0] == 12 || s9_insn[5:0] == 13) begin
 				SBP <= s9_insn[31:15] + (s9_insn[0] ? SBP : 0);
@@ -548,6 +585,8 @@ module mlaccel_compute #(
 
 	wire [7:0] trace_outb0 = pre_mem_wr_wdata[7:0];
 	wire [7:0] trace_outb1 = pre_mem_wr_wdata[15:8];
+	wire [31:0] trace_outw0 = pre_mem_wr_wdata[31:0];
+	wire [31:0] trace_outw1 = pre_mem_wr_wdata[63:32];
 	wire [16:0] trace_outaddr = pre_mem_wr_addr;
 
 	reg [6*64-1:0] trace_mdata_queue;
@@ -602,6 +641,13 @@ module mlaccel_compute #(
 				22: $display("TRACE %8t: ReLU1 0x%05x, 0x%03x // 0x%08x -> 0x%02x @ 0x%05x",
 						$time, trace_maddr, trace_caddr, trace_acc1, trace_outb1, trace_outaddr+1);
 
+				24: $display("TRACE %8t: Save 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%08x 0x%08x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_acc1, trace_outw0, trace_outw1, trace_outaddr);
+				25: $display("TRACE %8t: Save0 0x%05x, 0x%03x // 0x%08x -> 0x%08x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc0, trace_outw0, trace_outaddr);
+				26: $display("TRACE %8t: Save1 0x%05x, 0x%03x // 0x%08x -> 0x%08x @ 0x%05x",
+						$time, trace_maddr, trace_caddr, trace_acc1, trace_outw1, trace_outaddr+4);
+
 				28: $display("TRACE %8t: LdSet 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
 				29: $display("TRACE %8t: LdSet0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
 				30: $display("TRACE %8t: LdSet1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
@@ -617,18 +663,22 @@ module mlaccel_compute #(
 				40: $display("TRACE %8t: MACC 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,
 						trace_c0data, trace_c1data, trace_caddr_plus_cbp, trace_acc0, trace_acc1);
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 				41: $display("TRACE %8t: MMAX 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,
 						trace_c0data, trace_c1data, trace_caddr_plus_cbp, trace_acc0, trace_acc1);
+`endif
 				42: $display("TRACE %8t: MACCZ 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,
 						trace_c0data, trace_c1data, trace_caddr_plus_cbp, trace_acc0, trace_acc1);
+`ifdef MLACCEL_COMPUTE_SIMD_MAX
 				43: $display("TRACE %8t: MMAXZ 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,
 						trace_c0data, trace_c1data, trace_caddr_plus_cbp, trace_acc0, trace_acc1);
 				45: $display("TRACE %8t: MMAXN 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,
 						trace_c0data, trace_c1data, trace_caddr_plus_cbp, trace_acc0, trace_acc1);
+`endif
 			endcase
 			$fflush;
 		end

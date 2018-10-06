@@ -183,7 +183,12 @@ void MlSim::exec(insn_t insn)
 		}
 
 		if (trace) {
-			// FIXME
+			if (insn.op() == 24)
+				fprintf(trace, "Save 0x%05x, 0x%03x // 0x%08x 0x%08x -> 0x%08x 0x%08x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, acc1, acc0, acc1, maddr);
+			if (insn.op() == 25)
+				fprintf(trace, "Save0 0x%05x, 0x%03x // 0x%08x -> 0x%08x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc0, acc0, maddr);
+			if (insn.op() == 26)
+				fprintf(trace, "Save1 0x%05x, 0x%03x // 0x%08x -> 0x%08x @ 0x%05x\n", insn.maddr(), insn.caddr(), acc1, acc1, maddr+4);
 		}
 		return;
 	}
