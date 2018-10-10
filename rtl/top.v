@@ -25,12 +25,7 @@ module mlaccel_top (
 	inout  qpi_io2,
 	inout  qpi_io3,
 	output qpi_rdy,
-	output qpi_err,
-
-	output dbg1,
-	output dbg2,
-	output dbg3,
-	output dbg4
+	output qpi_err
 );
 	integer i;
 
@@ -507,13 +502,6 @@ module mlaccel_top (
 		.wdata (mem_wdata),
 		.rdata (mem_rdata)
 	);
-
-	/********** Debug Pins **********/
-
-	assign dbg1 = qpi_csb_di;
-	assign dbg2 = qpi_clk_di;
-	assign dbg3 = din_valid;
-	assign dbg4 = din_start;
 endmodule
 
 module mlaccel_qpi (

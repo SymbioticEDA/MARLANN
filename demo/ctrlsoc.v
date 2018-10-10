@@ -49,15 +49,20 @@ module ctrlsoc (
 
 	// mlaccel ctrl pins
 	output ml_csb,
-	input  ml_rdy,
-	input  ml_err
+	output ml_clk
 );
 	reg resetn = 0;
 	reg [5:0] reset_cnt = 0;
+	reg trigger_reset = 0;
 
 	always @(posedge clk) begin
 		reset_cnt <= reset_cnt + !(&reset_cnt);
 		resetn <= &reset_cnt;
+
+		if (trigger_reset) begin
+			reset_cnt <= 0;
+			resetn <= 0;
+		end
 	end
 
 	wire trap;
@@ -155,10 +160,13 @@ module ctrlsoc (
 	reg [3:0] flash_overwrite_oe;
 	reg [3:0] flash_overwrite_do;
 
-	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b1;
-
 	assign flash_clk = flash_overwrite ? flash_overwrite_clk : flash_clk_do;
 	assign flash_csb = flash_overwrite ? flash_overwrite_csb : flash_csb_do;
+
+	assign ml_clk = flash_clk;
+	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b1;
+	wire ml_rdy = 1;
+	wire ml_err = 1;
 
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),
@@ -174,6 +182,7 @@ module ctrlsoc (
 		mem_ready <= 0;
 		spram0_rselect <= 0;
 		spram1_rselect <= 0;
+		trigger_reset <= 0;
 
 		if (!resetn) begin
 			buserror <= 0;
@@ -225,6 +234,10 @@ module ctrlsoc (
 					mem_rdata[15:8] <= flash_overwrite_oe;
 					mem_rdata[7:0] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
 
+				end
+				mem_addr == 32'h 0200000c: begin
+					mem_ready <= 1;
+					trigger_reset <= |mem_wstrb;
 				end
 				default: begin
 					buserror <= 1;

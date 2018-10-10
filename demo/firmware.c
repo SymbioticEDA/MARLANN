@@ -25,9 +25,13 @@
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
 
-#define reg_leds (*(volatile uint32_t*)0x02000000)
-#define reg_uart (*(volatile uint32_t*)0x02000004)
-#define reg_qpio (*(volatile uint32_t*)0x02000008)
+#define SER_TIMEOUT 1000000
+#define ML_TIMEOUT   500000
+
+#define reg_leds  (*(volatile uint32_t*)0x02000000)
+#define reg_uart  (*(volatile uint32_t*)0x02000004)
+#define reg_qpio  (*(volatile uint32_t*)0x02000008)
+#define reg_reset (*(volatile uint32_t*)0x0200000c)
 
 #include "demodat.inc"
 
@@ -129,7 +133,7 @@ dig1:
 
 int getchar_timeout()
 {
-	for (int i = 0; i < 1000000; i++) {
+	for (int i = 0; i < SER_TIMEOUT; i++) {
 		int32_t c = reg_uart;
 		if (c > 0)
 			return c;
@@ -191,6 +195,7 @@ uint8_t ml_recv()
 
 void ml_stop()
 {
+	reg_qpio &= 0x88000fff;
 	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x8C000000;
 	asm volatile ("nop" : : : "memory");
@@ -217,7 +222,13 @@ void ml_upload(int offset, const char *data, int len)
 	ml_send(offset >> 9);
 	ml_send(len >> 2);
 	ml_recv();
-	while (ml_recv() != 0) { }
+	for (int i = 0; ml_recv() != 0; i++)
+		if (i == ML_TIMEOUT) {
+			ml_stop();
+			ml_finish();
+			print("TIMEOUT");
+			reg_reset = 1;
+		}
 	ml_stop();
 
 	ml_finish();
@@ -241,7 +252,13 @@ void ml_upload_buf(int offset, const char *data, int len)
 	ml_send(offset >> 9);
 	ml_send(len >> 2);
 	ml_recv();
-	while (ml_recv() != 0) { }
+	for (int i = 0; ml_recv() != 0; i++)
+		if (i == ML_TIMEOUT) {
+			ml_stop();
+			ml_finish();
+			print("TIMEOUT");
+			reg_reset = 1;
+		}
 	ml_stop();
 
 	ml_finish();
@@ -255,7 +272,13 @@ void ml_download(int offset, char *data, int len)
 	ml_send(offset >> 9);
 	ml_send(len >> 2);
 	ml_recv();
-	while (ml_recv() != 0) { }
+	for (int i = 0; ml_recv() != 0; i++)
+		if (i == ML_TIMEOUT) {
+			ml_stop();
+			ml_finish();
+			print("TIMEOUT");
+			reg_reset = 1;
+		}
 	ml_stop();
 
 	ml_start();
@@ -285,11 +308,14 @@ void ml_run(int start)
 	ml_finish();
 }
 
-void ml_test()
+bool ml_test()
 {
+	bool okay = true;
+
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
+		char buffer2[128];
 		char *p;
 
 		if (i == 0)
@@ -315,18 +341,35 @@ void ml_test()
 		ml_send(0);
 		ml_stop();
 
+		p = buffer2;
+
 		ml_start();
 		ml_send(0x22);
 		ml_recv();
 		while (1) {
 			char c = ml_recv();
+			*(p++) = c;
 			if (!c) break;
 			putchar(c);
 		}
 		ml_stop();
 
 		ml_finish();
+
+		for (int i = 0; buffer[i]; i++)
+			if (buffer[i] != buffer2[i]) {
+				print("Error in byte ");
+				print_dec(i);
+				print(": got ");
+				print_dec(buffer2[i]);
+				print(", expected ");
+				print_dec(buffer[i]);
+				print(".\n");
+				okay = false;
+			}
 	}
+
+	return okay;
 }
 
 // --------------------------------------------------------
@@ -335,7 +378,10 @@ void main()
 {
 	print("\n\n\n\n\n");
 	print("Booting..\n");
-	ml_test();
+	if (!ml_test()) {
+		print("QPI test failed. reboot..\n");
+		reg_reset = 1;
+	}
 	print("\n");
 
 	reg_leds = 127;
@@ -351,7 +397,10 @@ void main()
 reupload:
 		print("Reuploading..\n");
 	} else {
-		ml_test();
+		if (!ml_test()) {
+			print("QPI test failed. reboot..\n");
+			reg_reset = 1;
+		}
 		print("\n");
 
 		print("Uploading..\n");
@@ -520,5 +569,6 @@ test_failed:
 	print("READY. Press ENTER to reboot.\n");
 	while (getchar() != '\r') { }
 
-	return main();
+	reg_reset = 1;
+	return;
 }

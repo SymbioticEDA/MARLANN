@@ -73,8 +73,7 @@ module testbench;
 	wire btn3 = 0;
 
 	wire ml_csb;
-	wire ml_rdy = 0;
-	wire ml_err = 0;
+	wire ml_clk;
 
 	ctrlsoc ctrl (
 		.clk       (ctrl_clk ),
@@ -103,8 +102,7 @@ module testbench;
 		.btn3      (btn3     ),
 
 		.ml_csb    (ml_csb   ),
-		.ml_rdy    (ml_rdy   ),
-		.ml_err    (ml_err   )
+		.ml_clk    (ml_clk   )
 	);
 
 	spiflash flash (
@@ -119,13 +117,13 @@ module testbench;
 	mlaccel_top mlacc (
 		.clock   (accel_clk),
 		.qpi_csb (ml_csb   ),
-		.qpi_clk (flash_clk),
+		.qpi_clk (ml_clk   ),
 		.qpi_io0 (flash_io0),
 		.qpi_io1 (flash_io1),
 		.qpi_io2 (flash_io2),
 		.qpi_io3 (flash_io3),
-		.qpi_rdy (ml_rdy   ),
-		.qpi_err (ml_err   )
+		.qpi_rdy (         ),
+		.qpi_err (         )
 	);
 
 	reg [7:0] ser_byte;
