@@ -49,7 +49,7 @@ module mlaccel_top (
 	wire        dout_ready;
 	reg  [ 7:0] dout_data;
 
-	reg         qmem_done;
+	wire        qmem_done;
 	reg         qmem_rdone;
 	reg         qmem_read;
 	reg  [ 1:0] qmem_write;
@@ -440,52 +440,63 @@ module mlaccel_top (
 	reg mem_client_smem;
 	reg mem_client_cmem;
 
+	reg  [15:0] next_mem_addr;
+	reg  [ 7:0] next_mem_wen;
+	reg  [63:0] next_mem_wdata;
+
 	reg  [15:0] mem_addr;
 	reg  [ 7:0] mem_wen;
 	reg  [63:0] mem_wdata;
 	wire [63:0] mem_rdata;
 
-	reg [1:0] smem_state;
+	reg [2:0] smem_state;
+	reg [2:0] qmem_state;
 
 	always @* begin
 		mem_client_qmem = 0;
 		mem_client_smem = 0;
 		mem_client_cmem = 0;
 
-		mem_addr = cmem_addr;
-		mem_wen = cmem_wen;
-		mem_wdata = cmem_wdata;
+		next_mem_addr = cmem_addr;
+		next_mem_wen = cmem_wen;
+		next_mem_wdata = cmem_wdata;
 
 		if (cmem_ren || cmem_wen) begin
 			mem_client_cmem = 1;
 		end else
-		if ((qmem_read || qmem_write) && !qmem_done) begin
+		if ((qmem_read || qmem_write) && !qmem_state) begin
 			mem_client_qmem = 1;
-			mem_addr = qmem_addr;
-			mem_wen = qmem_write;
-			mem_wdata = qmem_wdata;
+			next_mem_addr = qmem_addr;
+			next_mem_wen = qmem_write;
+			next_mem_wdata = qmem_wdata;
 		end else
 		if (smem_valid && !smem_state) begin
 			mem_client_smem = 1;
-			mem_addr = smem_addr;
-			mem_wen = 0;
+			next_mem_addr = smem_addr;
+			next_mem_wen = 0;
 		end
 	end
 
 	assign qmem_rdata = mem_rdata[15:0];
+	assign qmem_done = qmem_state[1];
 	assign smem_data = mem_rdata[31:0];
-	assign smem_ready = smem_state[1];
+	assign smem_ready = smem_state[2];
 	assign cmem_rdata = mem_rdata;
 
 	always @(posedge clock) begin
-		qmem_done <= mem_client_qmem;
+		mem_addr <= next_mem_addr;
+		mem_wen <= next_mem_wen;
+		mem_wdata <= next_mem_wdata;
 		qmem_rdone <= qmem_read && qmem_done;
 
 		smem_state <= {smem_state, mem_client_smem};
+		qmem_state <= {qmem_state, mem_client_qmem};
 
 		if (reset) begin
-			qmem_done <= 0;
 			qmem_rdone <= 0;
+			mem_wen <= 0;
+			smem_state <= 0;
+			qmem_state <= 0;
 		end
 	end
 
