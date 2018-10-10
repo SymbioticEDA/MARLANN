@@ -25,8 +25,8 @@
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
 
-#define SER_TIMEOUT 1000000
-#define ML_TIMEOUT   500000
+#define SER_TIMEOUT 1500000
+#define ML_TIMEOUT      100
 
 #define reg_leds  (*(volatile uint32_t*)0x02000000)
 #define reg_uart  (*(volatile uint32_t*)0x02000004)
@@ -43,6 +43,12 @@ void *memset(void *s, int c, size_t n)
 	while (n--)
 		*(p++) = c;
 	return s;
+}
+
+void error()
+{
+	while (1) { }
+	reg_reset = 1;
 }
 
 // --------------------------------------------------------
@@ -154,41 +160,28 @@ char getchar()
 
 void ml_start()
 {
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x8C000000;
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
-	asm volatile ("nop" : : : "memory");
 }
 
 void ml_send(uint8_t byte)
 {
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000f00 | (byte >> 4);
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010f00 | (byte >> 4);
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000f00 | (byte & 15);
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010f00 | (byte & 15);
-	asm volatile ("nop" : : : "memory");
 }
 
 uint8_t ml_recv()
 {
 	uint8_t byte = 0;
 
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010000;
 	byte |= (reg_qpio & 15) << 4;
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88000000;
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x88010000;
 	byte |= reg_qpio & 15;
-	asm volatile ("nop" : : : "memory");
 
 	return byte;
 }
@@ -196,16 +189,41 @@ uint8_t ml_recv()
 void ml_stop()
 {
 	reg_qpio &= 0x88000fff;
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x8C000000;
-	asm volatile ("nop" : : : "memory");
 }
 
 void ml_finish()
 {
-	asm volatile ("nop" : : : "memory");
 	reg_qpio = 0x00000000;
-	asm volatile ("nop" : : : "memory");
+}
+
+void ml_clear_setup()
+{
+	ml_start();
+	ml_send(0x21);
+	for (int i = 0; i < 1024; i++)
+		ml_send(0x00);
+	ml_stop();
+	ml_finish();
+}
+
+void ml_clear_block(int offset, int len)
+{
+	ml_start();
+	ml_send(0x23);
+	ml_send(offset >> 1);
+	ml_send(offset >> 9);
+	ml_send(len >> 2);
+	ml_recv();
+	for (int i = 0; ml_recv() != 0; i++)
+		if (i == ML_TIMEOUT) {
+			ml_stop();
+			ml_finish();
+			print("TIMEOUT");
+			error();
+		}
+	ml_stop();
+	ml_finish();
 }
 
 void ml_upload(int offset, const char *data, int len)
@@ -227,7 +245,7 @@ void ml_upload(int offset, const char *data, int len)
 			ml_stop();
 			ml_finish();
 			print("TIMEOUT");
-			reg_reset = 1;
+			error();
 		}
 	ml_stop();
 
@@ -257,7 +275,7 @@ void ml_upload_buf(int offset, const char *data, int len)
 			ml_stop();
 			ml_finish();
 			print("TIMEOUT");
-			reg_reset = 1;
+			error();
 		}
 	ml_stop();
 
@@ -277,7 +295,7 @@ void ml_download(int offset, char *data, int len)
 			ml_stop();
 			ml_finish();
 			print("TIMEOUT");
-			reg_reset = 1;
+			error();
 		}
 	ml_stop();
 
@@ -379,8 +397,8 @@ void main()
 	print("\n\n\n\n\n");
 	print("Booting..\n");
 	if (!ml_test()) {
-		print("QPI test failed. reboot..\n");
-		reg_reset = 1;
+		print("QPI test failed.\n");
+		error();
 	}
 	print("\n");
 
@@ -391,21 +409,47 @@ void main()
 			break;
 	}
 
-	bool reuploaded = false;
+	if (!ml_test()) {
+		print("QPI test failed.\n");
+		error();
+	}
+	print("\n");
 
-	if (0) {
-reupload:
-		print("Reuploading..\n");
-	} else {
-		if (!ml_test()) {
-			print("QPI test failed. reboot..\n");
-			reg_reset = 1;
-		}
-		print("\n");
+	print("Clearing..\n");
 
-		print("Uploading..\n");
+	ml_clear_setup();
+
+	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
+
+		print("  clearing ");
+		print_dec(len);
+		print(" bytes at 0x");
+		print_hex(demo_hex_start+i, 5);
+		print(".\n");
+
+		ml_clear_block(demo_hex_start+i, len);
 	}
 
+	for (int i = 0; i < (int)sizeof(demo_out_hex_data); i += 1024)
+	{
+		int len = sizeof(demo_out_hex_data) - i;
+		if (len > 1024)
+			len = 1024;
+
+		print("  clearing ");
+		print_dec(len);
+		print(" bytes at 0x");
+		print_hex(demo_out_hex_start+i, 5);
+		print(".\n");
+
+		ml_clear_block(demo_out_hex_start+i, len);
+	}
+
+	print("Uploading..\n");
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
 		int len = sizeof(demo_hex_data) - i;
@@ -415,23 +459,19 @@ reupload:
 		print("  writing ");
 		print_dec(len);
 		print(" bytes to 0x");
-		print_hex(i, 5);
+		print_hex(demo_hex_start+i, 5);
 		print(".\n");
 
 		ml_upload_buf(demo_hex_start+i, demo_hex_data+i, len);
 	}
 
 	print("Checking..\n");
-	bool found_errors = false;
-
 	for (int i = 0; i < (int)sizeof(demo_hex_data); i += 1024)
 	{
-		bool rechecked = false;
 		int len = sizeof(demo_hex_data) - i;
 		if (len > 1024)
 			len = 1024;
 
-	recheck:
 		print("  checking ");
 		print_dec(len);
 		print(" bytes at 0x");
@@ -473,42 +513,16 @@ reupload:
 				}
 				print("\n");
 			}
-			if (!rechecked) {
-				print("Rechecking..\n");
-				rechecked = true;
-				goto recheck;
-			}
-			found_errors = true;
+			error();
 		} else {
 			print(" ok\n");
 		}
-	}
-
-	if (found_errors) {
-		if (!reuploaded) {
-			reuploaded = true;
-			goto reupload;
-		}
-		goto test_failed;
-	}
-
-	print("Clearing output region..\n");
-	for (int i = 0; i < (int)sizeof(demo_out_hex_data); i += 1024)
-	{
-		int len = sizeof(demo_out_hex_data) - i;
-		if (len > 1024)
-			len = 1024;
-
-		char buffer[1024] = { /* zeros */ };
-		ml_upload(demo_out_hex_start+i, buffer, len);
 	}
 
 	print("Running..\n");
 	ml_run(0);
 
 	print("Downloading..\n");
-	found_errors = false;
-
 	for (int i = 0; i < (int)sizeof(demo_out_hex_data); i += 1024)
 	{
 		int len = sizeof(demo_out_hex_data) - i;
@@ -531,7 +545,6 @@ reupload:
 		}
 
 		if (errcount != 0) {
-			found_errors = true;
 			print(" detected ");
 			print_dec(errcount);
 			print(" errors!\n");
@@ -557,18 +570,13 @@ reupload:
 				}
 				print("\n");
 			}
+			error();
 		} else {
 			print(" ok\n");
 		}
 	}
 
-test_failed:
-	if (found_errors)
-		print("!!!! Test failed !!!!\n");
-
-	print("READY. Press ENTER to reboot.\n");
-	while (getchar() != '\r') { }
-
+	print("Check PASSED. Reboot.\n");
 	reg_reset = 1;
 	return;
 }
