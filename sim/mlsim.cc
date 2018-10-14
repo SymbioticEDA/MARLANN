@@ -193,10 +193,9 @@ void MlSim::exec(insn_t insn)
 		return;
 	}
 
-	// LdSet/LdAdd/LdMax
+	// LdSet/LdAdd
 	if (insn.op() == 28 || insn.op() == 29 || insn.op() == 30 ||
-			insn.op() == 32 || insn.op() == 33 || insn.op() == 34 ||
-			insn.op() == 36 || insn.op() == 37 || insn.op() == 38)
+			insn.op() == 32 || insn.op() == 33 || insn.op() == 34)
 	{
 		int maddr = (LBP + insn.maddr()) & 0x1ffff;
 		assert(maddr % 2 == 0);
@@ -225,12 +224,6 @@ void MlSim::exec(insn_t insn)
 		if (insn.op() == 32 || insn.op() == 34)
 			acc1 += v1;
 
-		if (insn.op() == 36 || insn.op() == 37)
-			acc0 = std::max(acc0, v0);
-
-		if (insn.op() == 36 || insn.op() == 38)
-			acc1 = std::max(acc1, v1);
-
 		if (trace) {
 			if (insn.op() == 28)
 				fprintf(trace, "LdSet 0x%05x // -> 0x%08x 0x%08x\n", insn.maddr(), acc0, acc1);
@@ -244,12 +237,6 @@ void MlSim::exec(insn_t insn)
 				fprintf(trace, "LdAdd0 0x%05x // -> 0x%08x\n", insn.maddr(), acc0);
 			if (insn.op() == 34)
 				fprintf(trace, "LdAdd1 0x%05x // -> 0x%08x\n", insn.maddr(), acc1);
-			if (insn.op() == 36)
-				fprintf(trace, "LdMax 0x%05x // -> 0x%08x 0x%08x\n", insn.maddr(), acc0, acc1);
-			if (insn.op() == 37)
-				fprintf(trace, "LdMax0 0x%05x // -> 0x%08x\n", insn.maddr(), acc0);
-			if (insn.op() == 38)
-				fprintf(trace, "LdMax1 0x%05x // -> 0x%08x\n", insn.maddr(), acc1);
 		}
 		return;
 	}

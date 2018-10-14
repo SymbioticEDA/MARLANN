@@ -52,10 +52,6 @@ LdAdd  <maddr>
 LdAdd0 <maddr>
 LdAdd1 <maddr>
 
-LdMax  <maddr>
-LdMax0 <maddr>
-LdMax1 <maddr>
-
 MACC   <maddr>, <caddr>
 MMAX   <maddr>, <caddr>
 MACCZ  <maddr>, <caddr>

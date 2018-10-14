@@ -90,9 +90,9 @@ The assembler expects instruction operands in the order MADDR, CADDR, ARG/LEN.
     |             MADDR               |      -----      | 100010 34 |  LdAdd1
     |             -----               |      -----      | 100011 35 |  ---
     +---------------------------------+-----------------+-----------+
-    |             MADDR               |      -----      | 100100 36 |  LdMax
-    |             MADDR               |      -----      | 100101 37 |  LdMax0
-    |             MADDR               |      -----      | 100110 38 |  LdMax1
+    |             -----               |      -----      | 100100 36 |  ---
+    |             -----               |      -----      | 100101 37 |  ---
+    |             -----               |      -----      | 100110 38 |  ---
     |             -----               |      -----      | 100111 39 |  ---
     +---------------------------------+-----------------+-----------+
     |             MADDR               |      CADDR      | 101000 40 |  MACC
@@ -198,10 +198,6 @@ and MADDR+LBP+4 into the second accumulator. (MADDR+LBP must be 2-bytes-aligned.
 accumulators.
 
 - LdAdd0/LdAdd1: Like LdAdd, but only for the first/second accumulator.
-
-- LdMax: Like LdAdd but but perform a max-operation instead of addition.
-
-- LdMax0/LdMax1: Like LdMax, but only for the first/second accumulator.
 
 Performing computations:
 

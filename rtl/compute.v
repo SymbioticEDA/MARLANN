@@ -133,8 +133,8 @@ module mlaccel_compute #(
 			/* LoadCode, LoadCoeff0, LoadCoeff1 */
 			4, 5, 6: mlock_mask = 1 << 0;
 
-			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-			28, 29, 30, 32, 33, 34, 36, 37, 38: mlock_mask = 1 << 4;
+			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1 */
+			28, 29, 30, 32, 33, 34: mlock_mask = 1 << 4;
 
 			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
 			40, 41, 42, 43, 45: mlock_mask = 1 << 0;
@@ -334,8 +334,8 @@ module mlaccel_compute #(
 					LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
 				end
 
-				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1, LdMax, LdMax0, LdMax1 */
-				28, 29, 30, 32, 33, 34, 36, 37, 38: begin
+				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1 */
+				28, 29, 30, 32, 33, 34: begin
 					mem_rd1_en <= 1;
 					mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
 				end
@@ -504,16 +504,6 @@ module mlaccel_compute #(
 			if (s8_insn[5:0] == 32 || s8_insn[5:0] == 34) begin
 				acc1 <= acc1 + mem_rdata[63:32];
 			end
-
-			/* LdMax, LdMax0 */
-			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 37) begin
-				acc0 <= $signed(acc0) > $signed(mem_rdata[31:0]) ? acc0 : mem_rdata[31:0];
-			end
-
-			/* LdMax, LdMax1 */
-			if (s8_insn[5:0] == 36 || s8_insn[5:0] == 38) begin
-				acc1 <= $signed(acc1) > $signed(mem_rdata[63:32]) ? acc0 : mem_rdata[63:32];
-			end
 		end
 
 		if (&acc0_shifted[31:7] == |acc0_shifted[31:7])
@@ -674,10 +664,6 @@ module mlaccel_compute #(
 				32: $display("TRACE %8t: LdAdd 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
 				33: $display("TRACE %8t: LdAdd0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
 				34: $display("TRACE %8t: LdAdd1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
-
-				36: $display("TRACE %8t: LdMax 0x%05x // -> 0x%08x 0x%08x", $time, trace_maddr, trace_acc0, trace_acc1);
-				37: $display("TRACE %8t: LdMax0 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc0);
-				38: $display("TRACE %8t: LdMax1 0x%05x // -> 0x%08x", $time, trace_maddr, trace_acc1);
 
 				40: $display("TRACE %8t: MACC 0x%05x, 0x%03x // 0x%016x @ 0x%05x, 0x%016x 0x%016x @ 0x%03x -> 0x%08x 0x%08x",
 						$time, trace_maddr, trace_caddr, trace_mdata, trace_maddr_plus_vbp,

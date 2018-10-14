@@ -313,8 +313,7 @@ void MlAsm::parseLine(const char *line)
 
 		if ((cmd == "Save" || cmd == "Save0" || cmd == "Save1" ||
 				cmd == "LdSet" || cmd == "LdSet0" || cmd == "LdSet1" ||
-				cmd == "LdAdd" || cmd == "LdAdd0" || cmd == "LdAdd1" ||
-				cmd == "LdMax" || cmd == "LdMax0" || cmd == "LdMax1") && args.size() == 1)
+				cmd == "LdAdd" || cmd == "LdAdd0" || cmd == "LdAdd1") && args.size() == 1)
 		{
 			if (cmd == "Save")
 				insn.opcode = 24;
@@ -342,15 +341,6 @@ void MlAsm::parseLine(const char *line)
 
 			if (cmd == "LdAdd1")
 				insn.opcode = 34;
-
-			if (cmd == "LdMax")
-				insn.opcode = 36;
-
-			if (cmd == "LdMax0")
-				insn.opcode = 37;
-
-			if (cmd == "LdMax1")
-				insn.opcode = 38;
 
 			parseArg(args[0], FIELD_MADDR);
 			return;
