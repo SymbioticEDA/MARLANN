@@ -1,4 +1,5 @@
 .sym outdata 0x10000
+.sym maxout  0x11880
 
 .code 0x00000
 SetLBP 0
@@ -40,10 +41,33 @@ SetLBP bias
 SetVBP indata
 SetSBP outdata
 SetCBP 0
+Sync
 
 // Run convolution
-Sync
 Call run_conv_5x5x8_kernel
+
+// Setup max test
+LoadCoeff0 mask0, 0
+LoadCoeff0 mask1, 1
+SetVBP outdata
+SetSBP maxout
+SetCBP 0
+Sync
+
+// Run max test
+MMAXN  0, 0
+MMAX   8, 1
+MMAX  16, 0
+MMAX  24, 1
+MMAX  32, 1
+MMAX  40, 0
+MMAX  48, 1
+ReLU0 0, 0
+
+// Run max test
+MMAXZ 56, 0
+ReLU0 1, 0
+
 Return
 
 // Kernel Sequencer code
@@ -142,6 +166,12 @@ ReLU -8, 10
 conv_5x5x8_kernel_end:
 
 .data
+
+mask0:
+0x00 0x01 0x00 0x01 0x00 0x01 0x00 0x01
+
+mask1:
+0x01 0x00 0x01 0x00 0x01 0x00 0x01 0x00
 
 bias:
 0x00 0x01 0x00 0x00

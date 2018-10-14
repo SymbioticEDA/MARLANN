@@ -270,7 +270,7 @@ void MlSim::exec(insn_t insn)
 			int32_t p0 = c0*m, p1 = c1*m;
 
 			if ((insn.op() & 1) != 0) {
-				if (uint8_t(c0) != 0x80)
+				if (uint8_t(c0) != 0x00)
 					acc0 = std::max(acc0, p0);
 				acc1 += p1;
 			} else {

@@ -360,7 +360,7 @@ void MlAsm::parseLine(const char *line)
 			if (cmd == "MMAXZ")
 				insn.opcode = 43;
 
-			if (cmd == "MMAZN")
+			if (cmd == "MMAXN")
 				insn.opcode = 45;
 
 			parseArg(args[0], FIELD_MADDR);
