@@ -10,10 +10,12 @@ SECTIONS {
     {
         . = ALIGN(4);
         *(.start)          /* startup code */
+
         *(.rodata)         /* .rodata sections (constants, strings, etc.) */
         *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
         *(.srodata)        /* .rodata sections (constants, strings, etc.) */
         *(.srodata*)       /* .rodata* sections (constants, strings, etc.) */
+
         . = ALIGN(4);
         _etext = .;        /* define a global symbol at end of code */
         _sidata = _etext;  /* This is used by the startup in order to initialize the .data secion */
@@ -35,6 +37,7 @@ SECTIONS {
         *(.data*)          /* .data* sections */
         *(.sdata)           /* .sdata sections */
         *(.sdata*)          /* .sdata* sections */
+
         . = ALIGN(4);
         _edata = .;        /* define a global symbol at data end; used by startup code in order to initialise the .data section in RAM */
     } >RAM

@@ -25,6 +25,7 @@
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
 
+#define RUN_LOOP          0
 #define SER_TIMEOUT 1500000
 #define ML_TIMEOUT      100
 
@@ -45,12 +46,6 @@ void *memset(void *s, int c, size_t n)
 	return s;
 }
 
-void error()
-{
-	while (1) { }
-	reg_reset = 1;
-}
-
 // --------------------------------------------------------
 
 void putchar(char c)
@@ -60,10 +55,28 @@ void putchar(char c)
 	reg_uart = c;
 }
 
+void error()
+{
+	putchar('<');
+	putchar('E');
+	putchar('R');
+	putchar('R');
+	putchar('O');
+	putchar('R');
+	putchar('>');
+	while (1) { }
+	reg_reset = 1;
+}
+
 void print(const char *p)
 {
-	while (*p)
-		putchar(*(p++));
+	for (int i = 0;; i++) {
+		if (p[i] == 0)
+			break;
+		if (i == 256)
+			error();
+		putchar(p[i]);
+	}
 }
 
 void print_hex(uint32_t v, int digits)
@@ -160,27 +173,27 @@ char getchar()
 
 void ml_start()
 {
-	reg_qpio = 0x8C000000;
-	reg_qpio = 0x88000000;
+	reg_qpio = 0x80020000;
+	reg_qpio = 0x80000000;
 }
 
 void ml_send(uint8_t byte)
 {
-	reg_qpio = 0x88000f00 | (byte >> 4);
-	reg_qpio = 0x88010f00 | (byte >> 4);
-	reg_qpio = 0x88000f00 | (byte & 15);
-	reg_qpio = 0x88010f00 | (byte & 15);
+	reg_qpio = 0x80000f00 | (byte >> 4);
+	reg_qpio = 0x80010f00 | (byte >> 4);
+	reg_qpio = 0x80000f00 | (byte & 15);
+	reg_qpio = 0x80010f00 | (byte & 15);
 }
 
 uint8_t ml_recv()
 {
 	uint8_t byte = 0;
 
-	reg_qpio = 0x88000000;
-	reg_qpio = 0x88010000;
+	reg_qpio = 0x80000000;
+	reg_qpio = 0x80010000;
 	byte |= (reg_qpio & 15) << 4;
-	reg_qpio = 0x88000000;
-	reg_qpio = 0x88010000;
+	reg_qpio = 0x80000000;
+	reg_qpio = 0x80010000;
 	byte |= reg_qpio & 15;
 
 	return byte;
@@ -188,8 +201,8 @@ uint8_t ml_recv()
 
 void ml_stop()
 {
-	reg_qpio &= 0x88000fff;
-	reg_qpio = 0x8C000000;
+	reg_qpio = 0x80000fff;
+	reg_qpio = 0x80020000;
 }
 
 void ml_finish()
@@ -326,10 +339,8 @@ void ml_run(int start)
 	ml_finish();
 }
 
-bool ml_test()
+void ml_test()
 {
-	bool okay = true;
-
 	for (int i = 0; i < 4; i++)
 	{
 		char buffer[128];
@@ -364,7 +375,7 @@ bool ml_test()
 		ml_start();
 		ml_send(0x22);
 		ml_recv();
-		while (1) {
+		for (int i = 0; i < 128; i++) {
 			char c = ml_recv();
 			*(p++) = c;
 			if (!c) break;
@@ -383,11 +394,9 @@ bool ml_test()
 				print(", expected ");
 				print_dec(buffer[i]);
 				print(".\n");
-				okay = false;
+				error();
 			}
 	}
-
-	return okay;
 }
 
 // --------------------------------------------------------
@@ -396,25 +405,18 @@ void main()
 {
 	print("\n\n\n\n\n");
 	print("Booting..\n");
-	if (!ml_test()) {
-		print("QPI test failed.\n");
-		error();
-	}
+	ml_test();
 	print("\n");
 
 	reg_leds = 127;
-	while (1) {
+	while (!RUN_LOOP) {
 		print("Press ENTER to continue..\n");
 		if (getchar_timeout() == '\r')
 			break;
 	}
 
-	if (!ml_test()) {
-		print("QPI test failed.\n");
-		error();
-	}
+	ml_test();
 	print("\n");
-
 	print("Clearing..\n");
 
 	ml_clear_setup();
@@ -498,7 +500,9 @@ void main()
 				print("     ");
 				for (int k = 0; k < 16; k++) {
 					print(" ");
-					if (buffer[j+k] == demo_hex_data[i+j+k])
+					if (i+j+k >= (int)sizeof(demo_out_hex_data))
+						print("XX");
+					else if (buffer[j+k] == demo_hex_data[i+j+k])
 						print("--");
 					else
 						print_hex(buffer[j+k], 2);
@@ -506,8 +510,8 @@ void main()
 				print("     ");
 				for (int k = 0; k < 16; k++) {
 					print(" ");
-					if (buffer[j+k] == demo_hex_data[i+j+k])
-						print("--");
+					if (i+j+k >= (int)sizeof(demo_out_hex_data))
+						print("XX");
 					else
 						print_hex(demo_hex_data[i+j+k], 2);
 				}
@@ -555,7 +559,9 @@ void main()
 				print("     ");
 				for (int k = 0; k < 16; k++) {
 					print(" ");
-					if (buffer[j+k] == demo_out_hex_data[i+j+k])
+					if (i+j+k >= (int)sizeof(demo_out_hex_data))
+						print("XX");
+					else if (buffer[j+k] == demo_out_hex_data[i+j+k])
 						print("--");
 					else
 						print_hex(buffer[j+k], 2);
@@ -563,8 +569,8 @@ void main()
 				print("     ");
 				for (int k = 0; k < 16; k++) {
 					print(" ");
-					if (buffer[j+k] == demo_out_hex_data[i+j+k])
-						print("--");
+					if (i+j+k >= (int)sizeof(demo_out_hex_data))
+						print("XX");
 					else
 						print_hex(demo_out_hex_data[i+j+k], 2);
 				}

@@ -17,21 +17,17 @@ set_io flash_io3  13
 set_io ledr_n     11
 set_io ledg_n     37
 
-# LEDs and Buttons (PMOD 2)
+# LEDs (PMOD 2)
 set_io led1       27
 set_io led2       25
 set_io led3       21
 set_io led4       23
 set_io led5       26
-set_io btn1       20
-set_io btn2       19
-set_io btn3       18
-
-# mlaccel ctrl pins (on RGB pins)
-#set_io ml_csb     40
-#set_io ml_rdy     41
-#set_io ml_err     39
 
 # ML QPI (on PMOD1B)
-set_io ml_csb  43
-set_io ml_clk  38
+set_io ml_csb     43
+set_io ml_clk     38
+
+# ML QPI (on PMOD2)
+#set_io ml_csb    20
+#set_io ml_clk    18

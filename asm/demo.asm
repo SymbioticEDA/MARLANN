@@ -58,15 +58,18 @@ Sync
 MMAXN  0, 0
 MMAX   8, 1
 MMAX  16, 0
+Store0 0, 0
+
 MMAX  24, 1
 MMAX  32, 1
-MMAX  40, 0
-MMAX  48, 1
-ReLU0 0, 0
-
-// Run max test
-MMAXZ 56, 0
 ReLU0 1, 0
+
+MMAXZ 40, 0
+MMAX  48, 1
+Store0 2, 0
+
+MMAX  56, 0
+ReLU0 3, 0
 
 Return
 

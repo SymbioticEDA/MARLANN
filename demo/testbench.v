@@ -33,7 +33,7 @@ module testbench;
 		#(clock_period / 2);
 		ctrl_clk = 0;
 
-		repeat (900000) begin
+		repeat (1100000) begin
 			#(clock_period / 2);
 			ctrl_clk = !ctrl_clk;
 		end
@@ -43,7 +43,7 @@ module testbench;
 		#(clock_period / 2);
 		accel_clk = 0;
 
-		repeat (900000) begin
+		repeat (1100000) begin
 			#(clock_period / 2 + ($random & 31) - 15);
 			accel_clk = !accel_clk;
 		end
@@ -96,10 +96,6 @@ module testbench;
 		.led3      (led3     ),
 		.led4      (led4     ),
 		.led5      (led5     ),
-
-		.btn1      (btn1     ),
-		.btn2      (btn2     ),
-		.btn3      (btn3     ),
 
 		.ml_csb    (ml_csb   ),
 		.ml_clk    (ml_clk   )

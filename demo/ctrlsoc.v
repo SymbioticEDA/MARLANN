@@ -43,9 +43,6 @@ module ctrlsoc (
 	output led3,
 	output led4,
 	output led5,
-	input  btn1,
-	input  btn2,
-	input  btn3,
 
 	// mlaccel ctrl pins
 	output ml_csb,
@@ -148,6 +145,7 @@ module ctrlsoc (
 	);
 
 	reg ml_csb_r;
+	reg ml_clk_r;
 
 	wire flash_clk_do, flash_csb_do;
 	wire flash_io0_oe, flash_io1_oe, flash_io2_oe, flash_io3_oe;
@@ -155,18 +153,14 @@ module ctrlsoc (
 	wire flash_io0_di, flash_io1_di, flash_io2_di, flash_io3_di;
 
 	reg flash_overwrite;
-	reg flash_overwrite_clk;
-	reg flash_overwrite_csb;
 	reg [3:0] flash_overwrite_oe;
 	reg [3:0] flash_overwrite_do;
 
-	assign flash_clk = flash_overwrite ? flash_overwrite_clk : flash_clk_do;
-	assign flash_csb = flash_overwrite ? flash_overwrite_csb : flash_csb_do;
+	assign flash_clk = flash_overwrite ? 1'b 1 : flash_clk_do;
+	assign flash_csb = flash_overwrite ? 1'b 1 : flash_csb_do;
 
-	assign ml_clk = flash_clk;
-	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b1;
-	wire ml_rdy = 1;
-	wire ml_err = 1;
+	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b 1;
+	assign ml_clk = ml_clk_r;
 
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),
@@ -188,6 +182,7 @@ module ctrlsoc (
 			buserror <= 0;
 			flash_overwrite <= 0;
 			ml_csb_r <= 1;
+			ml_clk_r <= 1;
 		end else
 		if (mem_valid && !mem_ready && !buserror) begin
 			(* parallel_case *)
@@ -208,7 +203,7 @@ module ctrlsoc (
 					if (mem_wstrb[0]) begin
 						{led5_r, led4_r, led3_r, led2_r, led1_r} <= mem_wdata;
 					end
-					mem_rdata <= {btn3, btn2, btn1, led5, led4, led3, led2, led1};
+					mem_rdata <= {led5, led4, led3, led2, led1};
 				end
 				mem_addr == 32'h 02000004: begin
 					/* nothing to do here */
@@ -217,11 +212,10 @@ module ctrlsoc (
 					mem_ready <= 1;
 					if (mem_wstrb[3]) begin
 						flash_overwrite <= mem_wdata[31];
-						flash_overwrite_csb <= mem_wdata[27];
-						ml_csb_r <= mem_wdata[26];
 					end
 					if (mem_wstrb[2]) begin
-						flash_overwrite_clk <= mem_wdata[16];
+						ml_csb_r <= mem_wdata[17];
+						ml_clk_r <= mem_wdata[16];
 					end
 					if (mem_wstrb[1]) begin
 						flash_overwrite_oe <= mem_wdata[11:8];
@@ -229,11 +223,10 @@ module ctrlsoc (
 					if (mem_wstrb[0]) begin
 						flash_overwrite_do <= mem_wdata[3:0];
 					end
-					mem_rdata[31:24] <= {flash_overwrite, 3'b 000, flash_overwrite_csb, ml_csb, ml_rdy, ml_err};
-					mem_rdata[23:16] <= flash_overwrite_clk;
+					mem_rdata[31:24] <= {flash_overwrite, 7'b 0000000};
+					mem_rdata[23:16] <= {ml_csb_r, ml_clk_r};
 					mem_rdata[15:8] <= flash_overwrite_oe;
 					mem_rdata[7:0] <= {flash_io3_di, flash_io2_di, flash_io1_di, flash_io0_di};
-
 				end
 				mem_addr == 32'h 0200000c: begin
 					mem_ready <= 1;

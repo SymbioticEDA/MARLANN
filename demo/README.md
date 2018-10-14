@@ -8,8 +8,8 @@ On the mlaccel side PMOD1 is used for the connection:
 
 | Role | Pin Name   | IO Loc |
 |:----:|:---------- | ------:|
-|  CSB | `P1B1`     |     43 |
-|  CLK | `P1B2`     |     38 |
+|  CSB | `P1A1`     |      4 |
+|  CLK | `P1A2`     |      2 |
 |  IO0 | `P1A3`     |     47 |
 |  IO1 | `P1A4`     |     45 |
 |  IO2 | `P1A7`     |      3 |
@@ -17,16 +17,19 @@ On the mlaccel side PMOD1 is used for the connection:
 |  RDY | `P1A9`     |     46 |
 |  ERR | `P1A10`    |     44 |
 
-On the ctrlsoc side the "RGB" pins and the flash `IO[0123]` pins are used for
-the connection:
+On the ctrlsoc side two button pins from the break-off section and the flash
+`IO[0123]` pins are used for the connection:
 
 | Role | Pin Name         | IO Loc |
 |:----:|:---------------- | ------:|
-|  CSB | `P1B1`           |     43 |
-|  CLK | `P1B2`           |     38 |
+|  CSB | `P2_9`           |     20 |
+|  CLK | `P2_10`          |     18 |
 |  IO0 | `FLASH_MOSI/IO0` |     14 |
 |  IO1 | `FLASH_MISO/IO1` |     17 |
 |  IO2 | `FLASH_WP/IO2`   |     12 |
 |  IO3 | `FLASH_HLD/IO3`  |     13 |
 |  RDY | *none*           |     41 |
 |  ERR | *none*           |     39 |
+
+As a temporary hack, `CSB` is connected via `P1B1` on both boards and CLK
+is connected via `P1B2` on both boards.
