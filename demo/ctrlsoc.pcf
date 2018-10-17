@@ -24,10 +24,6 @@ set_io led3       21
 set_io led4       23
 set_io led5       26
 
-# ML QPI (on PMOD1B)
-set_io ml_csb     43
-set_io ml_clk     38
-
 # ML QPI (on PMOD2)
-#set_io ml_csb    20
-#set_io ml_clk    18
+set_io ml_csb    20
+set_io ml_clk    18
