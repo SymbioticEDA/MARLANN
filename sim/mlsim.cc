@@ -272,7 +272,8 @@ void MlSim::exec(insn_t insn)
 			if ((insn.op() & 1) != 0) {
 				if (uint8_t(c0) != 0x00)
 					acc0 = std::max(acc0, p0);
-				acc1 += p1;
+				if (uint8_t(c1) != 0x00)
+					acc1 = std::max(acc1, p1);
 			} else {
 				acc0 += p0;
 				acc1 += p1;
