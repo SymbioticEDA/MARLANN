@@ -354,6 +354,7 @@ module mlaccel_compute #(
 
 	mlaccel_compute_mul2 mul [NB*4-1:0] (
 		.clock (clock   ),
+		.uint  (    1'b0),
 		.A     (mulA    ),
 		.B     (s4_coeff),
 		.X     (s7_prod )
@@ -640,33 +641,52 @@ module mlaccel_compute #(
 endmodule
 
 module mlaccel_compute_mul2 (
-	input         clock,
-	input  [15:0] A, B,
-	output [31:0] X
+	input             clock,
+	input             uint,
+	input      [15:0] A, B,
+	output reg [31:0] X
 );
-`ifndef SYNTHESIS
-	reg [15:0] r1A, r2A, r3A;
-	reg [15:0] r1B, r2B, r3B;
+	reg sign_xl_d;
+	reg sign_xl;
+
+	reg sign_xh_d;
+	reg sign_xh;
 
 	always @(posedge clock) begin
-		r1A <= $signed(A[7:0]) * $signed(B[7:0]);
-		r1B <= $signed(A[15:8]) * $signed(B[15:8]);
-		r2A <= r1A;
-		r2B <= r1B;
-		r3A <= r2A;
-		r3B <= r2B;
+		sign_xl_d <= uint ? 1'b0 : A[7];
+		sign_xl <= sign_xl_d;
+
+		sign_xh_d <= uint ? 1'b0 : A[15];
+		sign_xh <= sign_xh_d;
 	end
 
-	assign X = {r3B, r3A};
+	wire [7:0] AL = (uint || !A[ 7]) ? A[ 7:0] : -A[ 7:0];
+	wire [7:0] AH = (uint || !A[15]) ? A[15:8] : -A[15:8];
+
+	wire [7:0] BL = B[ 7:0];
+	wire [7:0] BH = B[15:8];
+
+	wire [15:0] XL, XH;
+
+	always @(posedge clock) begin
+		X[15: 0] <= sign_xl ? -XL : XL;
+		X[31:16] <= sign_xh ? -XH : XH;
+	end
+
+`ifndef SYNTHESIS
+	reg [15:0] r1L, r2L;
+	reg [15:0] r1H, r2H;
+
+	always @(posedge clock) begin
+		r1L <= {8'h00, AL} * {{8{BL[7]}}, BL};
+		r1H <= {8'h00, AH} * {{8{BH[7]}}, BH};
+		r2L <= r1L;
+		r2H <= r1H;
+	end
+
+	assign XL = r2L;
+	assign XH = r2H;
 `else
-	wire [31:0] O;
-	reg [31:0] Q;
-
-	always @(posedge clock)
-		Q <= O;
-
-	assign X = Q;
-
 	SB_MAC16 #(
 		.NEG_TRIGGER              (1'b  0),
 
@@ -692,15 +712,15 @@ module mlaccel_compute_mul2 (
 		.BOTADDSUB_CARRYSELECT    (2'b 00),
 
 		.MODE_8x8                 (1'b  1),
-		.A_SIGNED                 (1'b  1),
+		.A_SIGNED                 (1'b  0),
 		.B_SIGNED                 (1'b  1)
 	) mac16 (
 		/* inputs */
 		.CLK        (clock     ),
 		.CE         (1'b1      ),
 
-		.A          (A         ),
-		.B          (B         ),
+		.A          ({AH, AL}  ),
+		.B          ({BH, BL}  ),
 		.C          (16'b 0    ),
 		.D          (16'b 0    ),
 
@@ -725,7 +745,7 @@ module mlaccel_compute_mul2 (
 		.SIGNEXTIN  (1'b 0     ),
 
 		/* outputs */
-		.O          (O         ),
+		.O          ({XH, XL}  ),
 		.CO         (          ),
 		.ACCUMCO    (          ),
 		.SIGNEXTOUT (          )
