@@ -51,8 +51,9 @@ erase_ctrlsoc:
 
 #####################################################################
 
+mlaccel.blif: mlaccel.json
 mlaccel.json: ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
-	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json' ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
+	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json -blif mlaccel.blif' ../rtl/top.v ../rtl/sequencer.v ../rtl/compute.v ../rtl/memory.v
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --freq 25 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
@@ -61,8 +62,18 @@ mlaccel.bin: mlaccel.asc
 	icetime -d up5k -c 12 -mtr mlaccel.rpt mlaccel.asc
 	icepack mlaccel.asc mlaccel.bin
 
+mlaccel_arachne.asc: mlaccel.pcf mlaccel.blif
+	arachne-pnr -d 5k -o mlaccel_arachne.asc -p mlaccel.pcf mlaccel.blif
+
+mlaccel_arachne.bin: mlaccel_arachne.asc
+	icetime -d up5k -c 12 -mtr mlaccel_arachne.rpt mlaccel_arachne.asc
+	icepack mlaccel_arachne.asc mlaccel_arachne.bin
+
 prog_mlaccel: mlaccel.bin
 	iceprog $(MLACCEL_DEV) mlaccel.bin
+
+prog_mlaccel_arachne: mlaccel_arachne.bin
+	iceprog $(MLACCEL_DEV) mlaccel_arachne.bin
 
 reset_mlaccel:
 	iceprog $(MLACCEL_DEV) -t
@@ -77,5 +88,6 @@ clean:
 	rm -f ctrlsoc.json ctrlsoc.log ctrlsoc.asc ctrlsoc.bin ctrlsoc.rpt
 	rm -f ctrlsoc_fw.elf ctrlsoc_fw.hex ctrlsoc_fw.bin
 	rm -f mlaccel.json mlaccel.log mlaccel.asc mlaccel.bin mlaccel.rpt
+	rm -f mlaccel.blif mlaccel_arachne.asc mlaccel_arachne.bin mlaccel_arachne.rpt
 
 .PHONY: clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc erase_ctrlsoc prog_mlaccel reset_mlaccel erase_mlaccel

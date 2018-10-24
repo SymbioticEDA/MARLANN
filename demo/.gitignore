@@ -11,6 +11,10 @@
 /mlaccel.json
 /mlaccel.log
 /mlaccel.rpt
+/mlaccel.blif
+/mlaccel_arachne.asc
+/mlaccel_arachne.bin
+/mlaccel_arachne.rpt
 /testbench
 /testbench.vcd
 /flashinit.hex

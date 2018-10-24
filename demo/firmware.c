@@ -347,17 +347,25 @@ void ml_test()
 		char buffer2[128];
 		char *p;
 
-		if (i == 0)
+		if (i == 0) {
+			print("<QPI_TEST_PATTERN_0> ");
 			p = "Testing QPI connection to accelerator.\n";
+		}
 
-		if (i == 1)
+		if (i == 1) {
 			p = "This is QPI test message two of four.\n";
+			print("<QPI_TEST_PATTERN_1> ");
+		}
 
-		if (i == 2)
+		if (i == 2) {
 			p = "And this is the third QPI test message.\n";
+			print("<QPI_TEST_PATTERN_2> ");
+		}
 
-		if (i == 3)
+		if (i == 3) {
 			p = "If you can read this then QPI works fine, maybe.\n";
+			print("<QPI_TEST_PATTERN_3> ");
+		}
 
 		for (int j = 0; j < 128; j++)
 			if ((buffer[j] = *(p++)) == 0)
