@@ -20,6 +20,7 @@
 module testbench;
 	localparam clock_period = 1000.0 / 12.0;
 	localparam ser_period = 1000.0 / 0.1152;
+	localparam n_cycles = 1100000;
 
 	reg ctrl_clk;
 	reg accel_clk;
@@ -33,7 +34,7 @@ module testbench;
 		#(clock_period / 2);
 		ctrl_clk = 0;
 
-		repeat (1100000) begin
+		repeat (n_cycles) begin
 			#(clock_period / 2);
 			ctrl_clk = !ctrl_clk;
 		end
@@ -43,7 +44,7 @@ module testbench;
 		#(clock_period / 2);
 		accel_clk = 0;
 
-		repeat (1100000) begin
+		repeat (n_cycles) begin
 			#(clock_period / 2 + ($random & 31) - 15);
 			accel_clk = !accel_clk;
 		end
