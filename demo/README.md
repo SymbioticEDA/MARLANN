@@ -30,6 +30,3 @@ On the ctrlsoc side two button pins from the break-off section and the flash
 |  IO3 | `FLASH_HLD/IO3`  |     13 |
 |  RDY | *none*           |     41 |
 |  ERR | *none*           |     39 |
-
-As a temporary hack, `CSB` is connected via `P1B1` on both boards and CLK
-is connected via `P1B2` on both boards.
