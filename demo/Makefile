@@ -92,8 +92,16 @@ clean_mlaccel:
 
 #####################################################################
 
+multisynth:
+	set -ex; for i in {100..120}; do \
+		make clean; \
+		make -j4 SEED=$$i mlaccel.bin mlaccel_arachne.bin; \
+		cp mlaccel.rpt report_nextpnr_$$i.txt; \
+		cp mlaccel_arachne.rpt report_arachne_$$i.txt; \
+	done
+
 clean: clean_ctrlsoc clean_mlaccel
 	rm -f testbench.vcd testbench flashinit.hex demodat.inc
 
-.PHONY: clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc erase_ctrlsoc clean_ctrlsoc
+.PHONY: multisynth clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc erase_ctrlsoc clean_ctrlsoc
 .PHONY: prog_mlaccel prog_mlaccel_arachne reset_mlaccel erase_mlaccel clean_mlaccel
