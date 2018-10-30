@@ -94,7 +94,14 @@ module mlaccel_top (
 	wire [3:0] qpi_io_oe;
 	wire [3:0] qpi_io_do;
 	wire [3:0] qpi_io_di;
-
+`ifdef RADIANT
+	BB_B qpi_io_buf [3:0] (
+		.B({qpi_io3, qpi_io2, qpi_io1, qpi_io0}),
+		.T_N(qpi_io_oe),
+		.I(qpi_io_do),
+		.O(qpi_io_di)
+	);
+`else
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),
 		.PULLUP(1'b 0)
@@ -104,10 +111,13 @@ module mlaccel_top (
 		.D_OUT_0(qpi_io_do),
 		.D_IN_0(qpi_io_di)
 	);
-
+`endif
 	wire qpi_csb_di;
 	wire qpi_clk_di;
-
+`ifdef RADIANT
+	assign qpi_csb_di = qpi_csb;
+	assign qpi_clk_di = qpi_clk;
+`else
 	SB_IO #(
 		.PIN_TYPE(6'b 0000_01),
 		.PULLUP(1'b 1)
@@ -123,7 +133,7 @@ module mlaccel_top (
 		.PACKAGE_PIN(qpi_clk),
 		.D_IN_0(qpi_clk_di)
 	);
-
+`endif
 	wire qpi_active;
 
 	mlaccel_qpi qpi (

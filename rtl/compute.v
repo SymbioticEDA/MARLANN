@@ -313,7 +313,7 @@ module mlaccel_compute #(
 
 				/* LoadCoeff1 */
 				6: begin
-					coeff_mem[s4_insn[14:6]][128:64] <= mem_rdata;
+					coeff_mem[s4_insn[14:6]][127:64] <= mem_rdata;
 				end
 
 				/* SetLBP, AddLBP */
@@ -669,32 +669,32 @@ module mlaccel_compute_mul2 (
 
 `ifdef RADIANT
 	MAC16 #(
-		.NEG_TRIGGER              (1'b  0),
+		.NEG_TRIGGER              ("0b0"),
 
-		.A_REG                    (1'b  1),
-		.B_REG                    (1'b  1),
-		.C_REG                    (1'b  0),
-		.D_REG                    (1'b  0),
+		.A_REG                    ("0b1"),
+		.B_REG                    ("0b1"),
+		.C_REG                    ("0b0"),
+		.D_REG                    ("0b0"),
 
-		.TOP_8x8_MULT_REG         (1'b  1),
-		.BOT_8x8_MULT_REG         (1'b  1),
+		.TOP_8x8_MULT_REG         ("0b1"),
+		.BOT_8x8_MULT_REG         ("0b1"),
 
-		.PIPELINE_16x16_MULT_REG1 (1'b  1),
-		.PIPELINE_16x16_MULT_REG2 (1'b  0),
+		.PIPELINE_16x16_MULT_REG1 ("0b1"),
+		.PIPELINE_16x16_MULT_REG2 ("0b0"),
 
-		.TOPOUTPUT_SELECT         (2'b 10),
-		.TOPADDSUB_LOWERINPUT     (2'b 00),
-		.TOPADDSUB_UPPERINPUT     (1'b  0),
-		.TOPADDSUB_CARRYSELECT    (2'b 00),
+		.TOPOUTPUT_SELECT         ("0b10"),
+		.TOPADDSUB_LOWERINPUT     ("0b00"),
+		.TOPADDSUB_UPPERINPUT     ("0b0"),
+		.TOPADDSUB_CARRYSELECT    ("0b00"),
 
-		.BOTOUTPUT_SELECT         (2'b 10),
-		.BOTADDSUB_LOWERINPUT     (2'b 00),
-		.BOTADDSUB_UPPERINPUT     (1'b  0),
-		.BOTADDSUB_CARRYSELECT    (2'b 00),
+		.BOTOUTPUT_SELECT         ("0b10"),
+		.BOTADDSUB_LOWERINPUT     ("0b00"),
+		.BOTADDSUB_UPPERINPUT     ("0b0"),
+		.BOTADDSUB_CARRYSELECT    ("0b00"),
 
-		.MODE_8x8                 (1'b  1),
-		.A_SIGNED                 (1'b  1),
-		.B_SIGNED                 (1'b  1)
+		.MODE_8x8                 ("0b1"),
+		.A_SIGNED                 ("0b1"),
+		.B_SIGNED                 ("0b1")
 	) mac16 (
 		/* inputs */
 		.CLK        (clock     ),
