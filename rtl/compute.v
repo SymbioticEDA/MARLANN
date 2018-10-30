@@ -667,6 +667,166 @@ module mlaccel_compute_mul2 (
 
 	assign X = Q;
 
+`ifdef RADIANT
+	MAC16 #(
+		.NEG_TRIGGER              (1'b  0),
+
+		.A_REG                    (1'b  1),
+		.B_REG                    (1'b  1),
+		.C_REG                    (1'b  0),
+		.D_REG                    (1'b  0),
+
+		.TOP_8x8_MULT_REG         (1'b  1),
+		.BOT_8x8_MULT_REG         (1'b  1),
+
+		.PIPELINE_16x16_MULT_REG1 (1'b  1),
+		.PIPELINE_16x16_MULT_REG2 (1'b  0),
+
+		.TOPOUTPUT_SELECT         (2'b 10),
+		.TOPADDSUB_LOWERINPUT     (2'b 00),
+		.TOPADDSUB_UPPERINPUT     (1'b  0),
+		.TOPADDSUB_CARRYSELECT    (2'b 00),
+
+		.BOTOUTPUT_SELECT         (2'b 10),
+		.BOTADDSUB_LOWERINPUT     (2'b 00),
+		.BOTADDSUB_UPPERINPUT     (1'b  0),
+		.BOTADDSUB_CARRYSELECT    (2'b 00),
+
+		.MODE_8x8                 (1'b  1),
+		.A_SIGNED                 (1'b  1),
+		.B_SIGNED                 (1'b  1)
+	) mac16 (
+		/* inputs */
+		.CLK        (clock     ),
+		.CE         (1'b1      ),
+
+		.A15        (A[15]     ),
+		.A14        (A[14]     ),
+		.A13        (A[13]     ),
+		.A12        (A[12]     ),
+		.A11        (A[11]     ),
+		.A10        (A[10]     ),
+		.A9         (A[ 9]     ),
+		.A8         (A[ 8]     ),
+		.A7         (A[ 7]     ),
+		.A6         (A[ 6]     ),
+		.A5         (A[ 5]     ),
+		.A4         (A[ 4]     ),
+		.A3         (A[ 3]     ),
+		.A2         (A[ 2]     ),
+		.A1         (A[ 1]     ),
+		.A0         (A[ 0]     ),
+
+		.B15        (B[15]     ),
+		.B14        (B[14]     ),
+		.B13        (B[13]     ),
+		.B12        (B[12]     ),
+		.B11        (B[11]     ),
+		.B10        (B[10]     ),
+		.B9         (B[ 9]     ),
+		.B8         (B[ 8]     ),
+		.B7         (B[ 7]     ),
+		.B6         (B[ 6]     ),
+		.B5         (B[ 5]     ),
+		.B4         (B[ 4]     ),
+		.B3         (B[ 3]     ),
+		.B2         (B[ 2]     ),
+		.B1         (B[ 1]     ),
+		.B0         (B[ 0]     ),
+
+		.C15        (1'b0      ),
+		.C14        (1'b0      ),
+		.C13        (1'b0      ),
+		.C12        (1'b0      ),
+		.C11        (1'b0      ),
+		.C10        (1'b0      ),
+		.C9         (1'b0      ),
+		.C8         (1'b0      ),
+		.C7         (1'b0      ),
+		.C6         (1'b0      ),
+		.C5         (1'b0      ),
+		.C4         (1'b0      ),
+		.C3         (1'b0      ),
+		.C2         (1'b0      ),
+		.C1         (1'b0      ),
+		.C0         (1'b0      ),
+
+		.D15        (1'b0      ),
+		.D14        (1'b0      ),
+		.D13        (1'b0      ),
+		.D12        (1'b0      ),
+		.D11        (1'b0      ),
+		.D10        (1'b0      ),
+		.D9         (1'b0      ),
+		.D8         (1'b0      ),
+		.D7         (1'b0      ),
+		.D6         (1'b0      ),
+		.D5         (1'b0      ),
+		.D4         (1'b0      ),
+		.D3         (1'b0      ),
+		.D2         (1'b0      ),
+		.D1         (1'b0      ),
+		.D0         (1'b0      ),
+
+		.AHOLD      (1'b 0     ),
+		.BHOLD      (1'b 0     ),
+		.CHOLD      (1'b 0     ),
+		.DHOLD      (1'b 0     ),
+
+		.IRSTTOP    (1'b 0     ),
+		.IRSTBOT    (1'b 0     ),
+		.ORSTTOP    (1'b 0     ),
+		.ORSTBOT    (1'b 0     ),
+		.OLOADTOP   (1'b 0     ),
+		.OLOADBOT   (1'b 0     ),
+
+		.ADDSUBTOP  (1'b 0     ),
+		.ADDSUBBOT  (1'b 0     ),
+		.OHOLDTOP   (1'b 0     ),
+		.OHOLDBOT   (1'b 0     ),
+		.CI         (1'b 0     ),
+		.ACCUMCI    (1'b 0     ),
+		.SIGNEXTIN  (1'b 0     ),
+
+		/* outputs */
+		.O31        (O[31]     ),
+		.O30        (O[30]     ),
+		.O29        (O[29]     ),
+		.O28        (O[28]     ),
+		.O27        (O[27]     ),
+		.O26        (O[26]     ),
+		.O25        (O[25]     ),
+		.O24        (O[24]     ),
+		.O23        (O[23]     ),
+		.O22        (O[22]     ),
+		.O21        (O[21]     ),
+		.O20        (O[20]     ),
+		.O19        (O[19]     ),
+		.O18        (O[18]     ),
+		.O17        (O[17]     ),
+		.O16        (O[16]     ),
+		.O15        (O[15]     ),
+		.O14        (O[14]     ),
+		.O13        (O[13]     ),
+		.O12        (O[12]     ),
+		.O11        (O[11]     ),
+		.O10        (O[10]     ),
+		.O9         (O[ 9]     ),
+		.O8         (O[ 8]     ),
+		.O7         (O[ 7]     ),
+		.O6         (O[ 6]     ),
+		.O5         (O[ 5]     ),
+		.O4         (O[ 4]     ),
+		.O3         (O[ 3]     ),
+		.O2         (O[ 2]     ),
+		.O1         (O[ 1]     ),
+		.O0         (O[ 0]     ),
+
+		.CO         (          ),
+		.ACCUMCO    (          ),
+		.SIGNEXTOUT (          )
+	);
+`else
 	SB_MAC16 #(
 		.NEG_TRIGGER              (1'b  0),
 
@@ -730,5 +890,6 @@ module mlaccel_compute_mul2 (
 		.ACCUMCO    (          ),
 		.SIGNEXTOUT (          )
 	);
+`endif
 `endif
 endmodule

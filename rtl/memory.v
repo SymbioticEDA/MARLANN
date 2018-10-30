@@ -60,6 +60,21 @@ module mlaccel_memory_spram (
 	input  [15:0] wdata,
 	output [15:0] rdata
 );
+`ifdef RADIANT
+	(* keep *)
+	SP256K spram (
+		.AD(addr[13:0]),
+		.DI(wdata),
+		.MASKWE({{2{wen[1]}}, {2{wen[0]}}}),
+		.WE(|wen),
+		.CS(1'b1),
+		.CK(clock),
+		.STDBY(1'b0),
+		.SLEEP(1'b0),
+		.PWROFF_N(1'b1),
+		.DO(rdata)
+	);
+`else
 	(* keep *)
 	SB_SPRAM256KA spram (
 		.ADDRESS(addr[13:0]),
@@ -73,4 +88,5 @@ module mlaccel_memory_spram (
 		.POWEROFF(1'b1),
 		.DATAOUT(rdata)
 	);
+`endif
 endmodule
