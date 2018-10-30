@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018  Clifford Wolf <clifford@symbioticeda.com>
+ *  Copyright (C) 2018  David Shah <david@symbioticeda.com>
  *
  *  Permission to use, copy, modify, and/or distribute this software for any
  *  purpose with or without fee is hereby granted, provided that the above
@@ -114,20 +114,42 @@ module cameraif(
     wire [1:0] i2c_din;
     reg [1:0] i2c_gpio;
     reg [1:0] i2c_read;
+    reg i2c_read_last;
 
-    assign i2c_din = {cam_scl, cam_sda};
-    assign cam_sda = i2c_gpio[0] ? 1'bz : 1'b0;
-    assign cam_scl = i2c_gpio[1] ? 1'bz : 1'b0;
+    SB_IO #(
+        .PIN_TYPE(6'b 1010_01),
+        .PULLUP(1'b 1)
+    ) scl_buf (
+        .PACKAGE_PIN(cam_sda),
+        .OUTPUT_ENABLE(!i2c_gpio[0]),
+        .D_OUT_0(1'b0),
+        .D_IN_0(i2c_din[0])
+    );
+
+    SB_IO #(
+        .PIN_TYPE(6'b 1010_01),
+        .PULLUP(1'b 1)
+    ) sda_buf (
+        .PACKAGE_PIN(cam_scl),
+        .OUTPUT_ENABLE(!i2c_gpio[1]),
+        .D_OUT_0(1'b0),
+        .D_IN_0(i2c_din[1])
+    );
+
     assign cam_enable = 1'b1;
 
     always @(posedge sys_clk) begin
         if (reset) begin
             i2c_gpio <= 2'b11;
             i2c_read <= 2'b11;
+            i2c_read_last <= 1'b0;
         end else if (addr == 16'h0000 && valid) begin
             if (wstrb[0])
                 i2c_gpio <= wdata[1:0];
             i2c_read <= i2c_din;
+            i2c_read_last <= 1'b1;
+        end else begin
+            i2c_read_last <= 1'b0;
         end
     end
 
@@ -139,8 +161,8 @@ module cameraif(
         end
     end
 
-    assign rdata = (addr == 16'h0000) ? {30'b0, i2c_read} :
-                                        {24'b0, ds_read_data};
+    assign rdata = i2c_read_last ? {30'b0, i2c_read} :
+                                   {24'b0, ds_read_data};
 
     // Debugging
     reg [22:0] hb_ctr;

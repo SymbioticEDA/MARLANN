@@ -51,7 +51,7 @@ module dphy_rx_byte_align(
 
 	reg [7:0] curr_byte;
 	reg [7:0] last_byte;
-	reg [7:0] shifted_byte;
+	wire [7:0] shifted_byte;
 
 	reg found_sync;
 	reg [2:0] sync_offs; // found offset of sync pattern

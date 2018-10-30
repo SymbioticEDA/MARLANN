@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "camera/camera.h"
+
 // a pointer to this is a null pointer, but the compiler does not
 // know that because "sram" is a linker symbol from sections.lds.
 extern uint32_t sram;
@@ -28,6 +30,8 @@ extern uint32_t sram;
 #define RUN_LOOP          0
 #define SER_TIMEOUT 1500000
 #define ML_TIMEOUT      100
+#define NUM_IMAGES       10
+#define IMAGE_NOPS    10000
 
 #define reg_leds  (*(volatile uint32_t*)0x02000000)
 #define reg_uart  (*(volatile uint32_t*)0x02000004)
@@ -409,12 +413,41 @@ void ml_test()
 
 // --------------------------------------------------------
 
+void print_image() {
+    uint8_t buf[30*40];
+    print("Acquiring image\n");
+    acquire_image(buf);
+    print("----------------------------------------\n");
+
+    int addr = 0;
+    for (int y = 0; y < 30; y++) {
+        for (int x = 0; x < 40; x++) {
+           print_hex(buf[addr++], 2);
+           print(" ");
+        }
+        print("\n");
+    }
+}
+
+// --------------------------------------------------------
+
 void main()
 {
 	print("\n\n\n\n\n");
 	print("Booting..\n");
+
+        camera_init();
+        print ("Initialised camera\n");
+	for (int ii=0; ii< NUM_IMAGES; ++ii) {
+		print_image();
+		for (volatile int i = 0; i < IMAGE_NOPS; i++)
+			;
+	}
+
 	ml_test();
 	print("\n");
+	camera_init();
+	print ("Initialised camera\n");
 
 	reg_leds = 127;
 	while (!RUN_LOOP) {
