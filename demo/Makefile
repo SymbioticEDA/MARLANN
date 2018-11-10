@@ -38,6 +38,20 @@ flashinit.hex: flashinit.py
 
 #####################################################################
 
+postsim.vcd: postsim flashinit.hex ctrlsoc_fw.hex
+	vvp -N postsim
+
+postsim: testbench.v spiflash.v ctrlsoc_post.v mlaccel_post.v
+	iverilog -s testbench -D VCD_FILENAME='"postsim.vcd"' -o $@ $^ $(shell yosys-config --datdir/ice40/cells_sim.v)
+
+ctrlsoc_post.v: ctrlsoc.asc
+	icebox_vlog -s -L -n ctrlsoc -p ctrlsoc.pcf -c ctrlsoc.asc > ctrlsoc_post.v
+
+mlaccel_post.v: mlaccel.asc
+	icebox_vlog -s -L -n mlaccel_top -p mlaccel.pcf -c mlaccel.asc > mlaccel_post.v
+
+#####################################################################
+
 ctrlsoc.json: $(SOC_RTL) $(CAMERA_RTL) flashinit.hex
 	yosys -ql ctrlsoc.log -p 'synth_ice40 -top ctrlsoc -json ctrlsoc.json' $(filter %.v, $^)
 

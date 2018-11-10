@@ -26,7 +26,11 @@ module testbench;
 	reg accel_clk;
 
 	initial begin
+`ifdef VCD_FILENAME
+		$dumpfile(`VCD_FILENAME);
+`else
 		$dumpfile("testbench.vcd");
+`endif
 		$dumpvars(0, testbench);
 	end
 
