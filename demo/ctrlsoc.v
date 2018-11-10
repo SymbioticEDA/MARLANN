@@ -54,7 +54,7 @@ module ctrlsoc (
 	input dphy_lp,
 
 	inout cam_sda, cam_scl,
-	output cam_enable,
+	output cam_enable
 );
 	reg resetn = 0;
 	reg [5:0] reset_cnt = 0;
