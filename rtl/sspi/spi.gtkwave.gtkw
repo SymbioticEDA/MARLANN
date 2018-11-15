@@ -1,0 +1,24 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Thu Nov 15 16:06:31 2018
+[*]
+[dumpfile] "/home/matt/work/fpga/mlaccel/rtl/sspi/testbench.vcd"
+[dumpfile_mtime] "Mon Nov 12 17:38:56 2018"
+[dumpfile_size] 13132
+[savefile] "/home/matt/work/fpga/mlaccel/rtl/sspi/spi.gtkwave.gtkw"
+[timestart] 0
+[size] 1000 600
+[pos] -1 -1
+*-9.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[sst_width] 253
+[signals_width] 107
+[sst_expanded] 1
+[sst_vpaned_height] 158
+@28
+testbench.clock
+testbench.qpi_clk
+@29
+testbench.qpi_csb
+[pattern_trace] 1
+[pattern_trace] 0
