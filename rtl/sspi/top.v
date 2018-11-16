@@ -496,10 +496,10 @@ module mlaccel_spi (
 	reg glitch_guard_posedge = 0;
 	reg glitch_guard_negedge = 0;
 	reg glitch_guard_di_stx = 0;
-	reg [7:0] glitch_guard_di_bit;
-	reg [7:0] glitch_guard_di_bit_q0;
-	reg [7:0] glitch_guard_do_bit;
-	reg [7:0] glitch_guard_do_bit_q0;
+	reg [3:0] glitch_guard_di_bit;
+	reg [3:0] glitch_guard_di_bit_q0;
+	reg [3:0] glitch_guard_do_bit;
+	reg [3:0] glitch_guard_do_bit_q0;
     reg di_toggle;
 
 	always @(negedge clock) begin
@@ -514,10 +514,10 @@ module mlaccel_spi (
 		// must have been low before posedge and high before negedge
 		glitch_guard_posedge <= !glitch_guard_clock_q0;
 		glitch_guard_negedge <= glitch_guard_clock_q0;
-		glitch_guard_di_bit <= glitch_guard_di_bit_q0;
-		glitch_guard_do_bit <= glitch_guard_do_bit_q0;
 
 		// delay some signals to protect against double clocking
+		glitch_guard_di_bit <= glitch_guard_di_bit_q0;
+		glitch_guard_do_bit <= glitch_guard_do_bit_q0;
 		glitch_guard_di_stx <= glitch_guard_di_stx_q0;
 	end
 
@@ -552,9 +552,9 @@ module mlaccel_spi (
 		end else begin
 			if (glitch_guard_negedge) begin
                 if(di_start)
-                    do_bit <= 0;
+                    do_bit <= 7;
                 else
-                    do_bit <= do_bit  + 1;
+                    do_bit <= glitch_guard_do_bit + 1;
 
                 // send data
                 spi_miso <= do_data[7-glitch_guard_do_bit];
@@ -580,7 +580,7 @@ module mlaccel_spi (
 	end
 
 	reg dout_busy;
-	assign dout_ready = glitch_guard_do_bit == 0 && dout_valid && !dout_busy;
+	assign dout_ready = glitch_guard_do_bit == 7 && dout_valid && !dout_busy;
 	assign active = active_q1;
 
 	always @(posedge clock) begin
@@ -597,7 +597,7 @@ module mlaccel_spi (
 			do_data <= dout_data;
 			dout_busy <= 1;
 		end
-		if (glitch_guard_do_bit == 7) begin
+		if (glitch_guard_do_bit == 6) begin
 			dout_busy <= 0;
 		end
 		if (!active) begin

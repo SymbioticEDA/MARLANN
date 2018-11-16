@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Fri Nov 16 14:38:41 2018
+[*] Fri Nov 16 17:18:13 2018
 [*]
 [dumpfile] "/home/matt/work/fpga/mlaccel/rtl/sspi/testbench.vcd"
-[dumpfile_mtime] "Fri Nov 16 14:38:13 2018"
-[dumpfile_size] 1538886
+[dumpfile_mtime] "Fri Nov 16 17:17:10 2018"
+[dumpfile_size] 1547642
 [savefile] "/home/matt/work/fpga/mlaccel/rtl/sspi/spi.gtkwave"
-[timestart] 0
+[timestart] 103746
 [size] 1917 1020
 [pos] -1 -1
-*-16.000000 89100 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.000000 104454 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [treeopen] testbench.uut.mem.
@@ -21,20 +21,17 @@
 @28
 testbench.clock
 @2024
-^1 /tmp/../home/matt/work/fpga/mlaccel/rtl/sspi/state_filter.txt
+^1 /home/matt/work/fpga/mlaccel/rtl/sspi/../../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/sspi/../../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/sspi/state_filter.txt
 testbench.uut.state[5:0]
 @22
 testbench.uut.buffer_ptr[10:0]
 testbench.uut.dout_data[7:0]
-@8025
+@8024
 testbench.cursor
 @28
 testbench.uut.reset
 testbench.uut.spi.spi_csb_di
 testbench.spi_clk
-@2022
-^2 /tmp/../home/matt/work/fpga/mlaccel/rtl/sspi/cmd_filter.txt
-testbench.uut.din_data[7:0]
 @22
 testbench.uut.dout_data[7:0]
 @28
@@ -42,6 +39,12 @@ testbench.uut.din_start
 testbench.uut.spi.di_start
 testbench.uut.din_valid
 testbench.uut.spi_active
+@22
+testbench.uut.din_data[7:0]
+@29
+testbench.xfer_wait_start
+@28
+testbench.xfer_read_start
 @c00022
 testbench.xfer[7:0]
 @28
@@ -57,6 +60,7 @@ testbench.xfer[7:0]
 -group_end
 @28
 testbench.spi_mosi_reg
+testbench.uut.spi.spi_csb_di
 testbench.spi_miso
 @200
 -
@@ -77,16 +81,19 @@ testbench.uut.spi.do_data[7:0]
 (7)testbench.uut.spi.do_data[7:0]
 @1401200
 -group_end
-@24
+@c00024
 testbench.uut.spi.do_bit[2:0]
-testbench.uut.spi.glitch_guard_do_bit_q0[7:0]
-testbench.uut.spi.glitch_guard_do_bit[7:0]
 @28
-testbench.uut.spi_clk
+(0)testbench.uut.spi.do_bit[2:0]
+(1)testbench.uut.spi.do_bit[2:0]
+(2)testbench.uut.spi.do_bit[2:0]
+@1401200
+-group_end
+@28
 testbench.uut.spi.spi_miso
 @200
 -
-@c00028
+@c00022
 testbench.uut.spi.din_data[7:0]
 @28
 (0)testbench.uut.spi.din_data[7:0]
@@ -101,7 +108,7 @@ testbench.uut.spi.din_data[7:0]
 -group_end
 @24
 testbench.uut.spi.di_bit[2:0]
-@c00022
+@c00028
 testbench.uut.spi.di_data[7:0]
 @28
 (0)testbench.uut.spi.di_data[7:0]
@@ -115,6 +122,7 @@ testbench.uut.spi.di_data[7:0]
 @1401200
 -group_end
 @28
+testbench.uut.spi_clk
 testbench.uut.spi.spi_mosi
 @200
 -
@@ -125,6 +133,20 @@ testbench.uut.spi.glitch_guard_negedge
 testbench.uut.spi.glitch_guard_posedge
 testbench.uut.spi.clk_q1
 testbench.uut.spi.clk_q2
+@200
+-
+@24
+testbench.uut.spi.di_bit[2:0]
+@22
+testbench.uut.spi.glitch_guard_di_bit_q0[3:0]
+testbench.uut.spi.glitch_guard_di_bit[3:0]
+@200
+-
+@24
+testbench.uut.spi.do_bit[2:0]
+@22
+testbench.uut.spi.glitch_guard_do_bit_q0[3:0]
+testbench.uut.spi.glitch_guard_do_bit[3:0]
 @200
 -
 @22

@@ -34,6 +34,8 @@ module testbench;
 	reg spi_miso_reg = 0;
 	reg spi_io2_reg;
 	reg spi_io3_reg;
+    reg xfer_read_start = 0;
+    reg xfer_wait_start = 0;
 
     wire spi_mosi = spi_mosi_reg;
 	wire spi_miso = spi_miso_reg;
@@ -161,21 +163,44 @@ module testbench;
 		end
 	endtask
 
+    // null byte
 	task xfer_wait;
 		begin
 
+            xfer_wait_start = 1;
 			xfer_negedge;
 			spi_miso_reg = 1'bz;
 			xfer_posedge;
 
-		//	xfer_negedge;
-		//	xfer_posedge;
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+            xfer_wait_start = 0;
 
 		end
 	endtask
 
 	task xfer_recv;
 		begin
+            xfer_read_start = 1;
 			xfer_negedge;
 			spi_miso_reg = 1'bz;
 			xfer_posedge;
@@ -211,6 +236,7 @@ module testbench;
 			xfer_negedge;
 			xfer[0] = spi_miso;
             xfer_posedge;
+            xfer_read_start = 0;
 
 		end
 	endtask
@@ -240,7 +266,7 @@ module testbench;
 		$readmemh("../../asm/demo.hex", indata);
 		$readmemh("../../sim/demo_out.hex", outdata);
 	end
-
+    integer num_tests = 32;
 	initial begin
 		xfer_stop;
 
@@ -252,7 +278,7 @@ module testbench;
         i= 0;
         len = 1;
 		cursor = 0;
-		while (cursor < 32) begin
+		while (cursor < num_tests) begin
                 i = 0;
 				$display("  uploading %4d bytes from 0x%05x", len, cursor);
 				$fflush;
@@ -280,7 +306,7 @@ module testbench;
 
         len = 1;
 		cursor = 0;
-		while (cursor < 32) begin
+		while (cursor < num_tests) begin
 				$display("  downloading %4d bytes from 0x%05x", len, cursor);
 				$fflush;
 
