@@ -1,0 +1,14 @@
+0 = halt 
+1 = status
+2 = wbuf
+3 = rbuf
+4 = wmem0
+5 = wmem1
+6 = wmem2
+7 = wmem3
+8 = rmem0
+9 = rmem1
+10 = rmem2
+11 = rmem3
+12 = run0
+13 = run1

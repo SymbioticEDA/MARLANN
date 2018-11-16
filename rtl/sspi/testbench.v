@@ -163,16 +163,23 @@ module testbench;
 
 	task xfer_wait;
 		begin
-			xfer_negedge;
-			xfer_posedge;
 
 			xfer_negedge;
+			spi_miso_reg = 1'bz;
 			xfer_posedge;
+
+		//	xfer_negedge;
+		//	xfer_posedge;
+
 		end
 	endtask
 
 	task xfer_recv;
 		begin
+			xfer_negedge;
+			spi_miso_reg = 1'bz;
+			xfer_posedge;
+
 			xfer_negedge;
 			xfer[7] = spi_miso;
             xfer_posedge;
@@ -230,8 +237,8 @@ module testbench;
 	reg [7:0] outdata [0:128*1024-1];
 
 	initial begin
-		$readmemh("../asm/demo.hex", indata);
-		$readmemh("../sim/demo_out.hex", outdata);
+		$readmemh("../../asm/demo.hex", indata);
+		$readmemh("../../sim/demo_out.hex", outdata);
 	end
 
 	initial begin
@@ -242,81 +249,45 @@ module testbench;
 		$display("Uploading demo kernel.");
 		$fflush;
 
+        i= 0;
+        len = 1;
 		cursor = 0;
-		while (cursor < 128*1024) begin
-			if (indata[cursor] !== 8'h XX) begin
-				len = 1;
-				while ((len < 1024) && (len+cursor < 128*1024) &&
-						(indata[cursor+len] !== 8'h XX)) len = len+1;
-
-				if ((cursor % 2) != 0) begin
-					cursor = cursor - 1;
-					len = len + 1;
-				end
-
-				if ((len % 4) != 0) begin
-					len = len - (len % 4) + 4;
-				end
-
-				if (len > 1024) begin
-					len = 1024;
-				end
-
-				$display("  uploading %4d bytes to 0x%05x", len, cursor);
+		while (cursor < 32) begin
+                i = 0;
+				$display("  uploading %4d bytes from 0x%05x", len, cursor);
 				$fflush;
 
 				xfer_start;
 				xfer_send_byte(8'h 21);
-				for (i = 0; i < len; i = i+1)
-					xfer_send_byte(indata[cursor+i]);
+                xfer_send_byte(cursor);
 				xfer_stop;
 
 				xfer_start;
 				xfer_send_byte(8'h 23);
-				xfer_send_hword(cursor >> 1);
-				xfer_send_byte(len >> 2);
+				xfer_send_hword(cursor);
+				xfer_send_byte(len);
 				xfer_wait;
 				xfer_recv;
+
 				while (xfer != 8'h 00)
 					xfer_recv;
 				xfer_stop;
 
 				cursor = cursor + len;
-			end else begin
-				cursor = cursor + 1;
-			end
 		end
-
 		$display("Readback.");
 		$fflush;
 
+        len = 1;
 		cursor = 0;
-		while (cursor < 128*1024) begin
-			if (indata[cursor] !== 8'h XX) begin
-				len = 1;
-				while ((len < 1024) && (len+cursor < 128*1024) &&
-						(indata[cursor+len] !== 8'h XX)) len = len+1;
-
-				if ((cursor % 2) != 0) begin
-					cursor = cursor - 1;
-					len = len + 1;
-				end
-
-				if ((len % 4) != 0) begin
-					len = len - (len % 4) + 4;
-				end
-
-				if (len > 1024) begin
-					len = 1024;
-				end
-
+		while (cursor < 32) begin
 				$display("  downloading %4d bytes from 0x%05x", len, cursor);
 				$fflush;
 
 				xfer_start;
 				xfer_send_byte(8'h 24);
-				xfer_send_hword(cursor >> 1);
-				xfer_send_byte(len >> 2);
+				xfer_send_hword(cursor);
+				xfer_send_byte(len);
 				xfer_wait;
 				xfer_recv;
 				while (xfer != 8'h 00)
@@ -326,20 +297,17 @@ module testbench;
 				xfer_start;
 				xfer_send_byte(8'h 22);
 				xfer_wait;
-				for (i = 0; i < len; i = i+1) begin
-					xfer_recv;
-					if (indata[cursor+i] !== 8'h XX && indata[cursor+i] !== xfer) begin
-						$display("ERROR at %d: expected 0x%02x, got 0x%02x", cursor+i, indata[cursor+i], xfer);
-					end
-				end
+                xfer_recv;
+                if( xfer != cursor) begin
+                    $display("ERROR at %4d: expected 0x%02x, got 0x%02x", cursor, cursor, xfer);
+                end
 				xfer_stop;
 
 				cursor = cursor + len;
-			end else begin
-				cursor = cursor + 1;
-			end
 		end
 
+
+        $finish;
 		$display("Running kernel.");
 		$fflush;
 

@@ -4,8 +4,8 @@ gtkwave: testbench
 	gtkwave testbench.vcd spi.gtkwave
 
 
-testbench: testbench.v top.v
-	iverilog -DTRACE -s testbench -o testbench testbench.v top.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+testbench: testbench.v top.v memory.v sequencer.v compute.v
+	iverilog -DTRACE -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 	vvp -N testbench > >( tee testbench.log; )
 
 clean:
