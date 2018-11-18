@@ -1,3 +1,4 @@
+`default_nettype none
 /*
  *  Copyright (C) 2018  Clifford Wolf <clifford@symbioticeda.com>
  *
@@ -17,6 +18,7 @@
 
 module testbench;
 	reg clock;
+    localparam spi_clock_period = 17;
 
 	initial begin
 		$dumpfile("testbench.vcd");
@@ -26,90 +28,85 @@ module testbench;
 		forever #5 clock = ~clock;
 	end
 
-	reg qpi_csb;
-	reg qpi_clk;
+	reg spi_csb;
+	reg spi_clk;
 
-	reg qpi_io0_reg;
-	reg qpi_io1_reg;
-	reg qpi_io2_reg;
-	reg qpi_io3_reg;
+	reg spi_mosi_reg = 0;
+	reg spi_miso_reg = 0;
+    reg xfer_read_start = 0;
+    reg xfer_wait_start = 0;
 
-	wire qpi_io0 = qpi_io0_reg;
-	wire qpi_io1 = qpi_io1_reg;
-	wire qpi_io2 = qpi_io2_reg;
-	wire qpi_io3 = qpi_io3_reg;
+    wire spi_mosi = spi_mosi_reg;
+	wire spi_miso = spi_miso_reg;
 
-	wire qpi_rdy;
-	wire qpi_err;
+	wire spi_rdy;
+	wire spi_err;
 
 	mlaccel_top uut (
 		.clock   (clock  ),
-		.qpi_csb (qpi_csb),
-		.qpi_clk (qpi_clk),
-		.qpi_io0 (qpi_io0),
-		.qpi_io1 (qpi_io1),
-		.qpi_io2 (qpi_io2),
-		.qpi_io3 (qpi_io3),
-		.qpi_rdy (qpi_rdy),
-		.qpi_err (qpi_err)
+		.spi_csb (spi_csb),
+		.spi_clk (spi_clk),
+		.spi_miso (spi_miso),
+    	.spi_mosi (spi_mosi)
 	);
 
 	reg [7:0] xfer;
 
 	task xfer_posedge;
 		begin
-			if ($random & 15) begin
-				#17;
-				qpi_clk = 1;
-			end else begin
-				#17;
-				qpi_clk = 1;
-				#1;
-				qpi_clk = 0;
-				#1;
-				qpi_clk = 1;
-			end
+				#spi_clock_period;
+				spi_clk = 1;
 		end
 	endtask
 
 	task xfer_negedge;
 		begin
-			if ($random & 15) begin
-				#17;
-				qpi_clk = 0;
-			end else begin
-				#17;
-				qpi_clk = 0;
-				#1;
-				qpi_clk = 1;
-				#1;
-				qpi_clk = 0;
-			end
+				#spi_clock_period;
+				spi_clk = 0;
 		end
 	endtask
 
 	task xfer_start;
 		begin
-			#17;
-			qpi_csb = 0;
+			#spi_clock_period;
+			spi_csb = 0;
 		end
 	endtask
 
 	task xfer_send;
 		begin
 			xfer_negedge;
-			qpi_io0_reg = xfer[4];
-			qpi_io1_reg = xfer[5];
-			qpi_io2_reg = xfer[6];
-			qpi_io3_reg = xfer[7];
+			spi_mosi_reg = xfer[7];
 			xfer_posedge;
 
 			xfer_negedge;
-			qpi_io0_reg = xfer[0];
-			qpi_io1_reg = xfer[1];
-			qpi_io2_reg = xfer[2];
-			qpi_io3_reg = xfer[3];
+			spi_mosi_reg = xfer[6];
 			xfer_posedge;
+
+			xfer_negedge;
+			spi_mosi_reg = xfer[5];
+			xfer_posedge;
+            
+			xfer_negedge;
+			spi_mosi_reg = xfer[4];
+			xfer_posedge;
+
+			xfer_negedge;
+			spi_mosi_reg = xfer[3];
+			xfer_posedge;
+
+			xfer_negedge;
+			spi_mosi_reg = xfer[2];
+			xfer_posedge;
+
+			xfer_negedge;
+			spi_mosi_reg = xfer[1];
+			xfer_posedge;
+
+			xfer_negedge;
+			spi_mosi_reg = xfer[0];
+			xfer_posedge;
+
 		end
 	endtask
 
@@ -145,62 +142,92 @@ module testbench;
 		end
 	endtask
 
+    // null byte
 	task xfer_wait;
 		begin
+
+            xfer_wait_start = 1;
 			xfer_negedge;
-			qpi_io0_reg = 1'bz;
-			qpi_io1_reg = 1'bz;
-			qpi_io2_reg = 1'bz;
-			qpi_io3_reg = 1'bz;
+			spi_miso_reg = 1'bz;
 			xfer_posedge;
 
 			xfer_negedge;
 			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+			xfer_negedge;
+			xfer_posedge;
+
+            xfer_wait_start = 0;
+
 		end
 	endtask
 
 	task xfer_recv;
 		begin
-			xfer_negedge;
-			qpi_io0_reg = 1'bz;
-			qpi_io1_reg = 1'bz;
-			qpi_io2_reg = 1'bz;
-			qpi_io3_reg = 1'bz;
-			xfer_posedge;
-
-			xfer[4] = qpi_io0;
-			xfer[5] = qpi_io1;
-			xfer[6] = qpi_io2;
-			xfer[7] = qpi_io3;
+            xfer_read_start = 1;
 
 			xfer_negedge;
-			xfer_posedge;
+            xfer_posedge;
+			xfer[7] = spi_miso;
 
-			xfer[0] = qpi_io0;
-			xfer[1] = qpi_io1;
-			xfer[2] = qpi_io2;
-			xfer[3] = qpi_io3;
+            xfer_read_start = 0;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[6] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[5] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[4] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[3] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[2] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[1] = spi_miso;
+
+			xfer_negedge;
+            xfer_posedge;
+			xfer[0] = spi_miso;
+
 		end
 	endtask
 
 	task xfer_stop;
 		begin
-			if ($random & 3) begin
-				xfer_negedge;
-			end else begin
-				#17;
-			end
+				#spi_clock_period;
 
-			qpi_io0_reg = 1'bz;
-			qpi_io1_reg = 1'bz;
-			qpi_io2_reg = 1'bz;
-			qpi_io3_reg = 1'bz;
 			xfer = 'bx;
 
-			#17;
-			qpi_csb = 1;
-			#17;
-			qpi_clk = 1;
+			#spi_clock_period;
+			spi_csb = 1;
+			#spi_clock_period;
+			spi_clk = 1;
 		end
 	endtask
 
