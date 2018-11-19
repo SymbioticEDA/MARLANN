@@ -75,6 +75,8 @@ module mlaccel_top (
 	/********** QPI Interface **********/
 
 	wire spi_active;
+    assign spi_rdy = 1;
+    assign spi_err = 1;
 
 	spi_client spi (
 		.i_clock      (clock     ),
