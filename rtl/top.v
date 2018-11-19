@@ -81,7 +81,7 @@ module mlaccel_top (
 		.i_reset      (reset     ),
 		.o_active     (spi_active),
 
-		.i_spi_cs   (spi_csb),
+		.i_spi_cs_n (spi_csb),
 		.i_spi_clk  (spi_clk),
 
 		.o_miso   (spi_miso ),

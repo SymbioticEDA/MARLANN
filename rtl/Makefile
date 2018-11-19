@@ -5,6 +5,13 @@ all: testbench
 	sed '/^TRACE/ ! d; s/^[^:]*: //;' < testbench.log > testbench.trace
 	cmp ../sim/demo.trace testbench.trace
 
+formal_spi: spi_client.v
+	sby -f spi.sby
+
+testbench_simple: testbench_simple.v top.v memory.v sequencer.v compute.v spi_client.v
+	iverilog -DTRACE -s testbench -o testbench_simple testbench_simple.v top.v memory.v sequencer.v compute.v spi_client.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+	vvp -N testbench_simple
+
 testbench: testbench.v top.v memory.v sequencer.v compute.v spi_client.v
 	iverilog -DTRACE -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v spi_client.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 
