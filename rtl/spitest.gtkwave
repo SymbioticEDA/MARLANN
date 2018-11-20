@@ -1,0 +1,57 @@
+[*]
+[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
+[*] Tue Nov 20 18:15:20 2018
+[*]
+[dumpfile] "/home/mattvenn/work/fpga/mlaccel/rtl/testbench.vcd"
+[dumpfile_mtime] "Tue Nov 20 18:08:14 2018"
+[dumpfile_size] 4888613
+[savefile] "/home/mattvenn/work/fpga/mlaccel/rtl/spitest.gtkwave"
+[timestart] 38200
+[size] 1393 754
+[pos] -1 -1
+*-11.000000 44420 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uut.
+[sst_width] 263
+[signals_width] 252
+[sst_expanded] 1
+[sst_vpaned_height] 209
+@28
+testbench.clock
+@8022
+testbench.cursor[31:0]
+@22
+testbench.xfer[7:0]
+@28
+testbench.xfer_wait_start
+testbench.xfer_read_start
+@200
+-
+@28
+testbench.uut.spi.i_spi_clk
+testbench.uut.spi.i_spi_cs_n
+@200
+-mosi
+@28
+testbench.uut.spi.i_mosi
+@22
+testbench.uut.spi.o_data_in_data[7:0]
+@28
+testbench.uut.spi.o_data_in_start
+testbench.uut.spi.o_data_in_valid
+@22
+testbench.uut.din_data[7:0]
+@200
+-
+-miso
+@28
+testbench.uut.spi.o_miso
+@22
+testbench.uut.spi.i_data_out_data[7:0]
+@23
+testbench.uut.dout_data[7:0]
+@28
+testbench.uut.spi.i_data_out_valid
+testbench.uut.spi.o_data_out_ready
+[pattern_trace] 1
+[pattern_trace] 0

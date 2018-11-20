@@ -19,6 +19,8 @@
 module testbench;
 	reg clock;
     localparam spi_clock_period = 17;
+    localparam no_glitch = 1;
+    localparam num_tests = 64;
 
 	initial begin
 		$dumpfile("testbench.vcd");
@@ -54,15 +56,33 @@ module testbench;
 
 	task xfer_posedge;
 		begin
+			if ($random & 15 || no_glitch) begin
 				#spi_clock_period;
 				spi_clk = 1;
+			end else begin
+				#spi_clock_period;
+				spi_clk = 1;
+				#1;
+				spi_clk = 0;
+				#1;
+				spi_clk = 1;
+            end
 		end
 	endtask
 
 	task xfer_negedge;
 		begin
+			if ($random & 15 || no_glitch) begin
 				#spi_clock_period;
 				spi_clk = 0;
+			end else begin
+				#spi_clock_period;
+				spi_clk = 0;
+				#1;
+			    spi_clk = 1;
+				#1;
+				spi_clk = 0;
+			end
 		end
 	endtask
 
@@ -220,7 +240,11 @@ module testbench;
 
 	task xfer_stop;
 		begin
+			if ($random & 3 || no_glitch) begin
+				xfer_negedge;
+			end else begin
 				#spi_clock_period;
+			end
 
 			xfer = 'bx;
 
@@ -233,7 +257,6 @@ module testbench;
 
 	integer cursor, len, i;
 
-    integer num_tests = 8;
 	initial begin
 		xfer_stop;
 
