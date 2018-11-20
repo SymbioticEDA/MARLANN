@@ -1,0 +1,3 @@
+0 = WAIT
+1 = RX
+2 = READY
