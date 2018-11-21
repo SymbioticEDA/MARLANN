@@ -13,14 +13,24 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(cs_pin, GPIO.OUT)
 GPIO.output(cs_pin, GPIO.HIGH)    
 
-def send_data(cursor):
-    # send the data
+def get_cursor_low_high(cursor):
+    cursor = cursor >> 1
+    cursor_low  = cursor & 0xFF 
+    cursor_high = cursor >> 8
+    return cursor_low, cursor_high
+
+def send_data(cursor, data):
+    # send the data to the buffer
+    d_len = len(data)
     GPIO.output(cs_pin, GPIO.LOW)    
-    spi.xfer([0x21, cursor])
+    spi.xfer([0x21])
+    spi.xfer(data)
     GPIO.output(cs_pin, GPIO.HIGH)    
-    #               2 bytes word  len 
+
+    # get the buffer written to memory
     GPIO.output(cs_pin, GPIO.LOW)    
-    spi.xfer([0x23, cursor, 0x00, 0x01])
+    cursor_low, cursor_high = get_cursor_low_high(cursor)
+    spi.xfer([0x23, cursor_low, cursor_high, d_len >> 2])
     get_ack()
     GPIO.output(cs_pin, GPIO.HIGH)    
 
@@ -37,19 +47,23 @@ def get_ack():
             print("no reply")
             exit(1)
 
-def get_data(cursor):
+def get_data(cursor, d_len):
     GPIO.output(cs_pin, GPIO.LOW)    
-    spi.xfer([0x24, cursor, 0x00, 0x01])
+    cursor_low, cursor_high = get_cursor_low_high(cursor)
+    spi.xfer([0x24, cursor_low, cursor_high, d_len >> 2])
     get_ack()
     GPIO.output(cs_pin, GPIO.HIGH)    
 
     GPIO.output(cs_pin, GPIO.LOW)    
-    data = spi.xfer([0x22, 0x00,  0])
+    spi.xfer([0x22, 0x00])
+    data = spi.readbytes(d_len)
     GPIO.output(cs_pin, GPIO.HIGH)    
     print(data)
-    return data[2]
+    return data
 
+import random
 for cursor in range(255):
-    send_data(cursor)
-    data = get_data(cursor)
-    assert(data == cursor)
+    rand_data = [ random.randint(0, 255), random.randint(0,255) ]
+    send_data(cursor, rand_data)
+    data = get_data(cursor, len(rand_data))
+    assert(data == rand_data)
