@@ -58,12 +58,15 @@ def get_data(cursor, d_len):
     spi.xfer([0x22, 0x00])
     data = spi.readbytes(d_len)
     GPIO.output(cs_pin, GPIO.HIGH)    
-    print(data)
     return data
 
 import random
-for cursor in range(255):
-    rand_data = [ random.randint(0, 255), random.randint(0,255) ]
-    send_data(cursor, rand_data)
-    data = get_data(cursor, len(rand_data))
-    assert(data == rand_data)
+count = 0
+while True:
+    print(count)
+    count += 1
+    for cursor in range(255):
+        rand_data = [ random.randint(0, 255), random.randint(0,255) ]
+        send_data(cursor, rand_data)
+        rx_data = get_data(cursor, len(rand_data))
+        assert(rx_data == rand_data)
