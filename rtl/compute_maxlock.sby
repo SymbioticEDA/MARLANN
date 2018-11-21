@@ -1,0 +1,13 @@
+[options]
+mode prove
+depth 15
+
+[engines]
+smtbmc boolector
+
+[script]
+read_verilog -formal -DFORMAL_MAXLOCK_CHECK -DFORMAL_INIT compute.v
+prep -top mlaccel_compute
+
+[files]
+compute.v

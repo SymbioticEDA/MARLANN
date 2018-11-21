@@ -2,4 +2,5 @@
 /testbench.vcd
 /testbench.log
 /testbench.trace
-/compute_mlock
+/compute_memlock
+/compute_maxlock

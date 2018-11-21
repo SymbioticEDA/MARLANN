@@ -106,7 +106,7 @@ module mlaccel_sequencer (
 	reg [31:0] next_buffer_insn;
 
 	always @* begin
-		stall_queue = 0;
+		stall_queue = comp_valid && !comp_ready;
 		next_buffer_insn = insn;
 		next_buffer_insn_valid = 0;
 

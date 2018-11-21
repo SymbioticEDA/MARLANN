@@ -98,7 +98,7 @@ mlaccel.json: $(ML_RTL)
 	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json -blif mlaccel.blif' $(ML_RTL)
 
 mlaccel.asc: mlaccel.pcf mlaccel.json
-	nextpnr-ice40 --seed $(SEED) --freq 25 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
+	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
 
 mlaccel.bin: mlaccel.asc
 	icetime -d up5k -c 12 -mtr mlaccel.rpt mlaccel.asc

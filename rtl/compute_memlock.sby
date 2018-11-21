@@ -6,7 +6,7 @@ depth 15
 smtbmc boolector
 
 [script]
-read_verilog -formal -DFORMAL_MLOCK_CHECK compute.v
+read_verilog -formal -DFORMAL_MEMLOCK_CHECK -DFORMAL_INIT compute.v
 prep -top mlaccel_compute
 
 [files]

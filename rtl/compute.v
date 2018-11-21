@@ -104,46 +104,73 @@ module mlaccel_compute #(
 	reg  [        19:0] s8_sum0;
 	reg  [        19:0] s8_sum1;
 	reg  [         8:0] s8_max;
+	reg                 s8_maxen;
 
 	reg                 s9_en;
 	reg  [        31:0] s9_insn;
 
 
-	/**** memory interlock ****/
+	/**** memory and max interlock ****/
 
-	reg [9:0] mlock_res;
-	reg [9:0] mlock_mask;
-	reg mlock_expect;
+	reg [9:0] memlock_res;
+	reg [9:0] memlock_mask;
+	reg memlock_expect;
 
 	always @* begin
-		mlock_mask = 0;
+		memlock_mask = 0;
 
 		case (s1_insn[5:0])
 			/* LoadCode, LoadCoeff0, LoadCoeff1 */
-			4, 5, 6: mlock_mask = 1 << 0;
+			4, 5, 6: memlock_mask = 1 << 0;
 
 			/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1 */
-			28, 29, 30, 32, 33, 34: mlock_mask = 1 << 4;
+			28, 29, 30, 32, 33, 34: begin
+				memlock_mask = 1 << 4;
+			end
 
 			/* MACC, MMAX, MACCZ, MMAXZ, MMAXN */
-			40, 41, 42, 43, 45: mlock_mask = 1 << 0;
+			40, 41, 42, 43, 45: memlock_mask = 1 << 0;
 
 			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1, Save, Save0, Save1 */
-			16, 17, 18, 20, 21, 22, 24, 25, 26: mlock_mask = 1 << 9;
+			16, 17, 18, 20, 21, 22, 24, 25, 26: memlock_mask = 1 << 9;
 		endcase
 
 		if (!s1_en || reset)
-			mlock_mask = 0;
+			memlock_mask = 0;
 	end
 
-	assign s1_stall = |(mlock_res & mlock_mask);
+	reg maxlock_a;
+	reg maxlock_b;
+	reg maxlock_a_q;
+
+	always @* begin
+		maxlock_a = 0;
+		maxlock_b = 0;
+
+		case (s1_insn[5:0] & 6'b 1111_00)
+			28, 32, 40, 44: maxlock_a = 1;
+		endcase
+
+		case (s1_insn[5:0])
+			41, 43, 45, 47: maxlock_b = 1;
+		endcase
+
+		if (!s1_en || reset) begin
+			maxlock_a = 0;
+			maxlock_b = 0;
+		end
+	end
+
+	assign s1_stall = |(memlock_res & memlock_mask) || (maxlock_b && maxlock_a_q);
 
 	always @(posedge clock) begin
-		{mlock_res, mlock_expect} <= mlock_res | mlock_mask;
+		{memlock_res, memlock_expect} <= memlock_res | (s1_stall ? 10'b 0 : memlock_mask);
+		maxlock_a_q <= maxlock_a && !s1_stall;
 
 		if (reset) begin
-			mlock_res <= 0;
-			mlock_expect <= 0;
+			memlock_res <= 0;
+			memlock_expect <= 0;
+			maxlock_a_q <= 0;
 		end
 	end
 
@@ -151,7 +178,7 @@ module mlaccel_compute #(
 
 	assign busy = |{s1_en, s2_en, s3_en, s4_en, s5_en, s6_en, s7_en, s8_en};
 
-`ifdef FORMAL_MLOCK_CHECK
+`ifdef FORMAL_INIT
 	reg init_cycle = 1;
 
 	always @(posedge clock) begin
@@ -160,11 +187,16 @@ module mlaccel_compute #(
 
 	always @* begin
 		if (init_cycle) begin
-			restrict (reset);
+			restrict property (reset);
 		end
+	end
+`endif
+
+`ifdef FORMAL_MEMLOCK_CHECK
+	always @* begin
 		if (!reset) begin
 			assert ((mem_rd0_en + mem_rd1_en + |mem_wr_en) < 2);
-			assert ((mem_rd0_en || mem_rd1_en || mem_wr_en) == mlock_expect);
+			assert ((mem_rd0_en || mem_rd1_en || mem_wr_en) == memlock_expect);
 		end
 	end
 `endif
@@ -374,6 +406,13 @@ module mlaccel_compute #(
 
 	/**** stage 8 ****/
 
+	reg [31:0] acc0zn;
+
+	always @* begin
+		acc0zn = s7_insn[1] ? 0 : acc0;
+		acc0zn = s7_insn[2] ? 32'h 8000_0000 : acc0zn;
+	end
+
 	always @(posedge clock) begin
 		s8_en <= 0;
 		s8_insn <= s7_insn;
@@ -385,6 +424,7 @@ module mlaccel_compute #(
 		           $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
 
 		s8_max <= $signed(s7_max[0*9 +: 9]) > $signed(s7_max[1*9 +: 9]) ? s7_max[0*9 +: 9] : s7_max[1*9 +: 9];
+		s8_maxen <= ($signed(s7_max[0*9 +: 9]) > $signed(acc0zn)) || ($signed(s7_max[1*9 +: 9]) > $signed(acc0zn));
 
 		if (!reset && s7_en) begin
 			s8_en <= 1;
@@ -408,6 +448,9 @@ module mlaccel_compute #(
 	reg [7:0] acc0_saturated;
 	reg [7:0] acc1_saturated;
 
+	reg new_acc0_max_cmp;
+	reg new_acc0_max_cmp_q;
+
 	always @* begin
 		new_acc0_add = s8_insn[1] ? 0 : acc0;
 		new_acc1_add = s8_insn[1] || s8_insn[2] ? 0 : acc1;
@@ -418,7 +461,7 @@ module mlaccel_compute #(
 		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1);
 
 		if (s8_max != 9'h 100)
-			new_acc0_max = $signed(new_acc0_max) > $signed(s8_max) ? new_acc0_max : s8_max;
+			new_acc0_max = s8_maxen ? s8_max : new_acc0_max;
 
 		new_acc0 = s8_insn[0] ? new_acc0_max : new_acc0_add;
 		new_acc1 = new_acc1_add;
@@ -433,6 +476,10 @@ module mlaccel_compute #(
 
 			/* MACC, MMAX, MMACZ, MMAXZ, MMAXN */
 			if (s8_insn[5:3] == 3'b 101) begin
+`ifdef FORMAL_MAXLOCK_CHECK
+				if (s8_insn[0])
+					assert ($stable(acc0));
+`endif
 				acc0 <= new_acc0;
 				acc1 <= new_acc1;
 			end
