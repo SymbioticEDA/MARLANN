@@ -32,6 +32,7 @@ extern uint32_t sram;
 #define ML_TIMEOUT      100
 #define NUM_IMAGES       10
 #define IMAGE_NOPS    10000
+#define ENABLE_CAMERA     1
 
 #define reg_leds  (*(volatile uint32_t*)0x02000000)
 #define reg_uart  (*(volatile uint32_t*)0x02000004)
@@ -57,6 +58,12 @@ void putchar(char c)
 	if (c == '\n')
 		putchar('\r');
 	reg_uart = c;
+}
+
+void puthex(uint8_t byte)
+{
+	putchar((byte >> 4) > 9 ? 'A' + (byte >> 4) - 10 : '0' + (byte >> 4));
+	putchar((byte & 15) > 9 ? 'A' + (byte & 15) - 10 : '0' + (byte & 15));
 }
 
 void error()
@@ -177,12 +184,27 @@ char getchar()
 
 void ml_start()
 {
+#if 0
+	putchar('<');
+	putchar('B');
+	putchar('E');
+	putchar('G');
+	putchar('>');
+#endif
+
 	reg_qpio = 0x80020000;
 	reg_qpio = 0x80000000;
 }
 
 void ml_send(uint8_t byte)
 {
+#if 0
+	putchar('<');
+	putchar('S');
+	puthex(byte);
+	putchar('>');
+#endif
+
 	reg_qpio = 0x80000f00 | (byte >> 4);
 	reg_qpio = 0x80010f00 | (byte >> 4);
 	reg_qpio = 0x80000f00 | (byte & 15);
@@ -200,11 +222,26 @@ uint8_t ml_recv()
 	reg_qpio = 0x80010000;
 	byte |= reg_qpio & 15;
 
+#if 0
+	putchar('<');
+	putchar('R');
+	puthex(byte);
+	putchar('>');
+#endif
+
 	return byte;
 }
 
 void ml_stop()
 {
+#if 0
+	putchar('<');
+	putchar('E');
+	putchar('N');
+	putchar('D');
+	putchar('>');
+#endif
+
 	reg_qpio = 0x80000fff;
 	reg_qpio = 0x80020000;
 }
@@ -436,18 +473,18 @@ void main()
 	print("\n\n\n\n\n");
 	print("Booting..\n");
 
-        camera_init();
-        print ("Initialised camera\n");
+#if ENABLE_CAMERA
+	camera_init();
+	print ("Initialised camera\n");
 	for (int ii=0; ii< NUM_IMAGES; ++ii) {
 		print_image();
 		for (volatile int i = 0; i < IMAGE_NOPS; i++)
 			;
 	}
+#endif
 
 	ml_test();
 	print("\n");
-	camera_init();
-	print ("Initialised camera\n");
 
 	reg_leds = 127;
 	while (!RUN_LOOP) {

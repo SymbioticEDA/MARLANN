@@ -47,6 +47,7 @@ module ctrlsoc (
 	// mlaccel ctrl pins
 	output ml_csb,
 	output ml_clk,
+	output ml_dbg,
 
 	// Camera interface (PMOD 1A/1B)
 	input dphy_clk,
@@ -176,6 +177,7 @@ module ctrlsoc (
 
 	assign ml_csb = flash_overwrite ? ml_csb_r : 1'b 1;
 	assign ml_clk = ml_clk_r;
+	assign ml_dbg = !flash_overwrite;
 
 	SB_IO #(
 		.PIN_TYPE(6'b 1010_01),
