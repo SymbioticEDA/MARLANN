@@ -1,5 +1,6 @@
 MAX_ADDRESS = 1024 * 128
 MAX_DATA = 1024
+PRINT_ACK = False # print the ack waits....
 
 # setup SPI
 import spidev
@@ -33,9 +34,12 @@ def spi_start():
 def spi_stop():
     GPIO.output(cs_pin, GPIO.HIGH)    
 
-def get_ack():
+# core returns 0xFF as a busy signal. Wait till returns 0
+def get_ack(print_ack=PRINT_ACK):
+    if print_ack:
+        print("ack ", end = "")
+
     count = 0
-    print("ack ", end = "")
     while True:
         data = spi.readbytes(1)
         # mlaccel core returns 0 when working, 0xFF when done
@@ -43,9 +47,11 @@ def get_ack():
             break;
         # wait up to 10 cycles before giving up
         count += 1
-        if count % 10 == 0:
+        if print_ack and (count % 10 == 0):
             print(".", end = "")
-    print("")
+
+    if print_ack:
+        print("")
 
 def spi_wait():
     spi.readbytes(1)
@@ -102,7 +108,7 @@ def wait_for_kernel():
     spi_start()
     spi.xfer([0x20])
     spi_wait()
-    get_ack()
+    get_ack(print_ack=True)
     spi_stop()
 
 # random write/read test
@@ -159,20 +165,20 @@ if __name__ == '__main__':
             data_in += bytes_4
 
     # upload kernel
-    print("uploading demo kernel")
+    print("uploading demo kernel:")
     cursor = 0
     for chunk in chunks(data_in, chunk_size):
         chunk_len = len(chunk)
-        print("uploading %d bytes to %05x" % (chunk_len, cursor))
+        print("> uploading %4d bytes to %05x" % (chunk_len, cursor))
         send_data(cursor, chunk)
         cursor += chunk_len
 
     # check data is valid
-    print("readback")
+    print("readback:")
     cursor = 0
     for chunk in chunks(data_in, chunk_size):
         chunk_len = len(chunk)
-        print("downloading %d bytes from %05x" % (chunk_len, cursor))
+        print("< downloading %4d bytes from %05x" % (chunk_len, cursor))
         data = get_data(cursor, chunk_len)
         assert(data == chunk)
         cursor += chunk_len
@@ -192,11 +198,11 @@ if __name__ == '__main__':
             data_out += bytes_16
 
     # check results are valid
-    print("checking results")
+    print("checking results:")
     cursor = 0x00010000 
     for chunk in chunks(data_out, chunk_size):
         chunk_len = len(chunk)
-        print("downloading %d bytes from %05x" % (chunk_len, cursor))
+        print("< downloading %4d bytes from %05x" % (chunk_len, cursor))
         data = get_data(cursor, chunk_len)
         assert(data == chunk)
         cursor += chunk_len
