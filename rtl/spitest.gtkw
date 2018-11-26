@@ -1,26 +1,30 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Mon Nov 19 18:25:58 2018
+[*] Wed Nov 21 17:06:54 2018
 [*]
 [dumpfile] "/home/matt/work/fpga/mlaccel/rtl/testbench.vcd"
-[dumpfile_mtime] "Mon Nov 19 18:24:36 2018"
-[dumpfile_size] 287357
+[dumpfile_mtime] "Wed Nov 21 12:09:29 2018"
+[dumpfile_size] 587223476
 [savefile] "/home/matt/work/fpga/mlaccel/rtl/spitest.gtkw"
-[timestart] 25724
-[size] 2090 1029
-[pos] -1 -1
-*-8.000000 26190 1015310 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 2512 1573
+[pos] -2513 -1
+*-18.000000 903682 1015310 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [treeopen] testbench.uut.mem.ram[0].
 [sst_width] 303
 [signals_width] 456
 [sst_expanded] 1
-[sst_vpaned_height] 309
+[sst_vpaned_height] 500
 @28
 testbench.uut.reset
 @8022
 testbench.cursor
+@24
+testbench.len
+@8022
+testbench.i
 @28
 testbench.uut.clock
 @22
@@ -40,6 +44,10 @@ testbench.xfer[7:0]
 -group_end
 @22
 testbench.uut.din_data[7:0]
+@28
+testbench.xfer_read_start
+@29
+testbench.xfer_wait_start
 @200
 -
 -
@@ -61,7 +69,7 @@ testbench.uut.spi.data_in[7:0]
 testbench.uut.spi.data_in_spi[7:0]
 testbench.uut.spi.o_data_in_data[7:0]
 @2022
-^1 /tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
+^1 /home/matt/work/fpga/mlaccel/rtl/../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
 testbench.uut.spi.data_in_state[1:0]
 @200
 -
@@ -74,11 +82,10 @@ testbench.uut.spi.in_bit_clock_past
 @200
 -
 @2024
-^1 /tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
+^1 /home/matt/work/fpga/mlaccel/rtl/../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
 testbench.uut.spi.data_out_state
 @28
 testbench.uut.spi.i_data_out_valid
-@29
 testbench.uut.spi.o_data_out_ready
 @22
 testbench.uut.spi.i_data_out_data[7:0]
