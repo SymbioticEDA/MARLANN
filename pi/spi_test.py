@@ -37,7 +37,7 @@ def spi_stop():
 # core returns 0xFF as a busy signal. Wait till returns 0
 def get_ack(print_ack=PRINT_ACK):
     if print_ack:
-        print("ack ", end = "")
+        print("ack "),
 
     count = 0
     while True:
@@ -48,7 +48,7 @@ def get_ack(print_ack=PRINT_ACK):
         # wait up to 10 cycles before giving up
         count += 1
         if print_ack and (count % 10 == 0):
-            print(".", end = "")
+            print("."),
 
     if print_ack:
         print("")
