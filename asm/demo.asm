@@ -46,6 +46,9 @@ Sync
 // Run convolution
 Call run_conv_5x5x8_kernel
 
+// For power measurements
+// Call longrun
+
 // Setup max test
 LoadCoeff0 mask0, 0
 LoadCoeff0 mask1, 1
@@ -71,6 +74,60 @@ Store0 2, 0
 MMAX  56, 0
 ReLU0 3, 0
 
+Return
+
+// Run run_conv_5x5x8_kernel 10000 times (for power measurements)
+
+longrun:
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Call longrun1
+Return
+
+longrun1:
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Call longrun2
+Return
+
+longrun2:
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Call longrun3
+Return
+
+longrun3:
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
+Call run_conv_5x5x8_kernel
 Return
 
 // Kernel Sequencer code
