@@ -8,6 +8,7 @@ Enable spi with raspi-config:
 
 Install Python modules spidev and RPi.GPIO:
 
+* sudo apt-get install python-pip
 * sudo pip install spidev
 * sudo pip install RPi.GPIO
 
