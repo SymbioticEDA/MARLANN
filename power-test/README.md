@@ -16,15 +16,15 @@ Onboard 1.2 V supply
 
 VCC     = 1.218V
 
-TP11/12 = 2.9mV = 2.9mA
-TP13/14 = 0mV   = 0mA
+* TP11/12 = 2.9mV = 2.9mA
+* TP13/14 = 0mV   = 0mA
 
 ### Running longrun demo
 
 ICC1.2  = 1.216V
 
-TP11/12 = 8.7mV = 8.7mA
-TP13/14 = 0mV   = 0mA
+* TP11/12 = 8.7mV = 8.7mA
+* TP13/14 = 0mV   = 0mA
 
 ## iCE40 UltraPlus VCCIO
 
@@ -38,17 +38,17 @@ Onboard 3.3 V supply
 
 VCCIO   = 3.29V
 
-TP5/6   = 0.3mV = 0.3mA
-TP9/10  = 0.1mV = 0.1mA
-TP7/8   = 0mV   = 0mA
+* TP5/6   = 0.3mV = 0.3mA
+* TP9/10  = 0.1mV = 0.1mA
+* TP7/8   = 0mV   = 0mA
 
 ### Running longrun demo
 
 ICC3.3  = 3.29V
 
-TP5/6   = 0.3mV = 0.3mA
-TP9/10  = 0.1mV = 0.1mA
-TP7/8   = 0mV   = 0mA
+* TP5/6   = 0.3mV = 0.3mA
+* TP9/10  = 0.1mV = 0.1mA
+* TP7/8   = 0mV   = 0mA
 
 ## Resources
 
