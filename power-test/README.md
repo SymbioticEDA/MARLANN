@@ -1,7 +1,7 @@
 # UP5K power usage running MLAccel firmware
 
-* When idle, the UP5K core draws 2.9mA (3.48mW). 
-* When running the longrun demo, draws 8.7mA (10.44mW).
+* When idle, the UP5K core draws 2.9mA @ 1.218V (3.53mW). 
+* When running the longrun demo, draws 8.7mA @ 1.216V (10.58mW).
 
 No change detected in VCCIO or VCC_PLL.
 
