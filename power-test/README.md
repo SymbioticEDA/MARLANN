@@ -1,7 +1,10 @@
 # UP5K power usage running MLAccel firmware
 
+Clock is default 12MHz unless otherwise specified.
+
 * When idle, the UP5K core draws 2.9mA @ 1.218V (3.53mW). 
 * When running the longrun demo, draws 8.7mA @ 1.216V (10.58mW).
+* When running longrun demo at 20MHz PLL draws 14mA @ 1.214V (16.99mW).
 
 No change detected in VCCIO or VCC_PLL.
 
@@ -14,7 +17,7 @@ Onboard 1.2 V supply
 
 ### Idle
 
-VCC     = 1.218V
+ICC1.2   = 1.218V
 
 * TP11/12 = 2.9mV = 2.9mA
 * TP13/14 = 0mV   = 0mA
@@ -25,6 +28,13 @@ ICC1.2  = 1.216V
 
 * TP11/12 = 8.7mV = 8.7mA
 * TP13/14 = 0mV   = 0mA
+
+### Running longrun demo with 20MHz PLL
+
+ICC1.2  = 1.214V
+
+* TP11/12 = 14.0mV = 14.0mA
+* TP13/14 = 0mV    = 0mA
 
 ## iCE40 UltraPlus VCCIO
 
@@ -49,6 +59,15 @@ ICC3.3  = 3.29V
 * TP5/6   = 0.3mV = 0.3mA
 * TP9/10  = 0.1mV = 0.1mA
 * TP7/8   = 0mV   = 0mA
+
+### Running longrun demo
+
+ICC3.3  = 3.28V
+
+* TP5/6   = 0.3mV = mA
+* TP9/10  = 0.1mV = mA
+* TP7/8   = 0mV   = 0mA
+
 
 ## Resources
 
