@@ -1,4 +1,4 @@
-set_io clock      35
+set_io clock_12m      35
 
 set_io spi_csb     2
 set_io spi_clk     46
