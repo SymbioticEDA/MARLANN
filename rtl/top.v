@@ -1,6 +1,6 @@
 `default_nettype none
 module mlaccel_top (
-	input  clock,
+	input  clock_12m,
 
 	input  spi_csb,
 	input  spi_clk,
@@ -57,6 +57,23 @@ module mlaccel_top (
 	wire [15:0] cmem_addr;
 	wire [63:0] cmem_wdata;
 	wire [63:0] cmem_rdata;
+
+	/********** PLL             **********/
+
+    wire clock;
+    SB_PLL40_CORE #(
+        .FEEDBACK_PATH("SIMPLE"),
+        .DIVR(4'b0000),		// DIVR =  0
+        .DIVF(7'b0110100),	// DIVF = 52
+        .DIVQ(3'b101),		// DIVQ =  5
+        .FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
+
+    ) uut (
+        .RESETB(1'b1),
+        .BYPASS(1'b0),
+        .REFERENCECLK(clock_12m),
+        .PLLOUTCORE(clock)
+    );
 
 	/********** Reset Generator **********/
 
