@@ -61,7 +61,7 @@ module mlaccel_top (
 	/********** PLL             **********/
 
     wire clock;
-    SB_PLL40_CORE #(
+    SB_PLL40_PAD #(
         .FEEDBACK_PATH("SIMPLE"),
         .DIVR(4'b0000),		// DIVR =  0
         .DIVF(7'b0110100),	// DIVF = 52
@@ -71,7 +71,7 @@ module mlaccel_top (
     ) uut (
         .RESETB(1'b1),
         .BYPASS(1'b0),
-        .REFERENCECLK(clock_12m),
+        .PACKAGEPIN(clock_12m),
         .PLLOUTCORE(clock)
     );
 
