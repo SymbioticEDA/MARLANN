@@ -102,14 +102,14 @@ mlaccel.asc: mlaccel.pcf mlaccel.json
 	nextpnr-ice40 --seed $(SEED) --freq 25 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
 
 mlaccel.bin: mlaccel.asc
-	icetime -d up5k -c 12 -mtr mlaccel.rpt mlaccel.asc
+	icetime -d up5k -c 20 -mtr mlaccel.rpt mlaccel.asc
 	icepack mlaccel.asc mlaccel.bin
 
 mlaccel_arachne.asc: mlaccel.pcf mlaccel.blif
 	arachne-pnr -s $(SEED) -d 5k -o mlaccel_arachne.asc -p mlaccel.pcf mlaccel.blif
 
 mlaccel_arachne.bin: mlaccel_arachne.asc
-	icetime -d up5k -c 12 -mtr mlaccel_arachne.rpt mlaccel_arachne.asc
+	icetime -d up5k -c 20 -mtr mlaccel_arachne.rpt mlaccel_arachne.asc
 	icepack mlaccel_arachne.asc mlaccel_arachne.bin
 
 prog_mlaccel: mlaccel.bin
