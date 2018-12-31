@@ -37,33 +37,33 @@ This firmware loads a set of coefficients and then runs a series of convolutions
 
 ## Idle 
 
-Measurement  voltage (V)  current (mA)  power (mW)
------------  -----------  ------------  -----------
-ICC          1.218        2.9           3.53
-ICCPLL       1.218        0.0           0.0
-ICC0         3.29         0.3           0.98
-ICC1         3.29         0.1           0.33
-ICC2         3.29         0.0           0.0
+| Measurement | voltage (V) | current (mA) | power (mW) |
+|-------------|-------------|--------------|:-----------|
+| ICC         | 1.218       | 2.9          | 3.53       |
+| ICCPLL      | 1.218       | 0.0          | 0.0        |
+| ICC0        | 3.29        | 0.3          | 0.98       |
+| ICC1        | 3.29        | 0.1          | 0.33       |
+| ICC2        | 3.29        | 0.0          | 0.0        |
 
 ## Longrun demo 12MHz
 
-Measurement  voltage (V)  current (mA)  power (mW)
------------  -----------  ------------  -----------
-ICC          1.216        8.7           10.58
-ICCPLL       1.216        0.0           0.0
-ICC0         3.29         0.3           0.98
-ICC1         3.29         0.1           0.33
-ICC2         3.29         0.0           0.0
+| Measurement | voltage (V) | current (mA) | power (mW) |
+|-------------|-------------|--------------|:-----------|
+| ICC         | 1.216       | 8.7          | 10.58      |
+| ICCPLL      | 1.216       | 0.0          | 0.0        |
+| ICC0        | 3.29        | 0.3          | 0.98       |
+| ICC1        | 3.29        | 0.1          | 0.33       |
+| ICC2        | 3.29        | 0.0          | 0.0        |
 
 ## Longrun demo 20MHz
 
-Measurement  voltage (V)  current (mA)  power (mW)
------------  -----------  ------------  -----------
-ICC          1.214        14.0          16.99
-ICCPLL       1.214        0.0           0.0
-ICC0         3.28         0.3           0.98
-ICC1         3.28         0.1           0.33
-ICC2         3.28         0.0           0.0
+| Measurement | voltage (V) | current (mA) | power (mW) |
+|-------------|-------------|--------------|:-----------|
+| ICC         | 1.214       | 14.0         | 16.99      |
+| ICCPLL      | 1.214       | 0.0          | 0.0        |
+| ICC0        | 3.28        | 0.3          | 0.98       |
+| ICC1        | 3.28        | 0.1          | 0.33       |
+| ICC2        | 3.28        | 0.0          | 0.0        |
 
 ## Resources
 
