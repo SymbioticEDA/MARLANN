@@ -1,17 +1,17 @@
-% UP5K power usage running MLAccel firmware
+% MLAccel FPGA power usage 
 % Symbiotic EDA
 % 31/12/2018
 
 # Aim
 
 Using the iCE40 UP5K development board, discover the power usage of the MLAccel core when idle and when running a test firmware.
-Additionally, compare default 12MHz clock with 20MHz PLL.
+In addition, compare default 12MHz clock with 20MHz PLL.
 
 # Summary of results
 
 * When idle, the FPGA draws 2.9mA @ 1.218V (3.53mW). 
-* When running the _longrun_ demo, draws 8.7mA @ 1.216V (10.58mW).
-* When running _longrun_ demo at 20MHz PLL draws 14mA @ 1.214V (16.99mW).
+* _longrun_ demo with 12MHz clock, draws 8.7mA @ 1.216V (10.58mW).
+* _longrun_ demo with 20MHz PLL generated clock, draws 14mA @ 1.214V (16.99mW).
 * No change detected VCC_PLL.
 
 # Test setup
