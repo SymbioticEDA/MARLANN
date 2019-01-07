@@ -1,18 +1,27 @@
-% MLAccel FPGA power usage 
+% MARLANN FPGA power usage 
 % Symbiotic EDA
 % 31/12/2018
 
 # Aim
 
-Using the iCE40 UP5K development board, discover the power usage of the MLAccel core when idle and when running a test firmware.
+Using the iCE40 UP5K development board, discover the power usage of the MARLANN core when idle and when running a test firmware.
 In addition, compare default 12MHz clock with 20MHz PLL.
 
 # Summary of results
+
+## Power
 
 * When idle, the FPGA draws 2.9mA @ 1.218V (3.53mW). 
 * _longrun_ demo with 12MHz clock, draws 8.7mA @ 1.216V (10.58mW).
 * _longrun_ demo with 20MHz PLL generated clock, draws 14mA @ 1.214V (16.99mW).
 * No change detected VCC_PLL.
+
+## Processing speed & GMMACC/s/W
+
+The _longrun_ demo can be simulated and will log MMACC/s.
+
+* At 12MHz, 154 MMACC/s. With 10.58mW measured power, results in 14.5 GMMACC/s/W
+* At 20Mhz, 256 MMACC/s. With 16.99mW measured power, results in 15.0 GMMACC/s/W
 
 # Test setup
 
@@ -28,7 +37,7 @@ The development board features 1R shunt resistors in series with ICC, ICC_PLL an
 * ICC1 can be measured across the series resistor R75 (1R) at TP9 and TP10
 * ICC2 can be measured across the series resistor R74 (1R) at TP7 and TP8
 
-## MLAccel Firmware
+## MARLANN Firmware
 
 To aid in making measurements, a demo firmware called _longrun_ was used. 
 This firmware loads a set of coefficients and then runs a series of convolutions that completes in 1 minute.

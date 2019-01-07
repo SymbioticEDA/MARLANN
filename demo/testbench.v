@@ -120,7 +120,7 @@ module testbench;
 		.flash_io3(flash_io3)
 	);
 
-	mlaccel_top mlacc (
+	marlann_top mlacc (
 		.clock   (accel_clk),
 		.qpi_csb (ml_csb   ),
 		.qpi_clk (ml_clk   ),

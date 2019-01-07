@@ -15,7 +15,7 @@
  *
  */
 
-module mlaccel_sequencer (
+module marlann_sequencer (
 	input             clock,
 	input             reset,
 	input             start,

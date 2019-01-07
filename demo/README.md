@@ -1,10 +1,10 @@
-A simple demo SoC controlling an mlaccel coprocessor
+A simple demo SoC controlling an MARLANN coprocessor
 ====================================================
 
 This demo uses two iCEBreaker boards.
-One running the control SoC and a second one running mlaccel.
+One running the control SoC and a second one running MARLANN.
 
-On the mlaccel side PMOD1 is used for the connection:
+On the MARLANN side PMOD1 is used for the connection:
 
 | Role | Pin Name   | IO Loc |
 |:----:|:---------- | ------:|

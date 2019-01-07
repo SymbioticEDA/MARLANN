@@ -15,7 +15,7 @@
  *
  */
 
-module mlaccel_compute #(
+module marlann_compute #(
 	parameter integer NB = 2,
 	parameter integer CODE_SIZE = 512,
 	parameter integer COEFF_SIZE = 512
@@ -384,7 +384,7 @@ module mlaccel_compute #(
 
 	wire [NB*64-1:0] mulA = {mem_rdata, mem_rdata};
 
-	mlaccel_compute_mul2 mul [NB*4-1:0] (
+	marlann_compute_mul2 mul [NB*4-1:0] (
 		.clock (clock   ),
 		.A     (mulA    ),
 		.B     (s4_coeff),
@@ -686,7 +686,7 @@ module mlaccel_compute #(
 `endif
 endmodule
 
-module mlaccel_compute_mul2 (
+module marlann_compute_mul2 (
 	input         clock,
 	input  [15:0] A, B,
 	output [31:0] X

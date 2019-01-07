@@ -7,7 +7,7 @@ smtbmc boolector
 
 [script]
 read_verilog -formal -DFORMAL_MEMLOCK_CHECK -DFORMAL_INIT compute.v
-prep -top mlaccel_compute
+prep -top marlann_compute
 
 [files]
 compute.v

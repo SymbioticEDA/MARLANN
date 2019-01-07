@@ -42,7 +42,7 @@ module testbench;
 	wire qpi_rdy;
 	wire qpi_err;
 
-	mlaccel_top uut (
+	marlann_top uut (
 		.clock   (clock  ),
 		.qpi_csb (qpi_csb),
 		.qpi_clk (qpi_clk),

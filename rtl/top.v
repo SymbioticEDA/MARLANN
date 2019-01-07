@@ -15,7 +15,7 @@
  *
  */
 
-module mlaccel_top (
+module marlann_top (
 	input  clock,
 
 	input  qpi_csb,
@@ -136,7 +136,7 @@ module mlaccel_top (
 `endif
 	wire qpi_active;
 
-	mlaccel_qpi qpi (
+	marlann_qpi qpi (
 		.clock      (clock     ),
 		.reset      (reset     ),
 		.active     (qpi_active),
@@ -347,7 +347,7 @@ module mlaccel_top (
 
 	/********** Sequencer and Compute **********/
 
-	mlaccel_sequencer seq (
+	marlann_sequencer seq (
 		.clock      (clock     ),
 		.reset      (reset     ),
 
@@ -365,7 +365,7 @@ module mlaccel_top (
 		.comp_insn  (comp_insn )
 	);
 
-	mlaccel_compute comp (
+	marlann_compute comp (
 		.clock       (clock      ),
 		.reset       (reset      ),
 		.busy        (comp_busy  ),
@@ -505,7 +505,7 @@ module mlaccel_top (
 		end
 	end
 
-	mlaccel_memory mem (
+	marlann_memory mem (
 		.clock (clock    ),
 		.addr  (mem_addr ),
 		.wen   (mem_wen  ),
@@ -514,7 +514,7 @@ module mlaccel_top (
 	);
 endmodule
 
-module mlaccel_qpi (
+module marlann_qpi (
 	input            clock,
 	input            reset,
 	output           active,

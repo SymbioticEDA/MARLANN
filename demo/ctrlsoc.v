@@ -44,7 +44,7 @@ module ctrlsoc (
 	output led4,
 	output led5,
 
-	// mlaccel ctrl pins
+	// marlann ctrl pins
 	output ml_csb,
 	output ml_clk,
 	output ml_dbg,

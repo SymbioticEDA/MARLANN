@@ -1,5 +1,5 @@
 CTRLSOC_DEV =
-MLACCEL_DEV =
+MARLANN_DEV =
 SEED = 1234
 
 CAMERA_RTL =					\
@@ -41,14 +41,14 @@ flashinit.hex: flashinit.py
 postsim.vcd: postsim flashinit.hex ctrlsoc_fw.hex
 	vvp -N postsim
 
-postsim: testbench.v spiflash.v ctrlsoc_post.v mlaccel_post.v
+postsim: testbench.v spiflash.v ctrlsoc_post.v marlann_post.v
 	iverilog -s testbench -D VCD_FILENAME='"postsim.vcd"' -o $@ $^ $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 ctrlsoc_post.v: ctrlsoc.asc
 	icebox_vlog -s -L -n ctrlsoc -p ctrlsoc.pcf -c ctrlsoc.asc > ctrlsoc_post.v
 
-mlaccel_post.v: mlaccel.asc
-	icebox_vlog -s -L -n mlaccel_top -p mlaccel.pcf -c mlaccel.asc > mlaccel_post.v
+marlann_post.v: marlann.asc
+	icebox_vlog -s -L -n marlann_top -p marlann.pcf -c marlann.asc > marlann_post.v
 
 #####################################################################
 
@@ -93,52 +93,52 @@ clean_ctrlsoc:
 
 #####################################################################
 
-mlaccel.blif: mlaccel.json
-mlaccel.json: $(ML_RTL)
-	yosys -ql mlaccel.log -p 'synth_ice40 -top mlaccel_top -json mlaccel.json -blif mlaccel.blif' $(ML_RTL)
+marlann.blif: marlann.json
+marlann.json: $(ML_RTL)
+	yosys -ql marlann.log -p 'synth_ice40 -top marlann_top -json marlann.json -blif marlann.blif' $(ML_RTL)
 
-mlaccel.asc: mlaccel.pcf mlaccel.json
-	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc mlaccel.asc --pcf mlaccel.pcf --json mlaccel.json
+marlann.asc: marlann.pcf marlann.json
+	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc marlann.asc --pcf marlann.pcf --json marlann.json
 
-mlaccel.bin: mlaccel.asc
-	icetime -d up5k -c 12 -mtr mlaccel.rpt mlaccel.asc
-	icepack mlaccel.asc mlaccel.bin
+marlann.bin: marlann.asc
+	icetime -d up5k -c 12 -mtr marlann.rpt marlann.asc
+	icepack marlann.asc marlann.bin
 
-mlaccel_arachne.asc: mlaccel.pcf mlaccel.blif
-	arachne-pnr -s $(SEED) -d 5k -o mlaccel_arachne.asc -p mlaccel.pcf mlaccel.blif
+marlann_arachne.asc: marlann.pcf marlann.blif
+	arachne-pnr -s $(SEED) -d 5k -o marlann_arachne.asc -p marlann.pcf marlann.blif
 
-mlaccel_arachne.bin: mlaccel_arachne.asc
-	icetime -d up5k -c 12 -mtr mlaccel_arachne.rpt mlaccel_arachne.asc
-	icepack mlaccel_arachne.asc mlaccel_arachne.bin
+marlann_arachne.bin: marlann_arachne.asc
+	icetime -d up5k -c 12 -mtr marlann_arachne.rpt marlann_arachne.asc
+	icepack marlann_arachne.asc marlann_arachne.bin
 
-prog_mlaccel: mlaccel.bin
-	iceprog $(MLACCEL_DEV) mlaccel.bin
+prog_marlann: marlann.bin
+	iceprog $(MARLANN_DEV) marlann.bin
 
-prog_mlaccel_arachne: mlaccel_arachne.bin
-	iceprog $(MLACCEL_DEV) mlaccel_arachne.bin
+prog_marlann_arachne: marlann_arachne.bin
+	iceprog $(MARLANN_DEV) marlann_arachne.bin
 
-reset_mlaccel:
-	iceprog $(MLACCEL_DEV) -t
+reset_marlann:
+	iceprog $(MARLANN_DEV) -t
 
-erase_mlaccel:
-	iceprog $(MLACCEL_DEV) -e 1
+erase_marlann:
+	iceprog $(MARLANN_DEV) -e 1
 
-clean_mlaccel:
-	rm -f mlaccel.json mlaccel.log mlaccel.asc mlaccel.bin mlaccel.rpt
-	rm -f mlaccel.blif mlaccel_arachne.asc mlaccel_arachne.bin mlaccel_arachne.rpt
+clean_marlann:
+	rm -f marlann.json marlann.log marlann.asc marlann.bin marlann.rpt
+	rm -f marlann.blif marlann_arachne.asc marlann_arachne.bin marlann_arachne.rpt
 
 #####################################################################
 
 multisynth:
 	set -ex; for i in {100..120}; do \
 		make clean; \
-		make -j4 SEED=$$i mlaccel.bin mlaccel_arachne.bin; \
-		cp mlaccel.rpt report_nextpnr_$$i.txt; \
-		cp mlaccel_arachne.rpt report_arachne_$$i.txt; \
+		make -j4 SEED=$$i marlann.bin marlann_arachne.bin; \
+		cp marlann.rpt report_nextpnr_$$i.txt; \
+		cp marlann_arachne.rpt report_arachne_$$i.txt; \
 	done
 
-clean: clean_ctrlsoc clean_mlaccel
+clean: clean_ctrlsoc clean_marlann
 	rm -f testbench.vcd testbench flashinit.hex demodat.inc
 
 .PHONY: multisynth clean prog_ctrlsoc prog_ctrlsoc_fw reset_ctrlsoc erase_ctrlsoc clean_ctrlsoc
-.PHONY: prog_mlaccel prog_mlaccel_arachne reset_mlaccel erase_mlaccel clean_mlaccel
+.PHONY: prog_marlann prog_marlann_arachne reset_marlann erase_marlann clean_marlann

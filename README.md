@@ -1,5 +1,7 @@
-MLAccel -- A simple FPGA Machine Learning Accelerator
+MARLANN -- A simple FPGA Machine Learning Accelerator
 =====================================================
+
+MARLANN stands for Multiply-Accumulate and Rectified-Linear Accelerator for Neural Networks
 
 A simple FPGA machine learning accelerator with focus on small multi-layer
 CNNs, 8-bit fixed point signed integer arithmetic (24 bit accumulators),

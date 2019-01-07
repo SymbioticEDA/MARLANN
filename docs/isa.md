@@ -1,7 +1,7 @@
 Architecure
 -----------
 
-The mlaccel architecture has up to 128 kB main memory, 512 4-byte words of
+The MARLANN architecture has up to 128 kB main memory, 512 4-byte words of
 fast compute code memory, and 2x512 8-byte words of coefficient storage.
 
 The compute core operates on two 24 bits wide accumulators. Each cycle it can

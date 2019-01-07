@@ -15,7 +15,7 @@
  *
  */
 
-module mlaccel_memory (
+module marlann_memory (
 	input             clock,
 	input      [15:0] addr,
 	input      [ 7:0] wen,
@@ -34,7 +34,7 @@ module mlaccel_memory (
 	wire [13:0] addr0 = addr[15:2];
 	wire [13:0] addr1 = addr0 + 1;
 
-	mlaccel_memory_spram ram [3:0] (
+	marlann_memory_spram ram [3:0] (
 		.clock(clock),
 		.wen(shifted_wen),
 		.addr({
@@ -53,7 +53,7 @@ module mlaccel_memory (
 	end
 endmodule
 
-module mlaccel_memory_spram (
+module marlann_memory_spram (
 	input         clock,
 	input  [ 1:0] wen,
 	input  [13:0] addr,
