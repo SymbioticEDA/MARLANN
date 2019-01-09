@@ -1,0 +1,12 @@
+set_io clock      35
+
+set_io qpi_csb     2
+set_io qpi_clk     4
+
+set_io qpi_io0    47
+set_io qpi_io1    45
+set_io qpi_io2     3
+set_io qpi_io3    48
+
+set_io qpi_rdy    46
+set_io qpi_err    44
