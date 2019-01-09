@@ -13,7 +13,13 @@ def main(argv0, *args):
         if not l:
             return 0
         
-        fh_out.write("%s\n" % instructions[0b111111 & int(l,16)])
+        try:
+            fh_out.write("%s\n" % instructions[0b111111 & int(l,16)])
+        except IndexError:
+            fh_out.write("no instruction\n")
+        except ValueError:
+            fh_out.write("undefined\n")
+
         fh_out.flush()
 
 if __name__ == '__main__':
