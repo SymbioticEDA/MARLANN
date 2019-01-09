@@ -23,8 +23,13 @@ ML_RTL =					\
 	../rtl/top.v				\
 	../rtl/sequencer.v			\
 	../rtl/compute.v			\
-	../rtl/memory.v             \
-	../rtl/spi_client.v
+	../rtl/memory.v
+
+SPI_TYPE = QPI
+
+ifeq ($(SPI_TYPE),SPI)
+    ML_RTL += ../rtl/spi_client.v
+endif
 
 #####################################################################
 
@@ -96,7 +101,7 @@ clean_ctrlsoc:
 
 marlann.blif: marlann.json
 marlann.json: $(ML_RTL)
-	yosys -ql marlann.log -p 'synth_ice40 -top marlann_top -json marlann.json -blif marlann.blif' $(ML_RTL)
+	yosys -l marlann.log -qp 'read_verilog -D$(SPI_TYPE) $(ML_RTL); synth_ice40 -top marlann_top -json marlann.json -blif marlann.blif'
 
 marlann.asc: marlann.pcf marlann.json
 	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc marlann.asc --pcf marlann.pcf --json marlann.json
