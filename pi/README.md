@@ -17,7 +17,7 @@ Install Python modules spidev and RPi.GPIO:
 * sudo pip install spidev
 * sudo pip install RPi.GPIO
 
-Connect the Pi's SPI pins to the pins defined in the [UP5k dev board's pcf](../demo/marlann.pcf).
+Connect the Pi's SPI pins to the pins defined in the [UP5k dev board's pcf](../demo/marlann_spi.pcf).
 
 ![pinout](pinout.jpeg)
 
