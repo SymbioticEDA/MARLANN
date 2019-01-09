@@ -29,6 +29,9 @@ SPI_TYPE = QPI
 
 ifeq ($(SPI_TYPE),SPI)
     ML_RTL += ../rtl/spi_client.v
+    ML_PCF = marlann_spi.pcf
+else
+    ML_PCF = marlann_qpi.pcf
 endif
 
 #####################################################################
@@ -54,7 +57,7 @@ ctrlsoc_post.v: ctrlsoc.asc
 	icebox_vlog -s -L -n ctrlsoc -p ctrlsoc.pcf -c ctrlsoc.asc > ctrlsoc_post.v
 
 marlann_post.v: marlann.asc
-	icebox_vlog -s -L -n marlann_top -p marlann.pcf -c marlann.asc > marlann_post.v
+	icebox_vlog -s -L -n marlann_top -p $(ML_PCF) -c marlann.asc > marlann_post.v
 
 #####################################################################
 
@@ -103,15 +106,15 @@ marlann.blif: marlann.json
 marlann.json: $(ML_RTL)
 	yosys -l marlann.log -qp 'read_verilog -D$(SPI_TYPE) $(ML_RTL); synth_ice40 -top marlann_top -json marlann.json -blif marlann.blif'
 
-marlann.asc: marlann.pcf marlann.json
-	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc marlann.asc --pcf marlann.pcf --json marlann.json
+marlann.asc: $(ML_PCF) marlann.json
+	nextpnr-ice40 --seed $(SEED) --freq 30 --up5k --asc marlann.asc --pcf $(ML_PCF) --json marlann.json
 
 marlann.bin: marlann.asc
 	icetime -d up5k -c 12 -mtr marlann.rpt marlann.asc
 	icepack marlann.asc marlann.bin
 
-marlann_arachne.asc: marlann.pcf marlann.blif
-	arachne-pnr -s $(SEED) -d 5k -o marlann_arachne.asc -p marlann.pcf marlann.blif
+marlann_arachne.asc: $(ML_PCF) marlann.blif
+	arachne-pnr -s $(SEED) -d 5k -o marlann_arachne.asc -p $(ML_PCF) marlann.blif
 
 marlann_arachne.bin: marlann_arachne.asc
 	icetime -d up5k -c 12 -mtr marlann_arachne.rpt marlann_arachne.asc
