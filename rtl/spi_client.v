@@ -24,7 +24,7 @@ module spi_client (
 
     // data coming from master goes here
     reg [2:0] in_bit = 0;
-    reg [7:0] data_in = 0;
+    reg [7:0] data_in = 8'b 0x;
 
     // data to send goes here
     reg [2:0] out_bit = 0;
