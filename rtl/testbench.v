@@ -15,6 +15,7 @@
  *
  */
 
+`default_nettype none
 module testbench;
 	reg clock;
 
