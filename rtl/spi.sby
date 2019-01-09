@@ -1,0 +1,14 @@
+[options]
+mode prove
+multiclock on
+depth 20
+
+[engines]
+smtbmc 
+
+[script]
+read_verilog -formal spi_client.v
+prep -top spi_client
+
+[files]
+spi_client.v

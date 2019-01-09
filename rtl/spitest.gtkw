@@ -1,0 +1,102 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Wed Nov 21 17:06:54 2018
+[*]
+[dumpfile] "/home/matt/work/fpga/mlaccel/rtl/testbench.vcd"
+[dumpfile_mtime] "Wed Nov 21 12:09:29 2018"
+[dumpfile_size] 587223476
+[savefile] "/home/matt/work/fpga/mlaccel/rtl/spitest.gtkw"
+[timestart] 0
+[size] 2512 1573
+[pos] -2513 -1
+*-18.000000 903682 1015310 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uut.
+[treeopen] testbench.uut.mem.ram[0].
+[sst_width] 303
+[signals_width] 456
+[sst_expanded] 1
+[sst_vpaned_height] 500
+@28
+testbench.uut.reset
+@8022
+testbench.cursor
+@24
+testbench.len
+@8022
+testbench.i
+@28
+testbench.uut.clock
+@22
+testbench.xfer_send_byte.data[7:0]
+@c00022
+testbench.xfer[7:0]
+@28
+(0)testbench.xfer[7:0]
+(1)testbench.xfer[7:0]
+(2)testbench.xfer[7:0]
+(3)testbench.xfer[7:0]
+(4)testbench.xfer[7:0]
+(5)testbench.xfer[7:0]
+(6)testbench.xfer[7:0]
+(7)testbench.xfer[7:0]
+@1401200
+-group_end
+@22
+testbench.uut.din_data[7:0]
+@28
+testbench.xfer_read_start
+@29
+testbench.xfer_wait_start
+@200
+-
+-
+@28
+testbench.uut.spi.i_spi_clk
+testbench.uut.spi.i_spi_cs_n
+testbench.uut.spi.i_mosi
+testbench.uut.spi.o_miso
+@200
+-
+@28
+testbench.uut.spi.o_active
+@200
+-
+@24
+testbench.uut.spi.in_bit[2:0]
+@22
+testbench.uut.spi.data_in[7:0]
+testbench.uut.spi.data_in_spi[7:0]
+testbench.uut.spi.o_data_in_data[7:0]
+@2022
+^1 /home/matt/work/fpga/mlaccel/rtl/../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
+testbench.uut.spi.data_in_state[1:0]
+@200
+-
+@28
+testbench.uut.spi.o_data_in_start
+testbench.uut.spi.o_data_in_valid
+testbench.uut.spi.start_status
+testbench.uut.spi.in_bit_clock
+testbench.uut.spi.in_bit_clock_past
+@200
+-
+@2024
+^1 /home/matt/work/fpga/mlaccel/rtl/../../../../../../tmp/../home/matt/work/fpga/mlaccel/rtl/spi_data_in_filter.txt
+testbench.uut.spi.data_out_state
+@28
+testbench.uut.spi.i_data_out_valid
+testbench.uut.spi.o_data_out_ready
+@22
+testbench.uut.spi.i_data_out_data[7:0]
+testbench.uut.spi.data_out[7:0]
+@24
+testbench.uut.spi.out_bit[2:0]
+@22
+testbench.uut.spi.data_out_spi[7:0]
+@28
+testbench.uut.spi.out_bit_clock
+testbench.uut.spi.out_bit_clock_past
+testbench.uut.spi.o_miso
+[pattern_trace] 1
+[pattern_trace] 0

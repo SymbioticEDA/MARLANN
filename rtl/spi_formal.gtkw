@@ -1,0 +1,54 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Mon Nov 19 16:36:01 2018
+[*]
+[dumpfile] "/home/matt/work/fpga/mlaccel/rtl/spi/engine_0/trace_induct.vcd"
+[dumpfile_mtime] "Mon Nov 19 16:31:51 2018"
+[dumpfile_size] 8257
+[savefile] "/home/matt/work/fpga/mlaccel/rtl/spi_formal.gtkw"
+[timestart] 0
+[size] 1774 1134
+[pos] -295 114
+*-6.258204 190 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 253
+[signals_width] 519
+[sst_expanded] 1
+[sst_vpaned_height] 332
+@c00200
+-spi_client.f_clk_counter
+@1401200
+-group_end
+@28
+spi_client.i_clock
+spi_client.i_spi_clk
+spi_client.i_mosi
+spi_client.i_reset
+spi_client.i_spi_cs_n
+@24
+spi_client.chip_select_count[2:0]
+@200
+-
+@22
+spi_client.i_data_out_data[7:0]
+@28
+spi_client.i_data_out_valid
+@24
+spi_client.out_bit[2:0]
+@22
+spi_client.data_out[7:0]
+@28
+spi_client.data_out_state
+@200
+-
+@23
+spi_client.data_in[7:0]
+@24
+spi_client.in_bit[2:0]
+@28
+spi_client.data_in_state[1:0]
+spi_client.o_data_in_start
+spi_client.i_spi_cs_n
+spi_client.spi_cs_n_clock_pipe
+spi_client.spi_cs_n_clock
+[pattern_trace] 1
+[pattern_trace] 0

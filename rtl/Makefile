@@ -5,10 +5,17 @@ all: testbench
 	sed '/^TRACE/ ! d; s/^[^:]*: //;' < testbench.log > testbench.trace
 	cmp ../sim/demo.trace testbench.trace
 
-testbench: testbench.v top.v memory.v sequencer.v compute.v
-	iverilog -DTRACE -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+formal_spi: spi_client.v
+	sby -f spi.sby
+
+testbench_simple: testbench_simple.v top.v memory.v sequencer.v compute.v spi_client.v
+	iverilog -DTRACE -s testbench -o testbench_simple testbench_simple.v top.v memory.v sequencer.v compute.v spi_client.v $(shell yosys-config --datdir/ice40/cells_sim.v)
+	vvp -N testbench_simple
+
+testbench: testbench.v top.v memory.v sequencer.v compute.v spi_client.v
+	iverilog -DTRACE -s testbench -o testbench testbench.v top.v memory.v sequencer.v compute.v spi_client.v $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 clean:
-	rm -f testbench testbench.vcd testbench.log testbench.trace
+	rm -f testbench testbench_simple testbench.vcd testbench.log testbench.trace
 
 .PHONY: all clean

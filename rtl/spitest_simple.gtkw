@@ -1,0 +1,69 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Mon Nov 19 17:11:30 2018
+[*]
+[dumpfile] "/home/matt/work/fpga/mlaccel/rtl/testbench.vcd"
+[dumpfile_mtime] "Mon Nov 19 17:08:52 2018"
+[dumpfile_size] 149967
+[savefile] "/home/matt/work/fpga/mlaccel/rtl/spitest.gtkw"
+[timestart] 10499
+[size] 1649 1029
+[pos] 317 470
+*-10.000000 13880 1015310 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uut.
+[treeopen] testbench.uut.mem.ram[0].
+[sst_width] 303
+[signals_width] 456
+[sst_expanded] 1
+[sst_vpaned_height] 309
+@28
+testbench.uut.reset
+@8022
+testbench.cursor
+@28
+testbench.uut.clock
+@22
+testbench.xfer_send_byte.data[7:0]
+@c00022
+testbench.xfer[7:0]
+@28
+(0)testbench.xfer[7:0]
+(1)testbench.xfer[7:0]
+(2)testbench.xfer[7:0]
+(3)testbench.xfer[7:0]
+(4)testbench.xfer[7:0]
+(5)testbench.xfer[7:0]
+(6)testbench.xfer[7:0]
+(7)testbench.xfer[7:0]
+@1401200
+-group_end
+@200
+-
+-
+@28
+testbench.uut.spi.i_spi_clk
+testbench.uut.spi.i_spi_cs_n
+testbench.uut.spi.i_mosi
+testbench.uut.spi.o_miso
+@200
+-
+@28
+testbench.uut.spi.o_active
+@200
+-
+@28
+testbench.uut.spi.in_bit[2:0]
+@22
+testbench.uut.spi.data_in[7:0]
+testbench.uut.spi.data_in_spi[7:0]
+@200
+-
+@28
+testbench.uut.spi.o_data_in_start
+@29
+testbench.uut.spi.o_data_out_ready
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0

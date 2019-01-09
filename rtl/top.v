@@ -14,10 +14,11 @@
  *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
-
+`default_nettype none
 module marlann_top (
 	input  clock,
 
+`ifdef QPI
 	input  qpi_csb,
 	input  qpi_clk,
 	inout  qpi_io0,
@@ -26,6 +27,14 @@ module marlann_top (
 	inout  qpi_io3,
 	output qpi_rdy,
 	output qpi_err
+`elsif SPI
+	input  spi_csb,
+	input  spi_clk,
+	output spi_miso,
+	input  spi_mosi,
+	output spi_rdy,
+	output spi_err
+`endif
 );
 	integer i;
 
@@ -89,53 +98,64 @@ module marlann_top (
 		reset <= !next_resetn;
 	end
 
+
 	/********** QPI Interface **********/
 
+
+`ifdef QPI
 	wire [3:0] qpi_io_oe;
 	wire [3:0] qpi_io_do;
 	wire [3:0] qpi_io_di;
-`ifdef RADIANT
-	BB_B qpi_io_buf [3:0] (
-		.B({qpi_io3, qpi_io2, qpi_io1, qpi_io0}),
-		.T_N(qpi_io_oe),
-		.I(qpi_io_do),
-		.O(qpi_io_di)
-	);
-`else
-	SB_IO #(
-		.PIN_TYPE(6'b 1010_01),
-		.PULLUP(1'b 0)
-	) qpi_io_buf [3:0] (
-		.PACKAGE_PIN({qpi_io3, qpi_io2, qpi_io1, qpi_io0}),
-		.OUTPUT_ENABLE(qpi_io_oe),
-		.D_OUT_0(qpi_io_do),
-		.D_IN_0(qpi_io_di)
-	);
-`endif
+
+	`ifdef RADIANT
+		BB_B qpi_io_buf [3:0] (
+			.B({qpi_io3, qpi_io2, qpi_io1, qpi_io0}),
+			.T_N(qpi_io_oe),
+			.I(qpi_io_do),
+			.O(qpi_io_di)
+		);
+	`else
+		SB_IO #(
+			.PIN_TYPE(6'b 1010_01),
+			.PULLUP(1'b 0)
+		) qpi_io_buf [3:0] (
+			.PACKAGE_PIN({qpi_io3, qpi_io2, qpi_io1, qpi_io0}),
+			.OUTPUT_ENABLE(qpi_io_oe),
+			.D_OUT_0(qpi_io_do),
+			.D_IN_0(qpi_io_di)
+		);
+	`endif
+
 	wire qpi_csb_di;
 	wire qpi_clk_di;
-`ifdef RADIANT
-	assign qpi_csb_di = qpi_csb;
-	assign qpi_clk_di = qpi_clk;
-`else
-	SB_IO #(
-		.PIN_TYPE(6'b 0000_01),
-		.PULLUP(1'b 1)
-	) qpi_csb_buf (
-		.PACKAGE_PIN(qpi_csb),
-		.D_IN_0(qpi_csb_di)
-	);
 
-	SB_IO #(
-		.PIN_TYPE(6'b 0000_01),
-		.PULLUP(1'b 0)
-	) qpi_clk_buf (
-		.PACKAGE_PIN(qpi_clk),
-		.D_IN_0(qpi_clk_di)
-	);
-`endif
+	`ifdef RADIANT
+		assign qpi_csb_di = qpi_csb;
+		assign qpi_clk_di = qpi_clk;
+	`else
+		SB_IO #(
+			.PIN_TYPE(6'b 0000_01),
+			.PULLUP(1'b 1)
+		) qpi_csb_buf (
+			.PACKAGE_PIN(qpi_csb),
+			.D_IN_0(qpi_csb_di)
+		);
+
+		SB_IO #(
+			.PIN_TYPE(6'b 0000_01),
+			.PULLUP(1'b 0)
+		) qpi_clk_buf (
+			.PACKAGE_PIN(qpi_clk),
+			.D_IN_0(qpi_clk_di)
+		);
+	`endif
+
 	wire qpi_active;
 
+`endif
+
+
+`ifdef QPI
 	marlann_qpi qpi (
 		.clock      (clock     ),
 		.reset      (reset     ),
@@ -156,7 +176,34 @@ module marlann_top (
 		.dout_valid (dout_valid),
 		.dout_ready (dout_ready),
 		.dout_data  (dout_data )
+    );
+
+`elsif SPI
+	/********** SPI Interface **********/
+	wire spi_active;
+    assign spi_rdy = 1;
+    assign spi_err = 1;
+
+	spi_client spi (
+		.i_clock      (clock     ),
+		.i_reset      (reset     ),
+		.o_active     (spi_active),
+
+		.i_spi_cs_n (spi_csb),
+		.i_spi_clk  (spi_clk),
+
+		.o_miso   (spi_miso ),
+		.i_mosi   (spi_mosi ),
+
+		.o_data_in_valid  (din_valid ),
+		.o_data_in_start  (din_start ),
+		.o_data_in_data   (din_data  ),
+
+		.i_data_out_valid (dout_valid),
+		.o_data_out_ready (dout_ready),
+		.i_data_out_data  (dout_data )
 	);
+`endif
 
 	/********** Cmd State Machine **********/
 
@@ -196,7 +243,11 @@ module marlann_top (
 		seq_start <= 0;
 		seq_stop <= 0;
 
+		`ifdef QPI
 		if (!qpi_active || din_start) begin
+		`elsif SPI
+		if (!spi_active || din_start) begin
+		`endif
 			dout_valid <= 0;
 		end
 
@@ -514,6 +565,8 @@ module marlann_top (
 	);
 endmodule
 
+
+`ifdef QPI
 module marlann_qpi (
 	input            clock,
 	input            reset,
@@ -682,3 +735,4 @@ module marlann_qpi (
 		end
 	end
 endmodule
+`endif

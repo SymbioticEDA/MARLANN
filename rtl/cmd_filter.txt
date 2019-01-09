@@ -1,0 +1,7 @@
+20 = status
+21 = wbuf 
+22 = rbuf 
+23 = wmem 
+24 = rmem 
+25 = run  
+26 = stop 

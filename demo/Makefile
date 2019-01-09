@@ -23,7 +23,8 @@ ML_RTL =					\
 	../rtl/top.v				\
 	../rtl/sequencer.v			\
 	../rtl/compute.v			\
-	../rtl/memory.v
+	../rtl/memory.v             \
+	../rtl/spi_client.v
 
 #####################################################################
 
