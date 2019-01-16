@@ -16,4 +16,5 @@
     47/50 runs passed
     icetime: min = 26.13 MHz, avg = 27.821489361702124 MHz, max = 29.26 MHz
 
-3 runs killed due to running for longer than 30 minutes
+* run with --opt-timing option
+* 3 runs killed due to running for longer than 30 minutes
