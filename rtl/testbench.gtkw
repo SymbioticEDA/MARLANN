@@ -1,22 +1,22 @@
 [*]
-[*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
-[*] Fri Sep 28 15:04:54 2018
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Wed Jan  9 17:52:17 2019
 [*]
-[dumpfile] "/home/clifford/Work/mlaccel/rtl/testbench.vcd"
-[dumpfile_mtime] "Fri Sep 28 15:02:49 2018"
-[dumpfile_size] 482791155
-[savefile] "/home/clifford/Work/mlaccel/rtl/testbench.gtkw"
-[timestart] 0
-[size] 1193 826
-[pos] 1883 92
-*-20.000000 505250 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[dumpfile] "/home/matt/work/fpga/marlann/rtl/testbench.vcd"
+[dumpfile_mtime] "Wed Jan  9 16:19:04 2019"
+[dumpfile_size] 581658800
+[savefile] "/home/matt/work/fpga/marlann/rtl/testbench.gtkw"
+[timestart] 515000
+[size] 1193 1239
+[pos] 1066 190
+*-20.000000 2140010 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
 [treeopen] testbench.uut.
 [treeopen] testbench.uut.comp.
 [sst_width] 256
 [signals_width] 510
 [sst_expanded] 1
-[sst_vpaned_height] 240
+[sst_vpaned_height] 384
 @28
 testbench.clock
 testbench.uut.reset
@@ -55,7 +55,7 @@ testbench.uut.seq.busy
 @22
 testbench.uut.seq.pc[16:0]
 testbench.uut.seq.insn[31:0]
-@90023
+@90022
 testbench.uut.seq.queue_fill[7:0]
 @200
 -
@@ -64,7 +64,8 @@ testbench.uut.seq.queue_fill[7:0]
 testbench.uut.comp.clock
 testbench.uut.comp.cmd_valid
 testbench.uut.comp.cmd_ready
-@22
+@4023
+^>1 /home/matt/work/fpga/marlann/rtl/instruction_filter.py
 testbench.uut.comp.cmd_insn[31:0]
 @200
 -

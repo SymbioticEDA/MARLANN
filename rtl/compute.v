@@ -79,35 +79,35 @@ module marlann_compute #(
 	reg                 s3_en;
 	reg  [        31:0] s3_insn;
 
-	reg                 s3a_en;
-	reg  [        31:0] s3a_insn;
-
 	reg                 s4_en;
 	reg  [        31:0] s4_insn;
-	reg  [   NB*64-1:0] s4_coeff;
 
 	reg                 s5_en;
 	reg  [        31:0] s5_insn;
-	reg  [     8*9-1:0] s5_max;
+	reg  [   NB*64-1:0] s5_coeff;
 
 	reg                 s6_en;
 	reg  [        31:0] s6_insn;
-	reg  [     4*9-1:0] s6_max;
+	reg  [     8*9-1:0] s6_max;
 
 	reg                 s7_en;
 	reg  [        31:0] s7_insn;
-	wire [  NB*128-1:0] s7_prod;
-	reg  [     2*9-1:0] s7_max;
+	reg  [     4*9-1:0] s7_max;
 
 	reg                 s8_en;
 	reg  [        31:0] s8_insn;
-	reg  [        19:0] s8_sum0;
-	reg  [        19:0] s8_sum1;
-	reg  [         8:0] s8_max;
-	reg                 s8_maxen;
+	wire [  NB*128-1:0] s8_prod;
+	reg  [     2*9-1:0] s8_max;
 
 	reg                 s9_en;
 	reg  [        31:0] s9_insn;
+	reg  [        19:0] s9_sum0;
+	reg  [        19:0] s9_sum1;
+	reg  [         8:0] s9_max;
+	reg                 s9_maxen;
+
+	reg                 s10_en;
+	reg  [        31:0] s10_insn;
 
 
 	/**** memory and max interlock ****/
@@ -176,7 +176,7 @@ module marlann_compute #(
 
 	assign cmd_ready = !s1_stall;
 
-	assign busy = |{s1_en, s2_en, s3_en, s4_en, s5_en, s6_en, s7_en, s8_en};
+	assign busy = |{s1_en, s2_en, s3_en, s5_en, s6_en, s7_en, s8_en, s9_en};
 
 `ifdef FORMAL_INIT
 	reg init_cycle = 1;
@@ -281,32 +281,14 @@ module marlann_compute #(
 	end
 
 
-	/**** stage 3A ****/
-
-	always @(posedge clock) begin
-		s3a_en <= 0;
-		s3a_insn <= s3_insn;
-
-		if (!reset && s3_en) begin
-			s3a_en <= 1;
-		end
-	end
-
-
 	/**** stage 4 ****/
 
 	always @(posedge clock) begin
 		s4_en <= 0;
-		s4_insn <= s3a_insn;
-		s4_coeff <= coeff_mem[s3a_insn[14:6] + CBP];
+		s4_insn <= s3_insn;
 
-		if (!reset && s3a_en) begin
+		if (!reset && s3_en) begin
 			s4_en <= 1;
-
-			/* SetCBP, AddCBP */
-			if (s3a_insn[5:0] == 14 || s3a_insn[5:0] == 15) begin
-				CBP <= s3a_insn[14:6] + (s3a_insn[0] ? CBP : 0);
-			end
 		end
 	end
 
@@ -316,49 +298,15 @@ module marlann_compute #(
 	always @(posedge clock) begin
 		s5_en <= 0;
 		s5_insn <= s4_insn;
-
-		s5_max[0*9 +: 9] <= s4_coeff[0*8 +: 8] ? $signed(mem_rdata[0*8 +: 8]) : 9'h100;
-		s5_max[1*9 +: 9] <= s4_coeff[1*8 +: 8] ? $signed(mem_rdata[1*8 +: 8]) : 9'h100;
-		s5_max[2*9 +: 9] <= s4_coeff[2*8 +: 8] ? $signed(mem_rdata[2*8 +: 8]) : 9'h100;
-		s5_max[3*9 +: 9] <= s4_coeff[3*8 +: 8] ? $signed(mem_rdata[3*8 +: 8]) : 9'h100;
-		s5_max[4*9 +: 9] <= s4_coeff[4*8 +: 8] ? $signed(mem_rdata[4*8 +: 8]) : 9'h100;
-		s5_max[5*9 +: 9] <= s4_coeff[5*8 +: 8] ? $signed(mem_rdata[5*8 +: 8]) : 9'h100;
-		s5_max[6*9 +: 9] <= s4_coeff[6*8 +: 8] ? $signed(mem_rdata[6*8 +: 8]) : 9'h100;
-		s5_max[7*9 +: 9] <= s4_coeff[7*8 +: 8] ? $signed(mem_rdata[7*8 +: 8]) : 9'h100;
-
-		mem_rd1_en <= 0;
-		mem_rd1_addr <= 'bx;
+		s5_coeff <= coeff_mem[s4_insn[14:6] + CBP];
 
 		if (!reset && s4_en) begin
 			s5_en <= 1;
 
-			case (s4_insn[5:0])
-				/* LoadCode */
-				4: begin
-					code_mem[s4_insn[14:6]] <= mem_rdata[31:0];
-				end
-
-				/* LoadCoeff0 */
-				5: begin
-					coeff_mem[s4_insn[14:6]][63:0] <= mem_rdata;
-				end
-
-				/* LoadCoeff1 */
-				6: begin
-					coeff_mem[s4_insn[14:6]][127:64] <= mem_rdata;
-				end
-
-				/* SetLBP, AddLBP */
-				10, 11: begin
-					LBP <= s4_insn[31:15] + (s4_insn[0] ? LBP : 0);
-				end
-
-				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1 */
-				28, 29, 30, 32, 33, 34: begin
-					mem_rd1_en <= 1;
-					mem_rd1_addr <= (s4_insn[31:15] + LBP) >> 1;
-				end
-			endcase
+			/* SetCBP, AddCBP */
+			if (s4_insn[5:0] == 14 || s4_insn[5:0] == 15) begin
+				CBP <= s4_insn[14:6] + (s4_insn[0] ? CBP : 0);
+			end
 		end
 	end
 
@@ -369,27 +317,53 @@ module marlann_compute #(
 		s6_en <= 0;
 		s6_insn <= s5_insn;
 
-		s6_max[0*9 +: 9] <= $signed(s5_max[0*9 +: 9]) > $signed(s5_max[1*9 +: 9]) ? s5_max[0*9 +: 9] : s5_max[1*9 +: 9];
-		s6_max[1*9 +: 9] <= $signed(s5_max[2*9 +: 9]) > $signed(s5_max[3*9 +: 9]) ? s5_max[2*9 +: 9] : s5_max[3*9 +: 9];
-		s6_max[2*9 +: 9] <= $signed(s5_max[4*9 +: 9]) > $signed(s5_max[5*9 +: 9]) ? s5_max[4*9 +: 9] : s5_max[5*9 +: 9];
-		s6_max[3*9 +: 9] <= $signed(s5_max[6*9 +: 9]) > $signed(s5_max[7*9 +: 9]) ? s5_max[6*9 +: 9] : s5_max[7*9 +: 9];
+		s6_max[0*9 +: 9] <= s5_coeff[0*8 +: 8] ? $signed(mem_rdata[0*8 +: 8]) : 9'h100;
+		s6_max[1*9 +: 9] <= s5_coeff[1*8 +: 8] ? $signed(mem_rdata[1*8 +: 8]) : 9'h100;
+		s6_max[2*9 +: 9] <= s5_coeff[2*8 +: 8] ? $signed(mem_rdata[2*8 +: 8]) : 9'h100;
+		s6_max[3*9 +: 9] <= s5_coeff[3*8 +: 8] ? $signed(mem_rdata[3*8 +: 8]) : 9'h100;
+		s6_max[4*9 +: 9] <= s5_coeff[4*8 +: 8] ? $signed(mem_rdata[4*8 +: 8]) : 9'h100;
+		s6_max[5*9 +: 9] <= s5_coeff[5*8 +: 8] ? $signed(mem_rdata[5*8 +: 8]) : 9'h100;
+		s6_max[6*9 +: 9] <= s5_coeff[6*8 +: 8] ? $signed(mem_rdata[6*8 +: 8]) : 9'h100;
+		s6_max[7*9 +: 9] <= s5_coeff[7*8 +: 8] ? $signed(mem_rdata[7*8 +: 8]) : 9'h100;
+
+		mem_rd1_en <= 0;
+		mem_rd1_addr <= 'bx;
 
 		if (!reset && s5_en) begin
 			s6_en <= 1;
+
+			case (s5_insn[5:0])
+				/* LoadCode */
+				4: begin
+					code_mem[s5_insn[14:6]] <= mem_rdata[31:0];
+				end
+
+				/* LoadCoeff0 */
+				5: begin
+					coeff_mem[s5_insn[14:6]][63:0] <= mem_rdata;
+				end
+
+				/* LoadCoeff1 */
+				6: begin
+					coeff_mem[s5_insn[14:6]][127:64] <= mem_rdata;
+				end
+
+				/* SetLBP, AddLBP */
+				10, 11: begin
+					LBP <= s5_insn[31:15] + (s5_insn[0] ? LBP : 0);
+				end
+
+				/* LdSet, LdSet0, LdSet1, LdAdd, LdAdd0, LdAdd1 */
+				28, 29, 30, 32, 33, 34: begin
+					mem_rd1_en <= 1;
+					mem_rd1_addr <= (s5_insn[31:15] + LBP) >> 1;
+				end
+			endcase
 		end
 	end
 
 
 	/**** stage 7 ****/
-
-	wire [NB*64-1:0] mulA = {mem_rdata, mem_rdata};
-
-	marlann_compute_mul2 mul [NB*4-1:0] (
-		.clock (clock   ),
-		.A     (mulA    ),
-		.B     (s4_coeff),
-		.X     (s7_prod )
-	);
 
 	always @(posedge clock) begin
 		s7_en <= 0;
@@ -397,6 +371,8 @@ module marlann_compute #(
 
 		s7_max[0*9 +: 9] <= $signed(s6_max[0*9 +: 9]) > $signed(s6_max[1*9 +: 9]) ? s6_max[0*9 +: 9] : s6_max[1*9 +: 9];
 		s7_max[1*9 +: 9] <= $signed(s6_max[2*9 +: 9]) > $signed(s6_max[3*9 +: 9]) ? s6_max[2*9 +: 9] : s6_max[3*9 +: 9];
+		s7_max[2*9 +: 9] <= $signed(s6_max[4*9 +: 9]) > $signed(s6_max[5*9 +: 9]) ? s6_max[4*9 +: 9] : s6_max[5*9 +: 9];
+		s7_max[3*9 +: 9] <= $signed(s6_max[6*9 +: 9]) > $signed(s6_max[7*9 +: 9]) ? s6_max[6*9 +: 9] : s6_max[7*9 +: 9];
 
 		if (!reset && s6_en) begin
 			s7_en <= 1;
@@ -406,25 +382,21 @@ module marlann_compute #(
 
 	/**** stage 8 ****/
 
-	reg [31:0] acc0zn;
+	wire [NB*64-1:0] mulA = {mem_rdata, mem_rdata};
 
-	always @* begin
-		acc0zn = s7_insn[1] ? 0 : acc0;
-		acc0zn = s7_insn[2] ? 32'h 8000_0000 : acc0zn;
-	end
+	marlann_compute_mul2 mul [NB*4-1:0] (
+		.clock (clock   ),
+		.A     (mulA    ),
+		.B     (s5_coeff),
+		.X     (s8_prod )
+	);
 
 	always @(posedge clock) begin
 		s8_en <= 0;
 		s8_insn <= s7_insn;
 
-		s8_sum0 <= $signed(s7_prod[  0 +: 16]) + $signed(s7_prod[ 16 +: 16]) + $signed(s7_prod[ 32 +: 16]) + $signed(s7_prod[ 48 +: 16]) +
-		           $signed(s7_prod[ 64 +: 16]) + $signed(s7_prod[ 80 +: 16]) + $signed(s7_prod[ 96 +: 16]) + $signed(s7_prod[112 +: 16]);
-
-		s8_sum1 <= $signed(s7_prod[128 +: 16]) + $signed(s7_prod[144 +: 16]) + $signed(s7_prod[160 +: 16]) + $signed(s7_prod[176 +: 16]) +
-		           $signed(s7_prod[192 +: 16]) + $signed(s7_prod[208 +: 16]) + $signed(s7_prod[224 +: 16]) + $signed(s7_prod[240 +: 16]);
-
-		s8_max <= $signed(s7_max[0*9 +: 9]) > $signed(s7_max[1*9 +: 9]) ? s7_max[0*9 +: 9] : s7_max[1*9 +: 9];
-		s8_maxen <= ($signed(s7_max[0*9 +: 9]) > $signed(acc0zn)) || ($signed(s7_max[1*9 +: 9]) > $signed(acc0zn));
+		s8_max[0*9 +: 9] <= $signed(s7_max[0*9 +: 9]) > $signed(s7_max[1*9 +: 9]) ? s7_max[0*9 +: 9] : s7_max[1*9 +: 9];
+		s8_max[1*9 +: 9] <= $signed(s7_max[2*9 +: 9]) > $signed(s7_max[3*9 +: 9]) ? s7_max[2*9 +: 9] : s7_max[3*9 +: 9];
 
 		if (!reset && s7_en) begin
 			s8_en <= 1;
@@ -434,6 +406,34 @@ module marlann_compute #(
 
 	/**** stage 9 ****/
 
+	reg [31:0] acc0zn;
+
+	always @* begin
+		acc0zn = s8_insn[1] ? 0 : acc0;
+		acc0zn = s8_insn[2] ? 32'h 8000_0000 : acc0zn;
+	end
+
+	always @(posedge clock) begin
+		s9_en <= 0;
+		s9_insn <= s8_insn;
+
+		s9_sum0 <= $signed(s8_prod[  0 +: 16]) + $signed(s8_prod[ 16 +: 16]) + $signed(s8_prod[ 32 +: 16]) + $signed(s8_prod[ 48 +: 16]) +
+		           $signed(s8_prod[ 64 +: 16]) + $signed(s8_prod[ 80 +: 16]) + $signed(s8_prod[ 96 +: 16]) + $signed(s8_prod[112 +: 16]);
+
+		s9_sum1 <= $signed(s8_prod[128 +: 16]) + $signed(s8_prod[144 +: 16]) + $signed(s8_prod[160 +: 16]) + $signed(s8_prod[176 +: 16]) +
+		           $signed(s8_prod[192 +: 16]) + $signed(s8_prod[208 +: 16]) + $signed(s8_prod[224 +: 16]) + $signed(s8_prod[240 +: 16]);
+
+		s9_max <= $signed(s8_max[0*9 +: 9]) > $signed(s8_max[1*9 +: 9]) ? s8_max[0*9 +: 9] : s8_max[1*9 +: 9];
+		s9_maxen <= ($signed(s8_max[0*9 +: 9]) > $signed(acc0zn)) || ($signed(s8_max[1*9 +: 9]) > $signed(acc0zn));
+
+		if (!reset && s8_en) begin
+			s9_en <= 1;
+		end
+	end
+
+
+	/**** stage 10 ****/
+
 	reg [31:0] new_acc0_add;
 	reg [31:0] new_acc1_add;
 
@@ -442,8 +442,8 @@ module marlann_compute #(
 	reg [31:0] new_acc0;
 	reg [31:0] new_acc1;
 
-	wire [31:0] acc0_shifted = $signed(acc0) >>> s8_insn[14:6];
-	wire [31:0] acc1_shifted = $signed(acc1) >>> s8_insn[14:6];
+	wire [31:0] acc0_shifted = $signed(acc0) >>> s9_insn[14:6];
+	wire [31:0] acc1_shifted = $signed(acc1) >>> s9_insn[14:6];
 
 	reg [7:0] acc0_saturated;
 	reg [7:0] acc1_saturated;
@@ -452,32 +452,32 @@ module marlann_compute #(
 	reg new_acc0_max_cmp_q;
 
 	always @* begin
-		new_acc0_add = s8_insn[1] ? 0 : acc0;
-		new_acc1_add = s8_insn[1] || s8_insn[2] ? 0 : acc1;
+		new_acc0_add = s9_insn[1] ? 0 : acc0;
+		new_acc1_add = s9_insn[1] || s9_insn[2] ? 0 : acc1;
 
-		new_acc0_max = s8_insn[2] ? 32'h 8000_0000 : new_acc0_add;
+		new_acc0_max = s9_insn[2] ? 32'h 8000_0000 : new_acc0_add;
 
-		new_acc0_add = $signed(new_acc0_add) + $signed(s8_sum0);
-		new_acc1_add = $signed(new_acc1_add) + $signed(s8_sum1);
+		new_acc0_add = $signed(new_acc0_add) + $signed(s9_sum0);
+		new_acc1_add = $signed(new_acc1_add) + $signed(s9_sum1);
 
-		if (s8_max != 9'h 100)
-			new_acc0_max = s8_maxen ? s8_max : new_acc0_max;
+		if (s9_max != 9'h 100)
+			new_acc0_max = s9_maxen ? s9_max : new_acc0_max;
 
-		new_acc0 = s8_insn[0] ? new_acc0_max : new_acc0_add;
+		new_acc0 = s9_insn[0] ? new_acc0_max : new_acc0_add;
 		new_acc1 = new_acc1_add;
 	end
 
 	always @(posedge clock) begin
-		s9_en <= 0;
-		s9_insn <= s8_insn;
+		s10_en <= 0;
+		s10_insn <= s9_insn;
 
-		if (!reset && s8_en) begin
-			s9_en <= 1;
+		if (!reset && s9_en) begin
+			s10_en <= 1;
 
 			/* MACC, MMAX, MMACZ, MMAXZ, MMAXN */
-			if (s8_insn[5:3] == 3'b 101) begin
+			if (s9_insn[5:3] == 3'b 101) begin
 `ifdef FORMAL_MAXLOCK_CHECK
-				if (s8_insn[0])
+				if (s9_insn[0])
 					assert ($stable(acc0));
 `endif
 				acc0 <= new_acc0;
@@ -485,22 +485,22 @@ module marlann_compute #(
 			end
 
 			/* LdSet, LdSet0 */
-			if (s8_insn[5:0] == 28 || s8_insn[5:0] == 29) begin
+			if (s9_insn[5:0] == 28 || s9_insn[5:0] == 29) begin
 				acc0 <= mem_rdata[31:0];
 			end
 
 			/* LdSet, LdSet1 */
-			if (s8_insn[5:0] == 28 || s8_insn[5:0] == 30) begin
+			if (s9_insn[5:0] == 28 || s9_insn[5:0] == 30) begin
 				acc1 <= mem_rdata[63:32];
 			end
 
 			/* LdAdd, LdAdd0 */
-			if (s8_insn[5:0] == 32 || s8_insn[5:0] == 33) begin
+			if (s9_insn[5:0] == 32 || s9_insn[5:0] == 33) begin
 				acc0 <= acc0 + mem_rdata[31:0];
 			end
 
 			/* LdAdd, LdAdd1 */
-			if (s8_insn[5:0] == 32 || s8_insn[5:0] == 34) begin
+			if (s9_insn[5:0] == 32 || s9_insn[5:0] == 34) begin
 				acc1 <= acc1 + mem_rdata[63:32];
 			end
 		end
@@ -535,35 +535,35 @@ module marlann_compute #(
 		end
 	end
 
-	wire [5:0] s9_insn_opcode = s9_insn[5:0];
+	wire [5:0] s10_insn_opcode = s9_insn[5:0];
 
 	always @(posedge clock) begin
 		pre_mem_wr_en <= 0;
-		pre_mem_wr_addr <= s9_insn[31:15] + SBP;
+		pre_mem_wr_addr <= s10_insn[31:15] + SBP;
 		pre_mem_wr_wdata <= {
-			{8{!s9_insn[2] || !acc1_saturated[7]}} & acc1_saturated,
-			{8{!s9_insn[2] || !acc0_saturated[7]}} & acc0_saturated
+			{8{!s10_insn[2] || !acc1_saturated[7]}} & acc1_saturated,
+			{8{!s10_insn[2] || !acc0_saturated[7]}} & acc0_saturated
 		};
 
-		if (s9_en) begin
+		if (s10_en) begin
 			/* Store, Store0, Store1, ReLU, ReLU0, ReLU1 */
-			if (s9_insn[5:3] == 3'b 010) begin
-				pre_mem_wr_en <= {!s9_insn[0], !s9_insn[1]};
+			if (s10_insn[5:3] == 3'b 010) begin
+				pre_mem_wr_en <= {!s10_insn[0], !s10_insn[1]};
 			end
 
 			/* Save, Save0, Save1 */
-			if (s9_insn[5:2] == 4'b 0110) begin
-				pre_mem_wr_en <= {{4{!s9_insn[0]}}, {4{!s9_insn[1]}}};
+			if (s10_insn[5:2] == 4'b 0110) begin
+				pre_mem_wr_en <= {{4{!s10_insn[0]}}, {4{!s10_insn[1]}}};
 				pre_mem_wr_wdata <= {acc1, acc0};
 			end
 
 			/* SetSBP, AddSBP */
-			if (s9_insn[5:0] == 12 || s9_insn[5:0] == 13) begin
-				SBP <= s9_insn[31:15] + (s9_insn[0] ? SBP : 0);
+			if (s10_insn[5:0] == 12 || s10_insn[5:0] == 13) begin
+				SBP <= s10_insn[31:15] + (s10_insn[0] ? SBP : 0);
 			end
 		end
 
-		if (reset || !s9_en) begin
+		if (reset || !s10_en) begin
 			pre_mem_wr_en <= 0;
 		end
 	end
@@ -610,16 +610,16 @@ module marlann_compute #(
 	wire [8:0] trace_caddr_plus_cbp = trace_caddr + trace_cbp;
 
 	always @(posedge clock) begin
-		trace_en <= s9_en;
-		trace_insn <= s9_insn;
+		trace_en <= s10_en;
+		trace_insn <= s10_insn;
 
 		trace_vbp_queue <= {trace_vbp_queue, VBP};
 		trace_lbp_queue <= {trace_lbp_queue, LBP};
 		trace_cbp_queue <= {trace_cbp_queue, CBP};
 
 		trace_mdata_queue <= {trace_mdata_queue, mem_rdata};
-		trace_c0data_queue <= {trace_c0data_queue, s4_coeff[63:0]};
-		trace_c1data_queue <= {trace_c1data_queue, s4_coeff[127:64]};
+		trace_c0data_queue <= {trace_c0data_queue, s5_coeff[63:0]};
+		trace_c1data_queue <= {trace_c1data_queue, s5_coeff[127:64]};
 
 		trace_acc0 <= acc0;
 		trace_acc1 <= acc1;
