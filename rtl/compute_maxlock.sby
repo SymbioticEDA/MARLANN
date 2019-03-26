@@ -3,7 +3,7 @@ mode prove
 depth 15
 
 [engines]
-smtbmc boolector
+smtbmc yices
 
 [script]
 read_verilog -formal -DFORMAL_MAXLOCK_CHECK -DFORMAL_INIT compute.v
