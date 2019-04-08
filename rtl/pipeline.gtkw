@@ -1,0 +1,56 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Mon Apr  8 19:25:20 2019
+[*]
+[dumpfile] "/home/matt/fpga/mlaccel/rtl/testbench.vcd"
+[dumpfile_mtime] "Mon Apr  8 19:08:08 2019"
+[dumpfile_size] 580690006
+[savefile] "/home/matt/fpga/mlaccel/rtl/pipeline.gtkw"
+[timestart] 1893252
+[size] 1237 745
+[pos] 1066 190
+*-7.000000 1893417 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[treeopen] testbench.uut.
+[sst_width] 256
+[signals_width] 290
+[sst_expanded] 1
+[sst_vpaned_height] 384
+@28
+testbench.clock
+@200
+-
+@4022
+^>1 /home/matt/fpga/mlaccel/rtl/instruction_filter.py
+testbench.uut.comp.s1_insn[31:0]
+^>1 /home/matt/fpga/mlaccel/rtl/instruction_filter.py
+testbench.uut.comp.s2_insn[31:0]
+@200
+-
+@28
+testbench.uut.comp.s1_en
+testbench.uut.comp.s2_en
+testbench.uut.comp.s3_en
+testbench.uut.comp.s4_en
+testbench.uut.comp.s5_en
+testbench.uut.comp.s6_en
+testbench.uut.comp.s7_en
+testbench.uut.comp.s8_en
+testbench.uut.comp.s9_en
+testbench.uut.comp.s10_en
+@200
+-
+@28
+testbench.uut.comp.memlock_mask[9:0]
+testbench.uut.comp.memlock_res[9:0]
+testbench.uut.comp.s1_stall
+testbench.uut.comp.memlock_expect
+@200
+-
+@28
+testbench.uut.comp.mem_rd1_en
+testbench.uut.comp.mem_rd0_en
+@22
+testbench.uut.comp.mem_wr_en[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
