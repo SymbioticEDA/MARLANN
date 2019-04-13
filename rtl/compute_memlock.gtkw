@@ -1,0 +1,59 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sat Apr 13 12:26:46 2019
+[*]
+[dumpfile] "/home/matt/fpga/mlaccel/rtl/compute_memlock/engine_0/trace.vcd"
+[dumpfile_mtime] "Sat Apr 13 12:04:04 2019"
+[dumpfile_size] 42441
+[savefile] "/home/matt/fpga/mlaccel/rtl/compute_memlock.gtkw"
+[timestart] 0
+[size] 1436 855
+[pos] -1 -1
+*-4.643856 70 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 43
+[signals_width] 227
+[sst_expanded] 0
+[sst_vpaned_height] 203
+@28
+marlann_compute.clock
+@200
+-
+@4022
+^>1 /home/matt/fpga/mlaccel/rtl/instruction_filter.py
+marlann_compute.s1_insn[31:0]
+@4023
+^>1 /home/matt/fpga/mlaccel/rtl/instruction_filter.py
+marlann_compute.s2_insn[31:0]
+@200
+-
+@28
+marlann_compute.s1_en
+marlann_compute.s2_en
+marlann_compute.s3_en
+marlann_compute.s4_en
+marlann_compute.s5_en
+marlann_compute.s6_en
+marlann_compute.s7_en
+marlann_compute.s8_en
+marlann_compute.s9_en
+marlann_compute.s10_en
+@200
+-
+@28
+marlann_compute.memlock_expect
+@22
+marlann_compute.memlock_mask[9:0]
+marlann_compute.memlock_res[9:0]
+@200
+-
+@28
+marlann_compute.s1_stall
+@200
+-
+@28
+marlann_compute.mem_rd0_en
+marlann_compute.mem_rd1_en
+@22
+marlann_compute.mem_wr_en[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
