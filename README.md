@@ -4,7 +4,7 @@ MARLANN -- A simple FPGA Machine Learning Accelerator
 MARLANN stands for Multiply-Accumulate and Rectified-Linear Accelerator for Neural Networks
 
 A simple FPGA machine learning accelerator with focus on small multi-layer
-CNNs, 8-bit fixed point signed integer arithmetic (24 bit accumulators),
+CNNs, 8-bit fixed point signed integer arithmetic (32 bit accumulators),
 max pooling, and ReLU activation function.
 
 The reference platform for this project is the iCE40UP5K FPGA. The project
