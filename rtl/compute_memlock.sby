@@ -8,6 +8,9 @@ smtbmc yices
 [script]
 read_verilog -formal -DFORMAL_MEMLOCK_CHECK -DFORMAL_INIT compute.v
 prep -top marlann_compute
+# cutpoint marlann_compute_mul2
+# cutpoint marlann_compute/coeff_mem
+# cutpoint marlann_compute/code_mem
 
 [files]
 compute.v
