@@ -18,20 +18,4 @@ of the assembler language syntax.
 See [docs/qpi.md](docs/qpi.md) for a description of the QPI interface to
 the host.
 
-iCE40UP5K Features
-------------------
-
-30x 4kbit BRAMS (max 16 bit data bus)
-
-4x 256kbit SPRAMS (max 16 bit data bus)
-
-8x MULT16 (fracturable in two MULT8)
-
-Upper bounds for possible results
----------------------------------
-
-DSP Timing: 50 MHz
-
-SPRAM Timing: 70 MHz
-
-Tentative clock target: 25 MHz
+![](overview.svg)
