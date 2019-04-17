@@ -18,4 +18,4 @@ of the assembler language syntax.
 See [docs/qpi.md](docs/qpi.md) for a description of the QPI interface to
 the host.
 
-![](overview.svg)
+![](docs/MARLANN-overview.svg)
