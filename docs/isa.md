@@ -4,7 +4,7 @@ Architecure
 The MARLANN architecture has up to 128 kB main memory, 512 4-byte words of
 fast compute code memory, and 2x512 8-byte words of coefficient storage.
 
-The compute core operates on two 24 bits wide accumulators. Each cycle it can
+The compute core operates on two 32 bits wide accumulators. Each cycle it can
 add 8 multiply results into each accumulator, yielding 16 MACC/cycle.
 
 The compute core can read any consecutive 8-byte block in main memory, as long
